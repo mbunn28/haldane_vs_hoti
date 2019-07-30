@@ -622,6 +622,7 @@ class Lattice:
 
         plt.xlabel(indep)
         plt.ylabel("E/t0")
+        plt.xticks(np.arrange(3), (0,1,"$\infty$"))
 
         names = self.make_names()
         newpath = names[0]
