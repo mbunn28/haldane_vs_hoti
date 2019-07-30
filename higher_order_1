@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jul 12 15:48:31 2019
+
+@author: sdiop
+"""
+
+
+import matplotlib
+import numpy as np
+import matplotlib.pyplot as plt
+from math import pi
+from math import sqrt
+
+
+
+PBC_i = True
+PBC_j = True
+
+N = 20
+t0 = 4
+t1 = 1
+
+def lat(i,j,s): return(6*N*i+6*j+s)  #lattice mapping
+
+
+def initialize_hamiltonian():
+    vv = 1000
+    Nvv = 0
+    h = np.zeros((6*N**2,6*N**2), dtype = float)
+
+
+    for i in range(N):
+        for j in range(N):
+
+            h[lat(i,j,0), lat(i,j,1)] = -t0
+            h[lat(i,j,0), lat(i,j,5)] = -t0
+            h[lat(i,j,0), lat((i+1)%N,j,3)] = -t1
+
+            h[lat(i,j,2), lat(i,j,1)] = -t0
+            h[lat(i,j,2), lat(i,j,3)] = -t0
+            h[lat(i,j,2), lat(i,(j+1)%N,5)] = -t1
+
+            h[lat(i,j,4), lat(i,j,3)] = -t0
+            h[lat(i,j,4), lat(i,j,5)] = -t0
+            h[lat(i,j,4), lat((i-1)%N,(j-1)%N,1)] = -t1
+
+    if PBC_i == False:
+        for j in range(N):
+#            h[lat(N-1,j,0), lat(0,j,3)] = 0
+#            h[lat(0,j,4), lat(N-1,(j-1)%N,1)] = 0
+            h[lat(N-1, j, 2),lat(N-1, j, 1)] = 0
+            h[lat(N-1, j, 0),lat(N-1, j, 5)] = 0
+    if PBC_j == False:
+        for i in range(N):
+            h[lat(i,N-1,2), lat(i,0,5)] = 0
+            h[lat(i,0,4), lat((i-1)%N,N-1,1)] = 0
+
+    if PBC_i == False and PBC_j==False:
+        for i in range(1,N-1):
+            for s in [0,3,4,5]:
+                h[lat(i,0,s),lat(i,0,s)] = vv
+                Nvv += 1
+            for s in [0,1,2,3]:
+                h[lat(i,N-1,s),lat(i,N-1,s)] = vv
+                Nvv += 1
+        for j in range(1,N-1):
+            for s in [2,3,4,5]:
+                h[lat(0,j,s),lat(0,j,s)] = vv
+                Nvv += 1
+            for s in [0,1,2,5]:
+                h[lat(N-1,j,s),lat(N-1,j,s)] = vv
+                Nvv += 1
+        for s in [0,2,3,4,5]:
+            h[lat(0,0,s),lat(0,0,s)] = vv
+            Nvv += 1
+        for s in [0,2,3,1,5]:
+            h[lat(N-1,N-1,s),lat(N-1,N-1,s)] = vv
+            Nvv += 1
+        for s in range(6):
+            h[lat(0,N-1,s),lat(0,N-1,s)] = vv
+            h[lat(N-1,0,s),lat(N-1,0,s)] = vv
+            Nvv += 2
+
+    h = np.conjugate(h.transpose()) + h
+    return(h,Nvv)
+
+h,Nvv = initialize_hamiltonian()
+energies, waves = np.linalg.eigh(h)
+fig = plt.figure()
+plt.hist(energies,70)
+fig.savefig("hist.pdf")
+plt.close(fig)

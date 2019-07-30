@@ -1,0 +1,260 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+import ti
+import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+import os
+
+
+# #find the energy spectrum and the eigenstates of a single lattice
+# lattice = ti.Lattice(
+# PBC_i = False,
+# PBC_j = False,
+# Corners = True,
+# alpha = 0,
+# hal = 0.4,
+# M=0,
+# N=7)
+#
+# lattice.single_state_largealpha()
+
+
+
+for c in range(0, 10):
+    M = round(0.1*c,1)
+    # find the E vs hal Spectrum
+    lattice = ti.Lattice(
+    PBC_i = False,
+    PBC_j = False,
+    Corners = True,
+    M=M,
+    N=7)
+
+    lattice.large_alpha = True
+    max_alpha = 4
+    max_hal = 2
+    s = 10
+    t = 100
+
+    for n in range(0,s):
+        alpha = round(max_alpha*n**2/s**2,2)
+        a = lattice.find_energysize()
+        bigenergies = np.zeros((a, t))
+        halvals = np.zeros(t)
+        for k in range(0,t):
+            hal = round(k*max_hal/t, 3)
+            halvals[k] = hal
+            print(f"{t*n + k}/{t*s}", end='\r')
+
+            lattice.alpha = alpha
+            lattice.hal = hal
+
+            lattice.initialize_hamiltonian()
+            lattice.eigenvalues()
+            bigenergies[:,k] = lattice.energies
+
+            for i in range(0, len(bigenergies[:,k])):
+                if bigenergies[i,k]>1000:
+                    bigenergies[i,k] = np.nan
+
+
+        bigenergies = np.round(bigenergies, 4)
+        new_array = [tuple(row) for row in bigenergies]
+        uniques = np.unique(new_array, axis=0)
+
+        fig = plt.figure()
+        for m in range(0,uniques.shape[0]):
+            plt.plot(halvals, uniques[m,:], lattice.colour(), alpha=0.7, linewidth=0.1)
+
+        plt.xlabel("Lambda")
+        plt.ylabel("E/t0")
+
+        names = lattice.make_names()
+        newpath = names[0]
+        name = names[4]
+        if not os.path.exists(f"{newpath}/M={M}"):
+            os.makedirs(f"{newpath}/M={M}")
+        plt.title(name)
+        fig.savefig(f"{newpath}/M={M}/{name}.pdf")
+        plt.close(fig)
+
+    # find the E vs alpha Spectrum
+    max_alpha = 4
+    max_hal = 2
+    s = 100
+    t = 10
+
+    for k in range(0,t):
+        hal = round(k*max_hal/t, 3)
+        a = lattice.find_energysize()
+        bigenergies = np.zeros((a, s))
+        alphavals = np.zeros(s)
+        for n in range(0,s):
+            alpha = round(max_alpha*n**2/s**2,2)
+            alphavals[n] = alpha
+            print(f"{s*k + n}/{t*s}", end='\r')
+            lattice.alpha = alpha
+            lattice.hal = hal
+
+            lattice.initialize_hamiltonian()
+            lattice.eigenvalues()
+            bigenergies[:,n] = lattice.energies
+
+            for i in range(0, len(bigenergies[:,n])):
+                if bigenergies[i,n]>1000:
+                    bigenergies[i,n] = np.nan
+
+        bigenergies = np.round(bigenergies, 4)
+        new_array = [tuple(row) for row in bigenergies]
+        uniques = np.unique(new_array, axis=0)
+
+        fig = plt.figure()
+        for m in range(0,uniques.shape[0]):
+            plt.plot(halvals, uniques[m,:], lattice.colour(), alpha=0.7, linewidth=0.1)
+
+        plt.xlabel("Alpha")
+        plt.ylabel("E/t0")
+
+        names = lattice.make_names()
+        newpath = names[0]
+        name = names[3]
+        if not os.path.exists(f"{newpath}/M={M}"):
+            os.makedirs(f"{newpath}/M={M}")
+        plt.title(name)
+        fig.savefig(f"{newpath}/M={M}/{name}.pdf")
+        plt.close(fig)
+
+# #find the E vs alpha Spectrum: Compare to Periodic
+# PBC_i = False
+# PBC_j = False
+# Corners = True
+# M=0
+# N=7
+#
+# max_alpha = 4
+# max_hal = 1
+# s = 10
+# t = 100
+#
+# for n in range(0,s):
+#     alpha = round(max_alpha*n**2/s**2,2)
+#     a = ti.find_energysize(PBC_i, PBC_j, Corners, N)
+#     b = ti.find_energysize(PBC_i = True, PBC_j = True, N=N)
+#     bigenergiesrib, bigenergiespbc = np.zeros((a, t)), np.zeros((b, t))
+#     halvals = np.zeros(t)
+#     for k in range(0,t):
+#         hal = round(k*max_hal/t, 3)
+#         halvals[k] = hal
+#         print(f"{t*n + k}/{t*s}", end='\r')
+#
+#         lattice = ti.Lattice(
+#         PBC_i = PBC_i,
+#         PBC_j = PBC_j,
+#         Corners = Corners,
+#         alpha = alpha,
+#         hal = hal,
+#         M=M,
+#         N=N)
+#
+#         lattice.initialize_hamiltonian()
+#         lattice.eigensystem()
+#         bigenergiesrib[:,k] = lattice.energies
+#
+#         lattice = ti.Lattice(
+#         PBC_i = True,
+#         PBC_j = True,
+#         alpha = alpha,
+#         hal = hal,
+#         M=M,
+#         N=N)
+#
+#         lattice.initialize_hamiltonian()
+#         lattice.eigensystem()
+#         bigenergiespbc[:,k] = lattice.energies
+#
+#     bigenergiesrib = np.round(bigenergiesrib, 4)
+#     new_array = [tuple(row) for row in bigenergiesrib]
+#     uniquesrib = np.unique(new_array, axis=0)
+#
+#     bigenergiespbc = np.round(bigenergiespbc, 4)
+#     new_array = [tuple(row) for row in bigenergiespbc]
+#     uniquespbc = np.unique(new_array, axis=0)
+#
+#     fig = plt.figure()
+#     for m in range(0,uniquesrib.shape[0]):
+#         plt.plot(halvals, uniquesrib[m,:], 'b', alpha=0.7, linewidth=0.1)
+#     for m in range(0, uniquespbc.shape[0]):
+#         plt.plot(halvals, uniquespbc[m,:], 'r', alpha=0.7, linewidth=0.1)
+#
+#     plt.xlabel("Lambda")
+#     plt.ylabel("E/t0")
+#
+#     names = lattice.make_names()
+#     newpath = names[0]
+#     name = names[4]
+#
+#     plt.title(name)
+#     fig.savefig(f"{newpath}/{name}.pdf")
+#     plt.close(fig)
+
+
+# #find the E vs alpha Spectrum
+# PBC_i = True
+# PBC_j = True
+# Corners = True
+# M=0
+# N=7
+#
+# max_alpha = 0.08
+# max_hal = 4
+# s = 5
+# t = 200
+#
+# def colour():
+#     if PBC_i == True and PBC_j == True:
+#         colour = 'r'
+#     else:
+#         colour = 'b'
+#     return colour
+#
+# for n in range(1,s):
+#     alpha = round(max_alpha*n**2/s**2,2)
+#     a = ti.find_energysize(PBC_i, PBC_j, Corners, N)
+#     bigenergies = np.zeros((a, t))
+#     halvals = np.zeros(t)
+#     for k in range(0,t):
+#         hal = round(k*max_hal/t, 3)
+#         halvals[k] = hal
+#         print(f"{t*n + k}/{t*s}", end='\r')
+#
+#         lattice = ti.Lattice(
+#         PBC_i = PBC_i,
+#         PBC_j = PBC_j,
+#         Corners = Corners,
+#         alpha = alpha,
+#         hal = hal,
+#         M=M,
+#         N=N)
+#
+#         lattice.initialize_hamiltonian_largealpha()
+#         lattice.eigensystem()
+#         bigenergies[:,k] = lattice.energies
+#
+#     bigenergiespbc = np.round(bigenergies, 4)
+#     new_array = [tuple(row) for row in bigenergiespbc]
+#     uniquespbc = np.unique(new_array, axis=0)
+#     fig = plt.figure()
+#     for m in range(0,uniquespbc.shape[0]):
+#         plt.plot(halvals, uniquespbc[m,:], colour(), alpha=0.7, linewidth=0.1)
+#
+#     plt.xlabel("Lambda")
+#     plt.ylabel("E/t0")
+#
+#     names = lattice.make_names()
+#     newpath = names[0]
+#     name = names[4]
+#
+#     plt.title(name)
+#     fig.savefig(f"{newpath}/{name}.pdf")
+#     plt.close(fig)

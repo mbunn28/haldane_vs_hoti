@@ -1,0 +1,281 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jul 12 15:48:31 2019
+
+@author: sdiop
+"""
+
+
+import matplotlib
+import numpy as np
+import matplotlib.pyplot as plt
+from math import pi
+from math import sqrt
+import os
+from matplotlib.patches import Circle
+from matplotlib.collections import PatchCollection
+
+
+
+PBC_i = True
+PBC_j = False
+Haldane = True
+Semenoff = False
+
+def lat(i,j,s): return(6*N*i+6*j+s)  #lattice mapping
+
+
+N = 10
+a= 1
+t = 10
+s = 10
+
+def initialize_hamiltonian(t0, t1, t2, t3, M):
+    vv = 1000
+    Nvv = 0
+    h = np.zeros((6*N**2,6*N**2), dtype = complex)
+
+    for i in range(N):
+        for j in range(N):
+
+            h[lat(i,j,0), lat(i,j,1)] = -t0
+            h[lat(i,j,0), lat(i,j,5)] = -t0
+            h[lat(i,j,0), lat((i+1)%N,j,3)] = -t1
+
+            h[lat(i,j,2), lat(i,j,1)] = -t0
+            h[lat(i,j,2), lat(i,j,3)] = -t0
+            h[lat(i,j,2), lat(i,(j+1)%N,5)] = -t1
+
+            h[lat(i,j,4), lat(i,j,3)] = -t0
+            h[lat(i,j,4), lat(i,j,5)] = -t0
+            h[lat(i,j,4), lat((i-1)%N,(j-1)%N,1)] = -t1
+
+            if Haldane == True:
+
+                h[lat(i,j,0), lat(i,j,4)] = -a*1j*t2
+                h[lat(i,j,0), lat((i+1)%N,j,4)] = -a*1j*t3
+                h[lat(i,j,0), lat((i+1)%N,(j+1)%N,4)] = -a*1j*t3
+
+                h[lat(i,j,1), lat(i,j,5)] = -a*1j*t2
+                h[lat(i,j,1), lat((i+1)%N,(j+1)%N,5)] = -a*1j*t3
+                h[lat(i,j,1), lat(i,(j+1)%N,5)] = -a*1j*t3
+
+                h[lat(i,j,2), lat(i,j,0)] = -a*1j*t2
+                h[lat(i,j,2), lat(i,(j+1)%N,0)] = -a*1j*t3
+                h[lat(i,j,2), lat((i-1)%N,j,0)] = -a*1j*t3
+
+                h[lat(i,j,3), lat(i,j,1)] = -a*1j*t2
+                h[lat(i,j,3), lat((i-1)%N,j,1)] = -a*1j*t3
+                h[lat(i,j,3), lat((i-1)%N,(j-1)%N,1)] = -a*1j*t3
+
+                h[lat(i,j,4), lat(i,j,2)] = -a*1j*t2
+                h[lat(i,j,4), lat((i-1)%N,(j-1)%N,2)] = -a*1j*t3
+                h[lat(i,j,4), lat(i,(j-1)%N,2)] = -a*1j*t3
+
+                h[lat(i,j,5), lat(i,j,3)] = -a*1j*t2
+                h[lat(i,j,5), lat(i,(j-1)%N,3)] = -a*1j*t3
+                h[lat(i,j,5), lat((i+1)%N,j,3)] = -a*1j*t3
+
+            if Semenoff == True:
+                for s in [0,2,4]:
+                    h[lat(i,j,s), lat(i,j,s)] = +M
+                for s in [1,3,5]:
+                    h[lat(i,j,s), lat(i,j,s)] = -M
+
+    if PBC_i == False:
+        for j in range(N):
+           h[lat(N-1,j,0), lat(0,j,3)] = 0
+           h[lat(0,j,4), lat(N-1,(j-1)%N,1)] = 0
+
+           h[lat(0,(j+1)%N,3), lat(N-1,j,1)] = 0
+           h[lat(N-1,j,0), lat(0,j,4)] = 0
+           h[lat(0,(j+1)%N,4), lat(N-1,j,2)] = 0
+           h[lat(N-1,j,5), lat(0,j,3)] = 0
+
+           h[lat(N-1,j,1), lat(0,(j+1)%N,5)] = 0
+           h[lat(N-1,j,0), lat(0,(j+1)%N,4)] = 0
+           h[lat(0,j,3), lat(N-1,j,1)] = 0
+           h[lat(0,j,2), lat(N-1,j,0)] = 0
+
+           # #dimer geometry
+           # h[lat(N-1, j, 2),lat(N-1, j, 1)] = 0
+           # h[lat(N-1, j, 0),lat(N-1, j, 5)] = 0
+           #
+           # h[lat(N-1,j,0), lat(N-1,j,4)] = 0
+           # h[lat(N-1,j,2), lat(N-1,j,0)] = 0
+           # h[lat(N-1,j,1), lat(N-1,j,5)] = 0
+           # h[lat(N-1,j,3), lat(N-1,j,1)] = 0
+           #
+           # h[lat(N-1,j,2), lat(N-1,(j+1)%N,0)] = 0
+           # h[lat(N-1,j,1), lat(N-1,(j+1)%N,5)] = 0
+           # h[lat(N-1,j,5), lat(0,j,3)] = 0
+           # h[lat(0,j,4), lat(N-1,(j-1)%N,2)] = 0
+
+    if PBC_j == False:
+        for i in range(N):
+            h[lat(i,N-1,2), lat(i,0,5)] = 0
+            h[lat(i,0,4), lat((i-1)%N,N-1,1)] = 0
+
+            h[lat((i+1)%N,0,3), lat(i,N-1,1)] = 0
+            h[lat(i,N-1,1), lat(i,0,5)] = 0
+            h[lat((i+1)%N,0,4), lat(i,N-1,2)] = 0
+            h[lat(i,N-1,2), lat(i,0,0)] = 0
+
+            h[lat(i,N-1,1), lat((i+1)%N,0,5)] = 0
+            h[lat(i,0,5), lat(i,N-1,3)] = 0
+            h[lat(i,N-1,0), lat((i+1)%N,0,4)] = 0
+            h[lat(i,0,4), lat(i,N-1,2)] = 0
+
+    # #dimer geometry
+    # if PBC_i == False and PBC_j==False:
+    #     for i in range(1,N-1):
+    #         for s in [0,3,4,5]:
+    #             h[lat(i,0,s),lat(i,0,s)] = vv
+    #             Nvv += 1
+    #         for s in [0,1,2,3]:
+    #             h[lat(i,N-1,s),lat(i,N-1,s)] = vv
+    #             Nvv += 1
+    #     for j in range(1,N-1):
+    #         for s in [2,3,4,5]:
+    #             h[lat(0,j,s),lat(0,j,s)] = vv
+    #             Nvv += 1
+    #         for s in [0,1,2,5]:
+    #             h[lat(N-1,j,s),lat(N-1,j,s)] = vv
+    #             Nvv += 1
+    #     for s in [0,2,3,4,5]:
+    #         h[lat(0,0,s),lat(0,0,s)] = vv
+    #         Nvv += 1
+    #     for s in [0,2,3,1,5]:
+    #         h[lat(N-1,N-1,s),lat(N-1,N-1,s)] = vv
+    #         Nvv += 1
+    #     for s in range(6):
+    #         h[lat(0,N-1,s),lat(0,N-1,s)] = vv
+    #         h[lat(N-1,0,s),lat(N-1,0,s)] = vv
+    #         Nvv += 2
+
+    h = np.conjugate(h.transpose()) + h
+    return(h,Nvv)
+
+folder = "output"
+if not os.path.exists(folder):
+    os.makedirs(folder)
+
+metal = np.zeros((s,t), dtype=bool)
+alph = np.zeros((s,t))
+t2t0 = np.zeros((s,t))
+
+for n in range(0,s):
+    p = round(10*n*n/(s**2),2)
+    alph[n,:] = p
+
+    for k in range(0,t):
+
+        t0 = 1
+        t1 = t0*p
+        t2 = k*0.4/t
+        t3 = t2*p
+        M = 0
+
+        t2t0[n,k] = t2/t0
+
+        print(f"{t*n + k}/{t*s}", end='\r')
+        h,Nvv = initialize_hamiltonian(t0, t1, t2, t3, M)
+        energies = np.round(np.linalg.eigvalsh(h),4)
+
+        emask = energies == 0
+        if emask.any() == True:
+            metal[n,k] = True
+
+fig = plt.figure()
+plt.plot
+
+    # fig = plt.figure()
+    # for m in range(0,6*N*N):
+    #     plt.plot(bigenergies[m,:,0], bigenergies[m,:,1], alpha=0.7, linewidth=0.1)
+    #
+    # plt.xlabel("t2/t0")
+    # plt.ylabel("E/t0")
+    #
+    # if PBC_i == False and PBC_j == False and Haldane == True:
+    #     name = f"OBC and H Energy Spectrum: Alpha = {p}"
+    # if PBC_i == False and PBC_j == False and Haldane == False:
+    #     name = f"OBC Energy Spectrum: Alpha = {p}"
+    # if PBC_i == True and PBC_j == False and Haldane == True:
+    #     name = f"Ribbon and H Energy Spectrum: Alpha = {p}"
+    # if PBC_i == False and PBC_j == True and Haldane == True:
+    #     name = f"Ribbon and H Energy Spectrum: Alpha = {p}"
+    # if PBC_i == True and PBC_j == False and Haldane == False:
+    #     name = f"Ribbon Energy Spectrum: Alpha = {p}"
+    # if PBC_i == False and PBC_j == True and Haldane == False:
+    #     name = f"Ribbon Energy Spectrum: Alpha = {p}"
+    # if PBC_i == True and PBC_j == True and Haldane == True:
+    #     name = f"PBC and H Energy Spectrum: Alpha = {p}"
+    # if PBC_i == True and PBC_j == True and Haldane == True:
+    #     name = f"PBC and H Energy Spectrum: Alpha = {p}"
+    #
+    # plt.title(name)
+    # fig.savefig(f"output/{name}.pdf")
+    # plt.close(fig)
+
+
+
+# fig = plt.figure()
+# plt.hist(energies,70)
+# title = "t0:{}, t1:{}, t2:{}, t3:{}".format(t0,t1,t2,t3)
+# fig.suptitle(title)
+# # newpath = '{}'.format(k)
+# # if not os.path.exists(newpath):
+# #     os.makedirs(newpath)
+# if PBC_i == False and PBC_j == False and Haldane == True:
+#     name = "OBCiandj_H_{}_{}_{}_{}_{}.pdf".format(N, t0, t1, t2*1000, t3*1000)
+# if PBC_i == False and PBC_j == False and Haldane == False:
+#     name = "OBCiandj_{}_{}_{}_{}_{}.pdf".format(N, t0, t1, t2*1000, t3*1000)
+# if PBC_i == True and PBC_j == False and Haldane == True:
+#     name = "OBCj_H_{}_{}_{}_{}_{}.pdf".format(N, t0, t1, t2*1000, t3*1000)
+# if PBC_i == False and PBC_j == True and Haldane == True:
+#     name = "OBCi_H_{}_{}_{}_{}_{}.pdf".format(N, t0, t1, t2*1000, t3*1000)
+# if PBC_i == True and PBC_j == False and Haldane == False:
+#     name = "OBCj_{}_{}_{}_{}_{}.pdf".format(N, t0, t1, t2*1000, t3*1000)
+# if PBC_i == False and PBC_j == True and Haldane == False:
+#     name = "OBCi_{}_{}_{}_{}_{}.pdf".format(N, t0, t1, t2*1000, t3*1000)
+# if PBC_i == True and PBC_j == True and Haldane == True:
+#     name = "PBC_H_{}_{}_{}_{}_{}.pdf".format(N, t0, t1, t2*1000, t3*1000)
+# if PBC_i == False and PBC_j == True and Haldane == True:
+#     name = "PBC_{}_{}_{}_{}_{}.pdf".format(N, t0, t1, t2*1000, t3*1000)
+#
+# fig.savefig(name)
+# plt.close(fig)
+
+# fig = plt.figure()
+# plt.hist(energies,70)
+# plt.ylim((None,30))
+# title = "t0:{}, t1:{}, t2:{}, t3:{} Short".format(t0,t1,t2,t3)
+# fig.suptitle(title)
+# name = "{}_{}_{}_{}_{}_short.pdf".format(N, t0, t1, t2*1000, t3*1000)
+# fig.savefig(name)
+# plt.close(fig)
+
+# print(h[0:12,0:12])
+# print(h[(6*N*(N-1)):(6*N*(N-1)+6),0:6])
+# print(h[(6*N*(N-1)):(6*N*(N-1)+6),(6*N*(N-1)):(6*N*(N-1)+6)])
+
+
+# def find_mode(eigenvalues, E): # finds the index mode which energy is closest to E
+#     mode = np.argmin(np.abs(eigenvalues-E))
+#     return(mode)
+#
+# def pos(i,j,s): # Gives the x,y coordinates of site i,j,s
+#     A = np.array([sqrt(3)/2 , 1/2])
+#     B = np.array([-sqrt(3)/2, 1/2])
+#     C = np.array([0,-1])
+#     cell =  (-i*C + j*A)*3
+#     if s==0: return(cell+A+B)
+#     if s==1: return(cell+A)
+#     if s==2: return(cell+A+C)
+#     if s==3: return(cell+C)
+#     if s==4: return(cell+B+C)
+#     if s==5: return(cell+B)
+#
+#
+#
