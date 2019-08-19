@@ -198,48 +198,54 @@ class Lattice:
         self.h_sparse = h_csr
         return
 
-    def make_names(self):
-        if self.PBC_i == False and self.PBC_j == False and self.Corners == True:
-            eigenstates = f"OBC Energy Eigenstate: Alpha = {self.alpha}, lambda = {self.hal}"
-            spect = f"OBC Energy Spectrum: Alpha = {self.alpha}, lambda = {self.hal}"
-            alpha = f"OBC Energy vs Alpha: Lambda = {self.hal}"
-            hal = f"OBC Energy vs Lambda: Alpha = {self.alpha}"
-            newpath = f'output/OBC_Corners'
-        elif self.PBC_i == False and self.PBC_j == False and self.Corners == False:
-            eigenstates = f"OBC Energy Eigenstate: Alpha = {self.alpha}, lambda = {self.hal}"
-            spect = f"OBC Energy Spectrum: Alpha = {self.alpha}, lambda = {self.hal}"
-            alpha = f"OBC Energy vs Alpha: Lambda = {self.hal}"
-            hal = f"OBC Energy vs Lambda: Alpha = {self.alpha}"
-            newpath = f'output/OBC'
-        elif (self.PBC_i == False and self.PBC_j == True) or (self.PBC_i == True and self.PBC_j == False) and self.Corners==True:
-            eigenstates = f"Ribbon Energy Eigenstates: Alpha = {self.alpha}, lambda = {self.hal}"
-            spect = f"Ribbon and H Energy Spectrum: Alpha = {self.alpha}, lambda = {self.hal}"
-            alpha = f"Ribbon Energy vs Alpha: Lambda = {self.hal}"
-            hal = f"Ribbon Energy vs Lambda: Alpha = {self.alpha}"
-            newpath = f'output/Rib_Corners'
-        elif (self.PBC_i == False and self.PBC_j == True) or (self.PBC_i == True and self.PBC_j == False) and self.Corners==False:
-            eigenstates = f"Ribbon Energy Eigenstates: Alpha = {self.alpha}, lambda = {self.hal}"
-            spect = f"Ribbon and H Energy Spectrum: Alpha = {self.alpha}, lambda = {self.hal}"
-            alpha = f"Ribbon Energy vs Alpha: Lambda = {self.hal}"
-            hal = f"Ribbon Energy vs Lambda: Alpha = {self.alpha}"
-            newpath = f'output/Rib'
-        elif self.PBC_i == True and self.PBC_j == True:
-            eigenstates = f"PBC Energy Eigenstates: Alpha = {self.alpha}, lambda = {self.hal}"
-            spect = f"PBC Energy Spectrum: Alpha = {self.alpha}, lambda = {self.hal}"
-            alpha = f"PBC Energy vs Alpha: Lambda = {self.hal}"
-            hal = f"PBC Energy vs Lambda: Alpha = {self.alpha}"
-            newpath = f'output/PBC'
+    def make_names(self, name):
+        if self.large_alpha == True:
+            if self.alpha == 0:
+                alpha = "Inf"
+            else:
+                alpha = 1/self.alpha
         else:
-            eigenstates = f"Energy Eigenstates: Alpha = {self.alpha}, lambda = {self.hal}"
-            spect = f"Energy Spectrum: Alpha = {self.alpha}, lambda = {self.hal}"
-            alpha = f"Energy vs Alpha: Lambda = {self.hal}"
-            hal = f" Energy vs Lambda: Alpha = {self.alpha}"
-            newpath = f'output/'
+            alpha = self.alpha
+
+        if self.large_hal == True:
+            if self.hal == 0:
+                hal = "Inf"
+            else:
+                hal = 1/self.hal
+        else:
+            hal = self.hal
+
+        if self.PBC_i == False and self.PBC_j == False:
+            condition = "OBC"
+        elif (self.PBC_i == False and self.PBC_j == True) or (self.PBC_i == True and self.PBC_j == False):
+            condition = "Ribbon"
+        elif self.PBC_i == True and self.PBC_j == True:
+            condition = "PBC"
+        else:
+            condition = ""
+
+        if self.Corners == True and condition != "PBC":
+            corners = "with Corners"
+            corn = "_corners"
+        else:
+            corners = ""
+            corn = ""
+
+        if name == "Energy Eigenstates" or name == "Energy Spectrum":
+            title = f"{condition} {corners} {name}: Alpha = {alpha}, Lambda = {hal}"
+        elif name == "Energy vs Alpha":
+            title = f"{condition} {corners} {name}: Lambda = {hal}"
+        elif name == "Energy vs Lambda":
+            title = f"{condition} {corners} {name}: Alpha = {alpha}"
+        else:
+            title = ""
+
+        newpath = f'output/{condition}{corn}'
 
         if not os.path.exists(newpath):
             os.makedirs(newpath)
 
-        return [newpath, spect, eigenstates, alpha, hal]
+        return [newpath, title]
 
     def eigensystem(self):
         energies, waves = np.linalg.eigh(self.h)
@@ -262,9 +268,7 @@ class Lattice:
     def energy_spectrum_point(self):
         fig = plt.figure()
         plt.hist(self.energies,201)
-        names = self.make_names()
-        newpath = names[0]
-        name = names[1]
+        [newpath, name] = self.make_names("Energy Spectrum")
         fig.suptitle(name)
         fig.savefig(f"{newpath}/spect2t0{self.hal}_alpha{self.alpha}.pdf")
         plt.close(fig)
@@ -314,9 +318,7 @@ class Lattice:
                 plt.scatter(x,y,s=0, c=proba, cmap= 'inferno_r',vmin=min(proba), vmax=max(proba), facecolors='none')
                 plt.colorbar(ax=axes, use_gridspec=True)
 
-            names = self.make_names()
-            newpath = names[0]
-            name = names[2]
+            [newpath, name] = self.make_names("Energy Eigenstates")
             if len(mode)>6:
                 plt.suptitle(f"First 6 {name}, Total States: {len(mode)}", fontsize = 10)
             else:
@@ -401,9 +403,7 @@ class Lattice:
         plt.ylabel("Alpha")
         plt.colorbar()
 
-        names = self.make_names()
-        newpath = names[0]
-        name = names[4]
+        [newpath, name] = self.make_names("Energy vs Lambda")
 
         plt.title(f"Phase Diagram, M = {self.M}")
         if self.M < 0:
@@ -420,9 +420,7 @@ class Lattice:
         plt.ylabel("Alpha")
         plt.colorbar()
 
-        names = self.make_names()
-        newpath = names[0]
-        name = names[4]
+        [newpath, name] = self.make_names("Energy vs Lambda")
 
         plt.title("Phase Diagram 2")
         fig.savefig(f"{newpath}/phasediagram2.pdf")
@@ -473,12 +471,10 @@ class Lattice:
         plt.xlabel(indep)
         plt.ylabel("E/t0")
 
-        names = self.make_names()
-        newpath = names[0]
         if indep == "Lambda":
-            name = names[4]
+            [newpath, name] = self.make_names("Energy vs Lambda")
         else:
-            name = names[3]
+            [newpath, name] = self.make_names("Energy vs Alpha")
 
         if not os.path.exists(f"{newpath}/M={self.M}"):
             os.makedirs(f"{newpath}/M={self.M}")
@@ -543,7 +539,7 @@ class Lattice:
                     plt.scatter(x,y,s=0, c=proba, cmap= 'inferno_r',vmin=min(proba), vmax=max(proba), facecolors='none')
                     plt.colorbar(ax=axes, use_gridspec=True)
 
-                names = self.make_names()
+                [newpath, name]= self.make_names("")
                 newpath = names[0]
                 if not os.path.exists(f"{newpath}/groundstate"):
                     os.makedirs(f"{newpath}/groundstate")
@@ -623,12 +619,11 @@ class Lattice:
         plt.xlabel(indep)
         plt.ylabel("E/t0")
 
-        names = self.make_names()
-        newpath = names[0]
+
         if indep == "Lambda":
-            name = names[4]
+            [newpath, name] = self.make_names("Energy vs Lambda")
         else:
-            name = names[3]
+            [newpath, name] = self.make_names("Energy vs Alpha")
 
         if not os.path.exists(f"{newpath}/M={self.M}"):
             os.makedirs(f"{newpath}/M={self.M}")
