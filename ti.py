@@ -582,9 +582,9 @@ class Lattice:
             self.eigenvalues()
             bigenergies[:,k] = self.energies
 
-            for i in range(0, len(bigenergies[:,k])):
-                if bigenergies[i,k]>1000:
-                    bigenergies[i,k] = np.nan
+            # for i in range(0, len(bigenergies[:,k])):
+            #     if bigenergies[i,k]>1000:
+            #         bigenergies[i,k] = np.nan
 
             vals[1-k] = 2-value
             if indep == 'Lambda':
@@ -603,10 +603,12 @@ class Lattice:
             self.eigenvalues()
             bigenergies[:,-k] = self.energies
 
-            for i in range(0, len(bigenergies[:,1-k])):
-                if bigenergies[i,1-k]>1000:
-                    bigenergies[i,1-k] = np.nan
+            # for i in range(0, len(bigenergies[:,1-k])):
+            #     if bigenergies[i,1-k]>1000:
+            #         bigenergies[i,1-k] = np.nan
 
+        bigenergiesmask = bigenergies > 10
+        bigenergies[bigenergiesmask] = np.nan
         bigenergies = np.round(bigenergies, 4)
         new_array = [tuple(row) for row in bigenergies]
         uniques = np.unique(new_array, axis=0)
