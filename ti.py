@@ -358,7 +358,7 @@ class Lattice:
         large_alpha = self.large_alpha
         large_hal = self.large_hal
 
-        minval = np.array((2*s-1,2*t-1), dtype=bool)
+        minval = np.zeros((2*s-1,2*t-1), dtype=bool)
         vals = np.zeros((2*s-1, 2*t-1, 2))
 
         for k in range(0,t):
@@ -377,7 +377,8 @@ class Lattice:
                 self.large_alpha = False
 
                 self.initialize_hamiltonian()
-                minval[n,k] = zero_eig(self.h)
+                x = zero_eig(self.h)
+                minval[n,k] = x
                 vals[n,k,:] = [alpha, hal]
 
                 self.large_alpha = True
@@ -395,8 +396,7 @@ class Lattice:
                 self.large_alpha = False
 
                 self.initialize_hamiltonian()
-                self.sparse_eigenvalues()
-                minval[n,-k] = np.amin(np.abs(self.energies_low))
+                minval[n,-k] = zero_eig(self.h)
                 vals[n,-k,:] = [alpha, 2-hal]
 
         fig = plt.figure()
@@ -406,7 +406,6 @@ class Lattice:
         plt.ylabel("Alpha")
         plt.xticks(np.arange(3), {0,1,"$\infty$"})
         plt.yticks(np.arange(3), {0,1,"$\infty$"})
-        plt.colorbar()
 
         [newpath, name] = self.make_names("Energy vs Lambda")
 
@@ -415,20 +414,6 @@ class Lattice:
             fig.savefig(f"{newpath}/phasediagram_negM{-self.M}.pdf")
         else:
             fig.savefig(f"{newpath}/phasediagram_M{self.M}.pdf")
-        plt.close(fig)
-
-        mask = minval < 0.01
-        fig = plt.figure()
-        plt.pcolormesh(vals[:,:,1], vals[:,:,0], mask, cmap = "inferno_r")
-
-        plt.xlabel("Lambda")
-        plt.ylabel("Alpha")
-        plt.colorbar()
-
-        [newpath, name] = self.make_names("Energy vs Lambda")
-
-        plt.title("Phase Diagram 2")
-        fig.savefig(f"{newpath}/phasediagram2.pdf")
         plt.close(fig)
 
         self.large_hal = large_hal
