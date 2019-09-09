@@ -23,4 +23,4 @@ lattice.large_hal = True
 # lattice.phase_diagram(s=50,t=50)
 # lattice.single_state()
 # lattice.plot_groundstate()
-lattice.energy_spectrum_full(indep = "Lambda", set_val = 0, t = 1000)
+lattice.phase_diagram()

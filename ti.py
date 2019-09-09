@@ -24,6 +24,12 @@ def layout(mode):
         rows = 2
     return rows, columns
 
+def zero_eig(A):
+    if np.linalg.det(A) == 0:
+        return True
+    else:
+        return False
+
 #find the number modes, up until a certain set value
 def no_states(energies, nostates):
     abs = np.unique(np.round(np.abs(energies),4))
@@ -352,7 +358,7 @@ class Lattice:
         large_alpha = self.large_alpha
         large_hal = self.large_hal
 
-        minval = np.zeros((2*s-1,2*t-1))
+        minval = np.array((2*s-1,2*t-1), dtype=bool)
         vals = np.zeros((2*s-1, 2*t-1, 2))
 
         for k in range(0,t):
@@ -371,22 +377,19 @@ class Lattice:
                 self.large_alpha = False
 
                 self.initialize_hamiltonian()
-                self.sparse_eigenvalues()
-                minval[n,k] = np.amin(np.abs(self.energies_low))
+                minval[n,k] = zero_eig(self.h)
                 vals[n,k,:] = [alpha, hal]
 
                 self.large_alpha = True
 
                 self.initialize_hamiltonian()
-                self.sparse_eigenvalues()
-                minval[-n,k] = np.amin(np.abs(self.energies_low))
+                minval[-n,k] = zero_eig(self.h)
                 vals[-n,k,:] = [2-alpha, hal]
 
                 self.large_hal = True
 
                 self.initialize_hamiltonian()
-                self.sparse_eigenvalues()
-                minval[-n,-k] = np.amin(np.abs(self.energies_low))
+                minval[-n,-k] = zero_eig(self.h)
                 vals[-n,-k,:] = [2-alpha, 2-hal]
 
                 self.large_alpha = False
@@ -401,6 +404,8 @@ class Lattice:
 
         plt.xlabel("Lambda")
         plt.ylabel("Alpha")
+        plt.xticks(np.arange(3), {0,1,"$\infty$"})
+        plt.yticks(np.arange(3), {0,1,"$\infty$"})
         plt.colorbar()
 
         [newpath, name] = self.make_names("Energy vs Lambda")
@@ -620,7 +625,7 @@ class Lattice:
 
         plt.xlabel(indep)
         plt.ylabel("E/t0")
-        plt.xticks(np.arrange(3), (0,1,"$\infty$"))
+        plt.xticks(np.arange(3), (0,1,"$\infty$"))
 
 
         if indep == "Lambda":
