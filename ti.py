@@ -1,4 +1,5 @@
 import matplotlib
+matplotlib.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
 from math import pi
@@ -267,7 +268,7 @@ class Lattice:
 
     def energy_spectrum_point(self):
         fig = plt.figure()
-        plt.hist(self.energies,201)
+        plt.hist(self.energies,200)
         [newpath, name] = self.make_names("Energy Spectrum")
         fig.suptitle(name)
         fig.savefig(f"{newpath}/spect2t0{self.hal}_alpha{self.alpha}.pdf")
@@ -275,6 +276,8 @@ class Lattice:
         return
 
     def plot_eigenstates(self, max_states):
+        if len(np.unique(np.round(np.abs(self.energies),4))) < max_states:
+            max_states = len(np.unique(np.round(np.abs(self.energies),4)))
         for m in range(0,no_states(self.energies, max_states)):
             self.plot_mode(m)
         return
@@ -539,11 +542,9 @@ class Lattice:
                     plt.scatter(x,y,s=0, c=proba, cmap= 'inferno_r',vmin=min(proba), vmax=max(proba), facecolors='none')
                     plt.colorbar(ax=axes, use_gridspec=True)
 
-                [newpath, name]= self.make_names("")
-                newpath = names[0]
+                [newpath, name]= self.make_names("Energy Eigenstates")
                 if not os.path.exists(f"{newpath}/groundstate"):
                     os.makedirs(f"{newpath}/groundstate")
-                name = names[2]
                 if len(mode)>6:
                     plt.suptitle(f"Ground State {f}/{ceil(len(mode)/6)}: {name}, Total States: {len(mode)}", fontsize = 10)
                 else:
@@ -620,7 +621,6 @@ class Lattice:
 
         plt.xlabel(indep)
         plt.ylabel("E/t0")
-        plt.xticks(np.arrange(3), (0,1,"$\infty$"))
 
 
         if indep == "Lambda":
@@ -638,3 +638,9 @@ class Lattice:
         self.large_hal = large_hal
         self.large_alpha = large_alpha
         return
+
+    def min_energy(self, x):
+        self.alpha=x
+        self.initialize_hamiltonian()
+        self.sparse_eigenvalues()
+        return np.amin(np.abs(self.energies_low),axis=None)
