@@ -20,4 +20,4 @@ N=7)
 lattice.large_alpha = True
 lattice.large_hal = True
 
-lattice.phase_diagram()
+#lattice.phase_diagram()
