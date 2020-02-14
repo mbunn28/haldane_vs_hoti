@@ -287,13 +287,14 @@ class Lattice:
         rows, columns = layout(mode)
         fig, ax_array = plt.subplots(rows, columns, squeeze=False)
         count = 0
+
         for l, ax_row in enumerate(ax_array):
             for k,axes in enumerate(ax_row):
-                psi = np.transpose(self.waves)[mode[k]] #wavefunction
+                psi = np.transpose(self.waves)[mode[count]] #wavefunction
                 proba = (np.abs(psi))**2
                 proba = proba/np.max(proba)
 
-                axes.set_title(f"E: {np.round(self.energies[mode[k]],4)}, Mode:{m}.{count}", fontsize=10)
+                axes.set_title(f"E: {np.round(self.energies[mode[count]],4)}, Mode:{m}.{count}", fontsize=10)
                 count +=1
 
                 cmap = matplotlib.cm.get_cmap('inferno_r')

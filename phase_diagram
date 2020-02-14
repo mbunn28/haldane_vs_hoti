@@ -9,8 +9,8 @@ lattice = ti.Lattice(
 PBC_i = True,
 PBC_j = True,
 Corners = False,
-alpha = 0.1,
-hal = 0.4,
+alpha = 1,
+hal = 1,
 M=0,
 N=7)
 
@@ -18,6 +18,6 @@ lattice.large_alpha = False
 lattice.large_hal = False
 
 #lattice.phase_diagram(s=50,t=50)
-lattice.energy_spectrum('Alpha',lattice.hal)
+lattice.single_state()
 #lattice.plot_groundstate()
 #lattice.energy_spectrum_full(indep = "Lambda", set_val = 0, t = 1000)
