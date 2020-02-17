@@ -100,7 +100,6 @@ class Lattice:
             t2 = 100
             t3 = 100
 
-
         for i in range(self.N):
             for j in range(self.N):
 
@@ -117,33 +116,37 @@ class Lattice:
                 h[self.lat(i,j,4), self.lat((i-1)%self.N,(j-1)%self.N,1)] = -t1
 
                 h[self.lat(i,j,0), self.lat(i,j,4)] = -1j*t2
-                h[self.lat(i,j,0), self.lat((i+1)%self.N,j,4)] = -1j*t3
-                h[self.lat(i,j,0), self.lat((i+1)%self.N,(j+1)%self.N,4)] = -1j*t3
-
                 h[self.lat(i,j,1), self.lat(i,j,5)] = -1j*t2
-                h[self.lat(i,j,1), self.lat((i+1)%self.N,(j+1)%self.N,5)] = -1j*t3
-                h[self.lat(i,j,1), self.lat(i,(j+1)%self.N,5)] = -1j*t3
-
                 h[self.lat(i,j,2), self.lat(i,j,0)] = -1j*t2
-                h[self.lat(i,j,2), self.lat(i,(j+1)%self.N,0)] = -1j*t3
-                h[self.lat(i,j,2), self.lat((i-1)%self.N,j,0)] = -1j*t3
-
                 h[self.lat(i,j,3), self.lat(i,j,1)] = -1j*t2
-                h[self.lat(i,j,3), self.lat((i-1)%self.N,j,1)] = -1j*t3
-                h[self.lat(i,j,3), self.lat((i-1)%self.N,(j-1)%self.N,1)] = -1j*t3
-
                 h[self.lat(i,j,4), self.lat(i,j,2)] = -1j*t2
-                h[self.lat(i,j,4), self.lat((i-1)%self.N,(j-1)%self.N,2)] = -1j*t3
-                h[self.lat(i,j,4), self.lat(i,(j-1)%self.N,2)] = -1j*t3
-
                 h[self.lat(i,j,5), self.lat(i,j,3)] = -1j*t2
-                h[self.lat(i,j,5), self.lat(i,(j-1)%self.N,3)] = -1j*t3
-                h[self.lat(i,j,5), self.lat((i+1)%self.N,j,3)] = -1j*t3
+
+                if self.N !=1:
+                    h[self.lat(i,j,0), self.lat((i+1)%self.N,j,4)] = -1j*t3
+                    h[self.lat(i,j,0), self.lat((i+1)%self.N,(j+1)%self.N,4)] = -1j*t3
+
+                    h[self.lat(i,j,1), self.lat((i+1)%self.N,(j+1)%self.N,5)] = -1j*t3
+                    h[self.lat(i,j,1), self.lat(i,(j+1)%self.N,5)] = -1j*t3
+
+                    h[self.lat(i,j,2), self.lat(i,(j+1)%self.N,0)] = -1j*t3
+                    h[self.lat(i,j,2), self.lat((i-1)%self.N,j,0)] = -1j*t3
+
+                    h[self.lat(i,j,3), self.lat((i-1)%self.N,j,1)] = -1j*t3
+                    h[self.lat(i,j,3), self.lat((i-1)%self.N,(j-1)%self.N,1)] = -1j*t3
+
+                    h[self.lat(i,j,4), self.lat((i-1)%self.N,(j-1)%self.N,2)] = -1j*t3
+                    h[self.lat(i,j,4), self.lat(i,(j-1)%self.N,2)] = -1j*t3
+
+                    h[self.lat(i,j,5), self.lat(i,(j-1)%self.N,3)] = -1j*t3
+                    h[self.lat(i,j,5), self.lat((i+1)%self.N,j,3)] = -1j*t3
 
                 for s in [0,2,4]:
                     h[self.lat(i,j,s), self.lat(i,j,s)] = +self.M/2
                 for s in [1,3,5]:
                     h[self.lat(i,j,s), self.lat(i,j,s)] = -self.M/2
+
+
 
         if self.PBC_i == False:
             for j in range(self.N):
@@ -298,7 +301,7 @@ class Lattice:
                 count +=1
 
                 cmap = matplotlib.cm.get_cmap('inferno_r')
-                normalize = matplotlib.colors.Normalize(vmin=min(proba), vmax=max(proba))
+                normalize = matplotlib.colors.Normalize(vmin=0, vmax=1)
                 colors = [cmap(normalize(value)) for value in proba]
 
                 #plot the probability distribution:
