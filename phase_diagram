@@ -10,11 +10,7 @@ PBC_i = True,
 PBC_j = True,
 Corners = False,
 alpha = 0.1,
-<<<<<<< HEAD
 hal = 1,
-=======
-hal = 0.4,
->>>>>>> 2b0747bac12f7affac142c53a1a8d027139191a2
 M=0,
 N=5)
 
@@ -22,11 +18,7 @@ lattice.large_alpha = False
 lattice.large_hal = False
 
 #lattice.phase_diagram(s=50,t=50)
-<<<<<<< HEAD
 lattice.single_state()
 # lattice.energy_spectrum(indep='Lambda',set_val=0)
-=======
-lattice.energy_spectrum('Alpha',lattice.hal)
->>>>>>> 2b0747bac12f7affac142c53a1a8d027139191a2
 #lattice.plot_groundstate()
 #lattice.energy_spectrum_full(indep = "Lambda", set_val = 0, t = 1000)
