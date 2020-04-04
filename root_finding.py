@@ -12,6 +12,7 @@ import joblib
 N = 200
 values = np.zeros(4*N)
 xvals = np.zeros(4*N)
+kval = 0.01
 for i in range(0,N):
     lattice = ti.Lattice(
     PBC_i = True,
@@ -49,7 +50,10 @@ for i in range(0,N):
 
     lattice.large_hal = False
     zero = False
-    k = 0.01
+    if kval < 0.1:
+        k = 0.01
+    else:
+        k = kval - 0.1    
     while (zero is False) and (k<=1):
         res = opt.minimize_scalar(lattice.min_energy, bounds=(1-k,1), method='bounded', tol=1e-6)
         if lattice.min_energy(res.x) < 1e-6:
@@ -57,6 +61,7 @@ for i in range(0,N):
         else:
             k = k + 0.01
 
+    kval = k
     values[4*N-i-1] = 2-res.x
     xvals[4*N-i-1] = 0.005*i    
 
