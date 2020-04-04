@@ -86,3 +86,4 @@ plt.xticks(np.arange(0,2,0.25),('0','0.25','0.5','0.75','1','1/0.75','1/0.5','1/
 plt.yticks(np.arange(0,2,0.25),('0','0.25','0.5','0.75','1','1/0.75','1/0.5','1/0.25','Inf'))
 fig.savefig(f"output/phase_diagram.pdf")
 plt.close(fig)
+

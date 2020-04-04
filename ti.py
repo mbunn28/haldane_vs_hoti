@@ -536,7 +536,6 @@ class Lattice:
                                     y[self.lat(i,j,l)] = pos(i,j,l)[1]
                                     circle = Circle(pos(i,j,l),0.5,color=colors[self.lat(i,j,l)],alpha=1,ec=None,zorder=1)
                                     axes.add_artist(circle)
-
                     axes.set_ylim(pos(0,self.N-1,3)[-1]-4,pos(self.N-1,0,0)[-1]+4)
                     axes.set_xlim(pos(0,0,5)[0]-4,pos(self.N-1,self.N-1,1)[0]+4)
                     axes.set_yticklabels([])

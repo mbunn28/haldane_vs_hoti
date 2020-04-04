@@ -6,8 +6,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 lattice = ti.Lattice(
-PBC_i = True,
-PBC_j = True,
+PBC_i = False,
+PBC_j = False,
 Corners = False,
 alpha = 0.1,
 hal = 1,
