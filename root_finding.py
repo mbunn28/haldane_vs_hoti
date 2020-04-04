@@ -7,12 +7,11 @@ import scipy.optimize as opt
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import joblib
 
 N = 200
 values = np.zeros(4*N)
 xvals = np.zeros(4*N)
-hit_zero = False
-hit_zero1 = False
 for i in range(0,N):
     lattice = ti.Lattice(
     PBC_i = True,
@@ -48,42 +47,22 @@ for i in range(0,N):
         values[i+2*N] = 2-res.x
         xvals[i+2*N] = 2-0.005*i
 
+    lattice.large_hal = False
+    zero = False
+    k = 0.01
+    while (zero is False) and (k<=1):
+        res = opt.minimize_scalar(lattice.min_energy, bounds=(1-k,1), method='bounded', tol=1e-6)
+        if lattice.min_energy(res.x) < 1e-6:
+            zero = True
+        else:
+            k = k + 0.01
+
+    values[4*N-i-1] = 2-res.x
+    xvals[4*N-i-1] = 0.005*i    
+
     lattice.large_hal=False
-
-    if hit_zero == False:
-        res = opt.minimize_scalar(lattice.min_energy, bounds=(0,1), method='bounded', tol=1e-6)
-        values[4*N-i-1] = 2-res.x
-        if i>5:
-            if values[4*N-i-1]<values[4*N-i]:
-                hit_zero = True
-                values[4*N-i-1] = np.nan
-    xvals[4*N-i-1] = 0.005*i
-
-    if hit_zero ==True:
-        if values[4*N-i-1]==0:
-            values[4*N-i-1]=np.nan
-
-    lattice.hal = 1-0.005*i
-
-    if hit_zero1 == False:
-        res = opt.minimize_scalar(lattice.min_energy, bounds=(0,1), method='bounded', tol=1e-6)
-        values[3*N+i] = 2-res.x
-        if values[3*N+i]<values[3*N+i-1] and i>5:
-            hit_zero1 = True
-            values[3*N+i] = np.nan
-
 
     print(f"{i}/{N}", end='\r')
 
-fig = plt.figure()
-plt.plot(xvals,values)
-fig.suptitle("Phase Diagram")
-plt.xlabel('Lambda')
-plt.ylabel('Alpha')
-plt.ylim(0,2)
-plt.xlim(0,2)
-plt.xticks(np.arange(0,2,0.25),('0','0.25','0.5','0.75','1','1/0.75','1/0.5','1/0.25','Inf'))
-plt.yticks(np.arange(0,2,0.25),('0','0.25','0.5','0.75','1','1/0.75','1/0.5','1/0.25','Inf'))
-fig.savefig(f"output/phase_diagram.pdf")
-plt.close(fig)
-
+joblib.dump(values, "values")
+joblib.dump(xvals, "xvals")
