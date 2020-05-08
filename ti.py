@@ -498,22 +498,22 @@ class Lattice:
         new_array = [tuple(row) for row in bigenergies]
         uniques = np.unique(new_array, axis=0)
 
-        fig = plt.figure()
-        for m in range(0,uniques.shape[0]):
-            plt.plot(vals, uniques[m,:], self.colour(), alpha=0.7, linewidth=0.1)
+        # fig = plt.figure()
+        # for m in range(0,uniques.shape[0]):
+        #     plt.plot(vals, uniques[m,:], self.colour(), alpha=0.7, linewidth=0.1)
 
-        plt.xlabel(indep)
-        plt.ylabel("E/t0")
+        # plt.xlabel(indep)
+        # plt.ylabel("E/t0")
 
-        if indep == "Lambda":
-            [newpath, name] = self.make_names("Energy vs Lambda")
-        else:
-            [newpath, name] = self.make_names("Energy vs Alpha")
+        # if indep == "Lambda":
+        #     [newpath, name] = self.make_names("Energy vs Lambda")
+        # else:
+        #     [newpath, name] = self.make_names("Energy vs Alpha")
 
         if not os.path.exists(f"{newpath}/M{self.M}"):
             os.makedirs(f"{newpath}/M{self.M}")
 
-        plt.title(f"{name}, M = {self.M}")
+        # plt.title(f"{name}, M = {self.M}")
 
         if (indep == 'Lambda' and self.large_hal == True) or (indep == 'Alpha' and self.large_alpha == True):
             q = 2-set_val
@@ -525,8 +525,8 @@ class Lattice:
         else:
             large = ""
         
-        fig.savefig(f"{newpath}/M{self.M}/{indep}{q}{large}_N{self.N}.pdf")
-        plt.close(fig)
+        # fig.savefig(f"{newpath}/M{self.M}/{indep}{q}{large}_N{self.N}.pdf")
+        # plt.close(fig)
 
         joblib.dump(vals, f"{newpath}/M{self.M}/{indep}{q}{large}_N{self.N}_xvals")
         joblib.dump(uniques[m,:], f"{newpath}/M{self.M}/{indep}{q}{large}_N{self.N}_evals")
