@@ -12,6 +12,7 @@ from matplotlib.collections import PatchCollection
 from scipy import sparse
 from scipy.sparse.linalg import eigsh
 from numpy import random
+import joblib
 
 def layout(mode):
     if len(mode)<=3:
@@ -37,6 +38,12 @@ def find_mode(eigenvalues, m): # finds the index mode which energy is closest to
     abs = np.unique(np.round(np.abs(eigenvalues),4))
     absenergies = np.round(np.abs(eigenvalues),4)
     index = [i for i, e in enumerate(absenergies) if e == abs[m]]
+    return(index)
+
+def find_modeofenergy(eigenvalues, E=float): # finds the index mode which energy is closest to E
+    abs = np.unique(np.round(np.abs(eigenvalues-E),4))
+    absenergies = np.round(np.abs(eigenvalues-E),4)
+    index = [i for i, e in enumerate(absenergies) if e == abs[0]]
     return(index)
 
 def pos(i,j,s): # Gives the x,y coordinates of site i,j,s
@@ -202,7 +209,7 @@ class Lattice:
         self.h_sparse = h_csr
         return
 
-    def make_names(self, name):
+    def make_names(self, name=""):
         if self.large_alpha == True:
             if self.alpha == 0:
                 alpha = "Inf"
@@ -274,7 +281,15 @@ class Lattice:
         plt.hist(self.energies,200)
         [newpath, name] = self.make_names("Energy Spectrum")
         fig.suptitle(name)
-        fig.savefig(f"{newpath}/spect2t0{self.hal}_alpha{self.alpha}.pdf")
+        if self.large_hal == True:
+            p = np.round(2-self.hal,4)
+        else:
+            p = np.round(self.hal,4)
+        if self.large_alpha == True:
+            q = np.round(2-self.alpha,4)
+        else:
+            q = np.round(self.alpha,4)
+        fig.savefig(f"{newpath}/spec_t{p}_a{q}_N{self.N}.pdf")
         plt.close(fig)
         return
 
@@ -285,7 +300,7 @@ class Lattice:
             self.plot_mode(m)
         return
 
-    def plot_mode(self, m):
+    def plot_mode(self, m, shift=0):
         mode = find_mode(self.energies,m)
         rows, columns = layout(mode)
         fig, ax_array = plt.subplots(rows, columns, squeeze=False)
@@ -297,7 +312,7 @@ class Lattice:
                 proba = (np.abs(psi))**2
                 proba = proba/np.max(proba)
 
-                axes.set_title(f"E: {np.round(self.energies[mode[count]],4)}, Mode:{m}.{count}", fontsize=10)
+                axes.set_title(f"E: {np.round(self.energies[mode[count]],4)+shift}, Mode:{m}.{count}", fontsize=10)
                 count +=1
 
                 cmap = matplotlib.cm.get_cmap('inferno_r')
@@ -330,7 +345,17 @@ class Lattice:
                 plt.suptitle(f"First 6 {name}, Total States: {len(mode)}", fontsize = 10)
             else:
                 plt.suptitle(name)
-            file = f"{newpath}/eigt2t0{self.hal}_alpha{self.alpha}_m{m}.pdf"
+
+            if self.large_hal == True:
+                p = np.round(2-self.hal,4)
+            else:
+                p = np.round(self.hal,4)
+            if self.large_alpha == True:
+                q = np.round(2-self.alpha,4)
+            else:
+                q = np.round(self.alpha,4)
+
+            file = f"{newpath}/estate_h{p}_a{q}_m{m}_N{self.N}.pdf"
             fig.savefig(file)
             plt.close(fig)
         return
@@ -441,6 +466,8 @@ class Lattice:
         a = self.find_energysize()
         bigenergies = np.zeros((a, t))
         vals = np.zeros(t)
+        al = self.alpha
+        ha = self.hal
 
         for k in range(0,t):
             value = round(k*max_val/t, 3)
@@ -483,12 +510,29 @@ class Lattice:
         else:
             [newpath, name] = self.make_names("Energy vs Alpha")
 
-        if not os.path.exists(f"{newpath}/M={self.M}"):
-            os.makedirs(f"{newpath}/M={self.M}")
+        if not os.path.exists(f"{newpath}/M{self.M}"):
+            os.makedirs(f"{newpath}/M{self.M}")
 
         plt.title(f"{name}, M = {self.M}")
-        fig.savefig(f"{newpath}/M={self.M}/{name}.pdf")
+
+        if (indep == 'Lambda' and self.large_hal == True) or (indep == 'Alpha' and self.large_alpha == True):
+            q = 2-set_val
+        else:
+            q=set_val
+
+        if (indep == 'Lambda' and self.large_alpha == True) or (indep == 'Alpha' and self.large_hal == True):
+            large = "large"
+        else:
+            large = ""
+        
+        fig.savefig(f"{newpath}/M{self.M}/{indep}{q}{large}_N{self.N}.pdf")
         plt.close(fig)
+
+        joblib.dump(vals, f"{newpath}/M{self.M}/{indep}{q}{large}_N{self.N}_xvals")
+        joblib.dump(uniques[m,:], f"{newpath}/M{self.M}/{indep}{q}{large}_N{self.N}_evals")
+
+        self.alpha = al
+        self.hal = ha
         return
 
     def plot_groundstate(self):
@@ -552,7 +596,17 @@ class Lattice:
                     plt.suptitle(f"Ground State {f}/{ceil(len(mode)/6)}: {name}, Total States: {len(mode)}", fontsize = 10)
                 else:
                     plt.suptitle(name)
-                file = f"{newpath}/groundstate/eigt2t0{self.hal}_alpha{self.alpha}_gs{f}.pdf"
+
+                if self.large_hal == True:
+                    p = np.round(2-self.hal,4)
+                else:
+                    p = np.round(self.hal,4)
+                if self.large_alpha == True:
+                    q = np.round(2-self.alpha,4)
+                else:
+                    q = np.round(self.alpha,4)
+
+                file = f"{newpath}/groundstate/estate_hal{p}_alpha{q}_gs{f}.pdf"
                 fig.savefig(file)
                 plt.close(fig)
         return
@@ -647,3 +701,14 @@ class Lattice:
         self.initialize_hamiltonian()
         self.sparse_eigenvalues()
         return np.amin(np.abs(self.energies_low),axis=None)
+
+    def parvals_forlabels(self):
+        if self.large_hal == True:
+            p = np.round(2-self.hal,4)
+        else:
+            p = np.round(self.hal,4)
+        if self.large_alpha == True:
+            q = np.round(2-self.alpha,4)
+        else:
+            q = np.round(self.alpha,4)
+        return [p,q]
