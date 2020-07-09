@@ -209,7 +209,7 @@ class Lattice:
         self.h_sparse = h_csr
         return
 
-    def make_names(self, name=""):
+    def make_names(self, name="", output="output"):
         if self.large_alpha == True:
             if self.alpha == 0:
                 alpha = "Inf"
@@ -242,7 +242,7 @@ class Lattice:
             corners = ""
             corn = ""
 
-        if name == "Energy Eigenstates" or name == "Energy Spectrum":
+        if name == "Energy Eigenstates" or name == "Density of States":
             title = f"{condition} {corners} {name}: Alpha = {alpha}, Lambda = {hal}"
         elif name == "Energy vs Alpha":
             title = f"{condition} {corners} {name}: Lambda = {hal}"
@@ -251,7 +251,7 @@ class Lattice:
         else:
             title = ""
 
-        newpath = f'output/{condition}{corn}'
+        newpath = f'{output}/{condition}{corn}'
 
         if not os.path.exists(newpath):
             os.makedirs(newpath)
@@ -276,10 +276,13 @@ class Lattice:
         self.energies_low = eigsh(self.h, k=k, sigma=random.uniform(high = 0.01), which="LM", tol = 0.001, return_eigenvectors=False)
         return
 
-    def energy_spectrum_point(self):
+    def densityofstates(self, r=None):
         fig = plt.figure()
-        plt.hist(self.energies,200)
-        [newpath, name] = self.make_names("Energy Spectrum")
+        if r != None:
+            plt.hist(self.energies,50, range=r)
+        else:
+            plt.hist(self.energies,200)
+        [newpath, name] = self.make_names("Density of States")
         fig.suptitle(name)
         if self.large_hal == True:
             p = np.round(2-self.hal,4)
@@ -289,7 +292,7 @@ class Lattice:
             q = np.round(2-self.alpha,4)
         else:
             q = np.round(self.alpha,4)
-        fig.savefig(f"{newpath}/spec_t{p}_a{q}_N{self.N}.pdf")
+        fig.savefig(f"{newpath}/dos_t{p}_a{q}_N{self.N}.pdf")
         plt.close(fig)
         return
 
@@ -355,7 +358,7 @@ class Lattice:
             else:
                 q = np.round(self.alpha,4)
 
-            file = f"{newpath}/estate_h{p}_a{q}_m{m}_N{self.N}.pdf"
+            file = f"{newpath}/mode{m}_h{p}_a{q}_N{self.N}.pdf"
             fig.savefig(file)
             plt.close(fig)
         return
@@ -363,7 +366,7 @@ class Lattice:
     def single_state(self):
         self.initialize_hamiltonian()
         self.eigensystem()
-        self.energy_spectrum_point()
+        self.densityofstates()
         self.plot_eigenstates(25)
         return
 
@@ -505,10 +508,10 @@ class Lattice:
         # plt.xlabel(indep)
         # plt.ylabel("E/t0")
 
-        # if indep == "Lambda":
-        #     [newpath, name] = self.make_names("Energy vs Lambda")
-        # else:
-        #     [newpath, name] = self.make_names("Energy vs Alpha")
+        if indep == "Lambda":
+            [newpath, name] = self.make_names("Energy vs Lambda")
+        else:
+            [newpath, name] = self.make_names("Energy vs Alpha")
 
         if not os.path.exists(f"{newpath}/M{self.M}"):
             os.makedirs(f"{newpath}/M{self.M}")
@@ -529,7 +532,7 @@ class Lattice:
         # plt.close(fig)
 
         joblib.dump(vals, f"{newpath}/M{self.M}/{indep}{q}{large}_N{self.N}_xvals")
-        joblib.dump(uniques[m,:], f"{newpath}/M{self.M}/{indep}{q}{large}_N{self.N}_evals")
+        joblib.dump(uniques, f"{newpath}/M{self.M}/{indep}{q}{large}_N{self.N}_evals")
 
         self.alpha = al
         self.hal = ha
@@ -712,3 +715,44 @@ class Lattice:
         else:
             q = np.round(self.alpha,4)
         return [p,q]
+
+    def energy_spectrumfromdata(self, indep, set_val, data="output", t=100, max_val=2):
+
+        if indep == "Lambda":
+            [newpath, name] = self.make_names("Energy vs Lambda", output=data)
+        else:
+            [newpath, name] = self.make_names("Energy vs Alpha", output=data)
+
+        if (indep == 'Lambda' and self.large_hal == True) or (indep == 'Alpha' and self.large_alpha == True):
+                q = 2-set_val
+        else:
+            q=set_val
+
+        if (indep == 'Lambda' and self.large_alpha == True) or (indep == 'Alpha' and self.large_hal == True):
+            large = "large"
+        else:
+            large = ""
+
+        vals = joblib.load( f"{newpath}/M{self.M}/{indep}{q}{large}_N{self.N}_xvals")
+        uniques = joblib.load(f"{newpath}/M{self.M}/{indep}{q}{large}_N{self.N}_evals")
+
+        fig = plt.figure()
+        for m in range(0,uniques.shape[0]):
+            plt.plot(vals, uniques[m,:], self.colour(), alpha=0.7, linewidth=0.1)
+
+        plt.xlabel(indep)
+        plt.ylabel("E/t0")
+
+        if indep == "Lambda":
+            [newpath, name] = self.make_names("Energy vs Lambda")
+        else:
+            [newpath, name] = self.make_names("Energy vs Alpha")
+        
+        if not os.path.exists(f"{newpath}/M{self.M}"):
+            os.makedirs(f"{newpath}/M{self.M}")
+
+        plt.title(f"{name}, M = {self.M}")    
+        fig.savefig(f"{newpath}/M{self.M}/{indep}{q}{large}_N{self.N}.pdf")
+        plt.close(fig)
+
+        return

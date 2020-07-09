@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import joblib
 
 lattice = ti.Lattice(
-PBC_i = True,
-PBC_j = True,
+PBC_i = False,
+PBC_j = False,
 Corners = False,
 alpha = 0.1,
 hal = 0.1,
@@ -18,14 +18,22 @@ N=20)
 lattice.large_alpha = True
 lattice.large_hal = True
 
-#lattice.phase_diagram(s=50,t=50)
-# lattice.single_state()
-# [newpath, name] = lattice.make_names()
+# folder = "data/11052020/PBC/t1.9_a1.9_N12"
 
-# joblib.dump(lattice.energies, f"{newpath}/t{lattice.hal}_a{lattice.alpha}_energies")
-# joblib.dump(lattice.waves, f"{newpath}/t{lattice.hal}_a{lattice.alpha}_waves")
-lattice.energy_spectrum(indep='Lambda',set_val=0.1, t=400)
-#lattice.plot_groundstate()
-#lattice.energy_spectrum_full(indep = "Lambda", set_val = 0, t = 1000)
-# x = lattice.min_energy(0)
-# print(x)
+# lattice.energies = joblib.load( f"{folder}_energies")
+# lattice.waves = joblib.load(f"{folder}_waves")
+
+lattice.initialize_hamiltonian()
+lattice.eigensystem()
+lattice.densityofstates(r=[0.15,1.6])
+
+# index = ti.find_mode(lattice.energies, 13)
+# betweenbands = np.round(np.abs(lattice.energies),4) < np.round(np.abs(lattice.energies[index[1]]),4)
+# s = np.count_nonzero(betweenbands)
+# print(s)
+# print(np.shape(lattice.energies))
+
+# lattice.initialize_hamiltonian()
+# E = 0.3
+# lattice.energies = lattice.energies - E
+# lattice.plot_mode(0, shift=E)
