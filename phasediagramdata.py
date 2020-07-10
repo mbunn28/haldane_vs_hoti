@@ -28,6 +28,7 @@ for k in range(0,t):
 
     for m in range(0,t+1):
 
+        print(f"{k*(t+1)+m}/{t*(t+1)}", end='\r')
         if m == t:
             lattice.alpha = 1
         else:
