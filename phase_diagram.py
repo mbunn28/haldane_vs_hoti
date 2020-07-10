@@ -7,16 +7,16 @@ import matplotlib.pyplot as plt
 import joblib
 
 lattice = ti.Lattice(
-PBC_i = False,
-PBC_j = False,
+PBC_i = True,
+PBC_j = True,
 Corners = False,
-alpha = 0.1,
-hal = 0.1,
+alpha = 1/np.sqrt(3),
+hal = 1/6,
 M=0,
 N=20)
 
 lattice.large_alpha = True
-lattice.large_hal = True
+lattice.large_hal = False
 
 # folder = "data/11052020/PBC/t1.9_a1.9_N12"
 
@@ -25,7 +25,7 @@ lattice.large_hal = True
 
 lattice.initialize_hamiltonian()
 lattice.eigensystem()
-lattice.densityofstates(r=[0.15,1.6])
+lattice.densityofstates()
 
 # index = ti.find_mode(lattice.energies, 13)
 # betweenbands = np.round(np.abs(lattice.energies),4) < np.round(np.abs(lattice.energies[index[1]]),4)

@@ -11,20 +11,20 @@ PBC_i = True,
 PBC_j = True,
 Corners = False,
 alpha = 0,
-hal = 0.1,
+hal = 1/np.sqrt(3),
 M=0,
 N=20)
 
 lattice.large_alpha = True
 lattice.large_hal = False
 
-# lattice.energy_spectrum('Lambda',set_val=0,t=100,max_val=1)
-indep ='Lambda'
+lattice.energy_spectrum('Alpha',set_val=1/np.sqrt(3),t=100,max_val=1)
+indep ='Beta'
 set_val=0
 t=100
 max_val=1
 
-[newpath, name] = lattice.make_names("Energy vs Lambda", output="output")
+[newpath, name] = lattice.make_names("Energy vs Alpha", output="output")
 q=set_val
 large = "large"
 
@@ -37,8 +37,7 @@ for m in range(0,uniques.shape[0]):
 
 plt.xlabel(indep)
 plt.ylabel("E/t0")
-plt.axvline(linewidth=0.5, color='k', x=1/(2*np.sqrt(3)))
-plt.axvline(linewidth=0.5, color='k', x=1/np.sqrt(3))
+plt.axvline(linewidth=0.5, color='k', x=1/6)
 
 plt.title(f"{name}, M = {lattice.M}")    
 fig.savefig(f"{newpath}/M{lattice.M}/{indep}{q}{large}_N{lattice.N}.pdf")
