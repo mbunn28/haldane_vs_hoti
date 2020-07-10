@@ -98,13 +98,13 @@ alph_val[0]=1
 # gap[t,0] = np.min(np.abs(lattice.energies))
 gap[t,0]=np.NaN
 
-# path = "output/phasediagram"
-# if not os.path.exists(path):
-#             os.makedirs(path)
+path = "output/phasediagram"
+if not os.path.exists(path):
+            os.makedirs(path)
 
-# joblib.dump(gap, f"{path}/N{lattice.N}_gap")
-# joblib.dump(hal_val, f"{path}/N{lattice.N}_hal_val")
-# joblib.dump(alph_val, f"{path}/N{lattice.N}_alph_val")
-print(gap)
-print(hal_val)
-print(alph_val)
+joblib.dump(gap, f"{path}/N{lattice.N}_gap")
+joblib.dump(hal_val, f"{path}/N{lattice.N}_hal_val")
+joblib.dump(alph_val, f"{path}/N{lattice.N}_alph_val")
+# print(gap)
+# print(hal_val)
+# print(alph_val)
