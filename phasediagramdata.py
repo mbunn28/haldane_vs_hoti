@@ -12,9 +12,9 @@ Corners = False,
 alpha = 0,
 hal = 0,
 M=0,
-N=4)
+N=16)
 
-t=15
+t=150
 gap = np.zeros((2*t+1,t+1))
 hal_val = np.zeros(2*t+1)
 alph_val = np.zeros(t+1)
@@ -37,34 +37,22 @@ for k in range(0,t):
 
         # lattice.large_hal= False
         # lattice.large_alpha = False
-
-        # lattice.initialize_hamiltonian()
-        # lattice.eigensystem()
-        # gap[k,m] = np.min(np.abs(lattice.energies))
+        # gap[k,m] = lattice.min_energy()
 
         lattice.large_hal = True
-
-        # lattice.initialize_hamiltonian()
-        # lattice.eigensystem()
-        # gap[2*t-k,m] = np.min(np.abs(lattice.energies))
+        # gap[2*t-k,m] = lattice.min_energy()
 
         if (lattice.hal<0.1) or ((lattice.alpha >= -(1/6)*(lattice.hal-1)+0.3) and (lattice.alpha <= -(1/9)*(lattice.hal-1)+0.5)):
-            lattice.initialize_hamiltonian()
-            lattice.eigensystem()
-            gap[2*t-k,t-m] = np.min(np.abs(lattice.energies))
+            gap[2*t-k,t-m] = lattice.min_energy()
         else:
             gap[2*t-k,t-m] = np.NaN
 
         lattice.large_hal = False
 
         if (lattice.hal >= 0.6) and (lattice.alpha >= 0.75*(lattice.hal-1) + 0.3) and (lattice.alpha <= 0.75*(lattice.hal-1)+0.6):
-            lattice.initialize_hamiltonian()
-            lattice.eigensystem()
-            gap[k,t-m] = np.min(np.abs(lattice.energies))
+            gap[k,t-m] = lattice.min_energy()
         elif (0.25 <= lattice.hal < 0.6) and (lattice.alpha <= (6/7)*(lattice.hal-0.25)):
-            lattice.initialize_hamiltonian()
-            lattice.eigensystem()
-            gap[k,t-m] = np.min(np.abs(lattice.energies))
+            gap[k,t-m] = lattice.min_energy()
         else:
             gap[k,t-m] = np.NaN
 
@@ -76,26 +64,19 @@ for m in range(0,t):
 
     # lattice.large_alpha = False 
     lattice.alpha = m/t
-
-    # lattice.initialize_hamiltonian()
-    # lattice.eigensystem()
-    # gap[t,m] = np.min(np.abs(lattice.energies))
+    # gap[t,m] = lattice.min_energy()
 
     # lattice.large_alpha = True
 
     if (lattice.alpha <= 0.5) and (lattice.alpha >= 0.2):
-        lattice.initialize_hamiltonian()
-        lattice.eigensystem()
-        gap[t,t-m] = np.min(np.abs(lattice.energies))
+        gap[t,t-m] = lattice.min_energy()
     else:
         gap[t,t-m] = np.NaN
 
 lattice.hal=1
 lattice.alpha=1
 alph_val[0]=1
-# lattice.initialize_hamiltonian()
-# lattice.eigensystem()
-# gap[t,0] = np.min(np.abs(lattice.energies))
+# gap[t,0] = lattice.min_energy()
 gap[t,0]=np.NaN
 
 path = "output/phasediagram"

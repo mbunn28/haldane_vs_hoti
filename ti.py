@@ -699,8 +699,7 @@ class Lattice:
         self.large_alpha = large_alpha
         return
 
-    def min_energy(self, x):
-        self.alpha=x
+    def min_energy(self):
         self.initialize_hamiltonian()
         self.sparse_eigenvalues()
         return np.amin(np.abs(self.energies_low),axis=None)
