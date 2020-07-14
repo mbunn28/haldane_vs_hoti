@@ -12,14 +12,14 @@ Corners = False,
 alpha = 0,
 hal = 0,
 M=0,
-N=4)
+N=5)
 
-t=100 #multiples of twenty only
+t=20 #multiples of twenty only
 delta = 1/t
 alph_val = np.zeros(t+1)
 lattice.large_alpha = True
 
-V = 0
+V = 2
 Vmin = [0, 0.1, 0.55, 0.75, 0.25]
 Vmax = [0.1, 0.55, 1.0, 1.0, 0.75]
 v_vals = np.arange(Vmin[V],Vmax[V],delta)
@@ -32,11 +32,14 @@ for k in range(0, v_vals.size):
     
     lattice.hal = v_vals[k]
     lattice.large_hal = VLarge[V]
+
     if lattice.large_hal == 'False':
         hal_val[k] = lattice.hal
     elif lattice.large_hal == 'True':
         hal_val[v_vals.size-k-1] = 2-lattice.hal
-  
+    else:
+        print('broken')
+
     for m in range(0,t+1):
 
         print(f"{k*(t+1)+m}/{v_vals.size*(t+1)}", end='\r')
@@ -65,9 +68,9 @@ path = "output/phasediagram"
 if not os.path.exists(path):
             os.makedirs(path)
 
-joblib.dump(gap, f"{path}/N{lattice.N}_gap_v{V}")
-joblib.dump(hal_val, f"{path}/N{lattice.N}_hal_val_v{V}")
-joblib.dump(alph_val, f"{path}/N{lattice.N}_alph_val_v{V}")
-# print(gap)
-# print(hal_val)
-# print(alph_val)
+# joblib.dump(gap, f"{path}/N{lattice.N}_gap_v{V}")
+# joblib.dump(hal_val, f"{path}/N{lattice.N}_hal_val_v{V}")
+# joblib.dump(alph_val, f"{path}/N{lattice.N}_alph_val_v{V}")
+print(gap)
+print(hal_val)
+print(alph_val)
