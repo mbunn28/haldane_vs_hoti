@@ -74,6 +74,7 @@ class Lattice:
         self.waves = None
         self.large_hal = False
         self.large_alpha = False
+        self.periodic_hamiltonian = False
 
     def lat(self,i,j,s): return(6*self.N*i+6*j+s)
 
@@ -208,6 +209,48 @@ class Lattice:
         h_csr = sparse.csr_matrix(h)
         self.h_sparse = h_csr
         return
+
+    def initialize_periodic_hamiltonian(self, k):
+
+        phi = np.pi/2
+        kx = k[0]
+        ky = k[1]
+
+        if self.large_alpha == True:
+            a = 1
+            b = self.alpha
+        else:
+            a = self.alpha
+            b = 1
+        
+        if self.large_hal == True:
+            l = 1
+            t = self.hal
+        else:
+            l = self.hal
+            t = 1
+
+        self.periodic_hamiltonian = np.zeros((6,6), dtype=complex)
+        for m in range(0,6):
+            self.periodic_hamiltonian[m,(m+1)%6] = t*bs
+        
+        self.periodic_hamiltonian[2,0] = l*np.exp(-1j*phi)*(b+a*(np.exp(3*1j*kx)+np.exp(1.5*1j*(kx+ky*np.sqrt(3)))))
+        self.periodic_hamiltonian[3,0] = t*a*np.exp(1.5*1j*(kx+ky*np.sqrt(3)))
+        self.periodic_hamiltonian[4,0] = l*np.exp(-1j*phi)*(b+a*(np.exp(1.5*1j*(kx+ky*np.sqrt(3)))+np.exp(-1.5*1j*(kx-ky*np.sqrt(3)))))
+        
+        self.periodic_hamiltonian[3,1] = l*np.exp(-1j*phi)*(b+a*(np.exp(1.5*1j*(kx+ky*np.sqrt(3)))+np.exp(-1.5*1j*(kx-ky*np.sqrt(3)))))
+        self.periodic_hamiltonian[4,1] = t*a*np.exp(-1.5*1j*(kx-ky*np.sqrt(3)))
+        self.periodic_hamiltonian[5,1] = l*np.exp(-1j*phi)*(b+a*(np.exp(-3*1j*kx)+np.exp(-1.5*1j*(kx-ky*np.sqrt(3)))))
+        
+        self.periodic_hamiltonian[4,2] = l*np.exp(-1j*phi)*(b+a*(np.exp(-3*1j*kx)+np.exp(-1.5*1j*(kx-ky*np.sqrt(3)))))
+        self.periodic_hamiltonian[5,2] = t*a*np.exp(-3*1j*kx)
+
+        self.periodic_hamiltonian[5,3] = l*np.exp(-1j*phi)*(b+a*(np.exp(-3*1j*kx)+np.exp(-1.5*1j*(kx+ky*np.sqrt(3)))))
+
+        self.periodic_hamiltonian = self.periodic_hamiltonian + np.conjugate(self.periodic_hamiltonian.transpose())
+
+        return
+
 
     def make_names(self, name="", output="output"):
         if self.large_alpha == True:
