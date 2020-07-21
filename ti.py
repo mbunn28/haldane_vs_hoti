@@ -236,11 +236,11 @@ class Lattice:
         
         self.periodic_hamiltonian[2,0] = l*np.exp(-1j*phi)*(b+a*(np.exp(3*1j*kx)+np.exp(1.5*1j*(kx+ky*np.sqrt(3)))))
         self.periodic_hamiltonian[3,0] = t*a*np.exp(1.5*1j*(kx+ky*np.sqrt(3)))
-        self.periodic_hamiltonian[4,0] = l*np.exp(-1j*phi)*(b+a*(np.exp(1.5*1j*(kx+ky*np.sqrt(3)))+np.exp(-1.5*1j*(kx-ky*np.sqrt(3)))))
+        self.periodic_hamiltonian[4,0] = l*np.exp(1j*phi)*(b+a*(np.exp(1.5*1j*(kx+ky*np.sqrt(3)))+np.exp(-1.5*1j*(kx-ky*np.sqrt(3)))))
         
         self.periodic_hamiltonian[3,1] = l*np.exp(-1j*phi)*(b+a*(np.exp(1.5*1j*(kx+ky*np.sqrt(3)))+np.exp(-1.5*1j*(kx-ky*np.sqrt(3)))))
         self.periodic_hamiltonian[4,1] = t*a*np.exp(-1.5*1j*(kx-ky*np.sqrt(3)))
-        self.periodic_hamiltonian[5,1] = l*np.exp(-1j*phi)*(b+a*(np.exp(-3*1j*kx)+np.exp(-1.5*1j*(kx-ky*np.sqrt(3)))))
+        self.periodic_hamiltonian[5,1] = l*np.exp(1j*phi)*(b+a*(np.exp(-3*1j*kx)+np.exp(-1.5*1j*(kx-ky*np.sqrt(3)))))
         
         self.periodic_hamiltonian[4,2] = l*np.exp(-1j*phi)*(b+a*(np.exp(-3*1j*kx)+np.exp(-1.5*1j*(kx-ky*np.sqrt(3)))))
         self.periodic_hamiltonian[5,2] = t*a*np.exp(-3*1j*kx)
