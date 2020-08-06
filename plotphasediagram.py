@@ -7,33 +7,38 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
-N = 6
-path = "output/phasediagram"
-gap0 = joblib.load(f"{path}/N{N}_gap_v0")
-hal_val0 = joblib.load(f"{path}/N{N}_hal_val_v0")
-alph_val = joblib.load(f"{path}/N{N}_alph_val_v0")
+N = 14
+path = "output/phasediagram/0508"
 
-gap1 = joblib.load(f"{path}/N{N}_gap_v1")
-hal_val1 = joblib.load(f"{path}/N{N}_hal_val_v1")
+gap = joblib.load(f"{path}/N{N}_gap")
+hal_val = joblib.load(f"{path}/N{N}_hal_val")
+alph_val = joblib.load(f"{path}/N{N}_alph_val")
 
-gap2 = joblib.load(f"{path}/N{N}_gap_v2")
-hal_val2 = joblib.load(f"{path}/N{N}_hal_val_v2")
+# gap0 = joblib.load(f"{path}/N{N}_gap_v0")
+# hal_val0 = joblib.load(f"{path}/N{N}_hal_val_v0")
+# alph_val = joblib.load(f"{path}/N{N}_alph_val_v0")
 
-gap3 = joblib.load(f"{path}/N{N}_gap_v3")
-hal_val3 = joblib.load(f"{path}/N{N}_hal_val_v3")
+# gap1 = joblib.load(f"{path}/N{N}_gap_v1")
+# hal_val1 = joblib.load(f"{path}/N{N}_hal_val_v1")
 
-gap4 = joblib.load(f"{path}/N{N}_gap_v4")
-hal_val4 = joblib.load(f"{path}/N{N}_hal_val_v4")
+# gap2 = joblib.load(f"{path}/N{N}_gap_v2")
+# hal_val2 = joblib.load(f"{path}/N{N}_hal_val_v2")
 
-gap = np.concatenate((gap4,gap3), axis=0)
-gap = np.concatenate((gap,gap2), axis=0)
-gap = np.concatenate((gap,gap1), axis=0)
-gap = np.concatenate((gap,gap0), axis=0)
+# gap3 = joblib.load(f"{path}/N{N}_gap_v3")
+# hal_val3 = joblib.load(f"{path}/N{N}_hal_val_v3")
 
-hal_val = np.concatenate((hal_val4,hal_val3), axis=0)
-hal_val = np.concatenate((hal_val,hal_val2), axis=0)
-hal_val = np.concatenate((hal_val,hal_val1), axis=0)
-hal_val = np.concatenate((hal_val,hal_val0), axis=0)
+# gap4 = joblib.load(f"{path}/N{N}_gap_v4")
+# hal_val4 = joblib.load(f"{path}/N{N}_hal_val_v4")
+
+# gap = np.concatenate((gap4,gap3), axis=0)
+# gap = np.concatenate((gap,gap2), axis=0)
+# gap = np.concatenate((gap,gap1), axis=0)
+# gap = np.concatenate((gap,gap0), axis=0)
+
+# hal_val = np.concatenate((hal_val4,hal_val3), axis=0)
+# hal_val = np.concatenate((hal_val,hal_val2), axis=0)
+# hal_val = np.concatenate((hal_val,hal_val1), axis=0)
+# hal_val = np.concatenate((hal_val,hal_val0), axis=0)
 
 gap[gap>0.01]= np.NaN
 fig, ax = plt.subplots()

@@ -5,6 +5,7 @@ import numpy as np
 import joblib
 import os
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 
 lattice = ti.Lattice(
 PBC_i = True,
@@ -15,7 +16,7 @@ hal = 0,
 M=0,
 N=14)
 
-t=250
+t=400
 gap = np.zeros((2*t+1,2*t+1))
 hal_val = np.zeros(2*t+1)
 alph_val = np.zeros(2*t+1)
@@ -30,6 +31,8 @@ for k in range(0,t+1):
     for m in range(0,t+1):
 
         print(f"{k*(t+1)+m}/{(t+1)**2}", end='\r')
+
+        lattice.large_alpha = False
 
         lattice.alpha = m/t
         alph_val[m] = lattice.alpha
@@ -46,7 +49,7 @@ for k in range(0,t+1):
         lattice.large_hal = True
 
         if k != t:
-            if (lattice.hal<0.1) or ((lattice.alpha >= -(2/9)*(lattice.hal-0.1)+0.5) and (lattice.alpha <= -(2/9)*(lattice.hal-1)+0.5)):
+            if (lattice.hal<0.1) or ((lattice.alpha >= -(2/9)*(lattice.hal-0.1)+0.45) and (lattice.alpha <= -(5/9)*(lattice.hal-1)+0.5)):
                 gap[2*t-k,m] = lattice.min_energy()
             else:
                 gap[2*t-k,m] = np.NaN
@@ -81,3 +84,7 @@ joblib.dump(alph_val, f"{path}/N{lattice.N}_alph_val")
 # print(gap)
 # print(hal_val)
 # print(alph_val)
+
+# fig = plt.figure()
+# plt.pcolormesh(hal_val, alph_val, np.transpose(gap), norm = colors.LogNorm(), cmap='inferno')
+# fig.savefig(f"{path}/test.pdf")
