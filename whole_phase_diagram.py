@@ -14,9 +14,9 @@ Corners = False,
 alpha = 0,
 hal = 0,
 M=0,
-N=14)
+N=11)
 
-t=400
+t=100
 gap = np.zeros((2*t+1,2*t+1))
 hal_val = np.zeros(2*t+1)
 alph_val = np.zeros(2*t+1)
@@ -78,13 +78,13 @@ path = "output/phasediagram"
 if not os.path.exists(path):
             os.makedirs(path)
 
-joblib.dump(gap, f"{path}/N{lattice.N}_gap")
-joblib.dump(hal_val, f"{path}/N{lattice.N}_hal_val")
-joblib.dump(alph_val, f"{path}/N{lattice.N}_alph_val")
+# joblib.dump(gap, f"{path}/N{lattice.N}_gap")
+# joblib.dump(hal_val, f"{path}/N{lattice.N}_hal_val")
+# joblib.dump(alph_val, f"{path}/N{lattice.N}_alph_val")
 # print(gap)
 # print(hal_val)
 # print(alph_val)
 
-# fig = plt.figure()
-# plt.pcolormesh(hal_val, alph_val, np.transpose(gap), norm = colors.LogNorm(), cmap='inferno')
-# fig.savefig(f"{path}/test.pdf")
+fig = plt.figure()
+plt.pcolormesh(hal_val, alph_val, np.transpose(gap), norm = colors.LogNorm(), cmap='inferno')
+fig.savefig(f"{path}/test.pdf")

@@ -757,3 +757,7 @@ class Lattice:
         else:
             q = np.round(self.alpha,4)
         return [p,q]
+
+    def min_periodic_energy(self, kpoint):
+        self.initialize_periodic_hamiltonian(kpoint)
+        return np.amin(np.abs(np.linalg.eigvalsh(self.periodic_hamiltonian)),axis=None)

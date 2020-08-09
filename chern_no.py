@@ -30,12 +30,12 @@ lattice = ti.Lattice(
 PBC_i = True,
 PBC_j = True,
 Corners = False,
-alpha = 1.5,
-hal = 0.15,
+alpha = 0.1,
+hal = 0.4,
 M=0,
 N=4)
 
-lattice.large_hal = False
+lattice.large_hal = True
 lattice.large_alpha = False
 
 b1 = np.array([0,4*np.pi*np.sqrt(3)/9])
@@ -53,7 +53,7 @@ for r in range(0,points):
         w, v = scipy.linalg.eigh(lattice.periodic_hamiltonian)
         idx = np.argsort(w)
         w = w[idx]
-        v = v[idx,:].transpose()            
+        v = v[:,idx].transpose()
         eigensys[r,s,0,:] = w
         eigensys[r,s,1:7,:] = v
 
@@ -62,9 +62,8 @@ F = np.zeros((6,points,points),dtype=complex)
 for n in range(0,6):
     for r in range(0,points):
         for s in range(0, points):
-            f = np.log(u(r,s,n,1)*u(r+1,s,n,2)*np.conjugate(u(r,s+1,n,1))*np.conjugate(u(r,s,n,2)))
-            F[n,r,s] = f
-    chern[n] = np.sum(F[n,:,:], dtype=complex)/(2*np.pi*1j)
+            F[n,r,s] = np.log(u(r,s,n,1)*u(r+1,s,n,2)*np.conjugate(u(r,s+1,n,1))*np.conjugate(u(r,s,n,2)))
+    chern[n] = np.sum(np.imag(F[n,:,:]))/(2*np.pi)
 
 print(chern)
 
@@ -87,19 +86,19 @@ if not os.path.exists(newpath):
 fig, (ax1, ax2, ax3) = plt.subplots(1,3)
 ax1.pcolormesh(k1[0,:,:],k1[1,:,:],np.real(eigensys[:,:,0,0]),cmap='plasma', vmin = np.real(np.amin(eigensys[:,:,0,:])), vmax=0)
 ax1.set_aspect('equal')
-ax1.title.set_text(r'$N=1$')
+ax1.title.set_text(r'$n=1$')
 ax1.set_ylabel(r'$k_y$')
 ax1.set_xlabel(r'$k_x$')
 
 ax2.pcolormesh(k1[0,:,:],k1[1,:,:],np.real(eigensys[:,:,0,1]),cmap='plasma', vmin = np.real(np.amin(eigensys[:,:,0,:])), vmax=0)
 ax2.set_aspect('equal')
-ax2.title.set_text(r'$N=2$')
+ax2.title.set_text(r'$n=2$')
 ax2.set_ylabel(r'$k_y$')
 ax2.set_xlabel(r'$k_x$')
 
 im = ax3.pcolormesh(k1[0,:,:],k1[1,:,:],np.real(eigensys[:,:,0,2]),cmap='plasma', vmin = np.real(np.amin(eigensys[:,:,0,:])), vmax=0)
 ax3.set_aspect('equal')
-ax3.title.set_text(r'$N=3$')
+ax3.title.set_text(r'$n=3$')
 ax3.set_ylabel(r'$k_y$')
 ax3.set_xlabel(r'$k_x$')
 
@@ -110,26 +109,26 @@ cbar_ax = fig.add_axes([0.1, 0.1, 0.8, 0.05])
 cbar_ax.set_ylabel('E',rotation=0, fontsize=12,labelpad=10)
 fig.colorbar(im, cax=cbar_ax, orientation='horizontal')
 
-fig.savefig(f"{newpath}/energybands.pdf", bbox_inches='tight')
+fig.savefig(f"{newpath}/energybands.png", bbox_inches='tight', dpi =1200)
 
 fig, (ax1, ax2, ax3) = plt.subplots(1,3)
 # fig.suptitle("Berry Flux")
-lim = np.amax(np.abs(np.imag(F[0:2,:,:]))/d_area)
-ax1.pcolormesh(k1[0,:,:],k1[1,:,:],np.imag(F[0,:,:])/d_area,cmap='coolwarm', vmin = -lim, vmax=lim)
+lim = np.amax(np.abs(np.imag(F[0:2,:,:])))
+ax1.pcolormesh(k1[0,:,:],k1[1,:,:],np.imag(F[0,:,:]),cmap='coolwarm', vmin = -lim, vmax=lim)
 ax1.set_aspect('equal')
-ax1.title.set_text(f'$N=1$\nQ={chernnos[0]}')
+ax1.title.set_text(f'$n=1$\n$c_n=${chernnos[0]}')
 ax1.set_ylabel(r'$k_y$')
 ax1.set_xlabel(r'$k_x$')
 
-ax2.pcolormesh(k1[0,:,:],k1[1,:,:],np.imag(F[1,:,:])/d_area,cmap='coolwarm', vmin =-lim, vmax=lim)
+ax2.pcolormesh(k1[0,:,:],k1[1,:,:],np.imag(F[1,:,:]),cmap='coolwarm', vmin =-lim, vmax=lim)
 ax2.set_aspect('equal')
-ax2.title.set_text(f'$N=2$\nQ={chernnos[1]}')
+ax2.title.set_text(f'$n=2$\n$c_n=${chernnos[1]}')
 ax2.set_ylabel(r'$k_y$')
 ax2.set_xlabel(r'$k_x$')
 
-im = ax3.pcolormesh(k1[0,:,:],k1[1,:,:],np.imag(F[0,:,:])/d_area,cmap='coolwarm', vmin = -lim, vmax=lim)
+im = ax3.pcolormesh(k1[0,:,:],k1[1,:,:],np.imag(F[2,:,:]),cmap='coolwarm', vmin = -lim, vmax=lim)
 ax3.set_aspect('equal')
-ax3.title.set_text(f'$N=3$\nQ={chernnos[2]}')
+ax3.title.set_text(f'$n=3$\n$c_n$={chernnos[2]}')
 ax3.set_ylabel(r'$k_y$')
 ax3.set_xlabel(r'$k_x$')
 
@@ -137,7 +136,7 @@ fig.tight_layout()
 # fig.text(0.5,0.88,"Berry Flux Distribution over Brillouin Zone",horizontalalignment='center',fontsize=16)
 fig.subplots_adjust(bottom=0.15)
 cbar_ax = fig.add_axes([0.1, 0.1, 0.8, 0.05])
-cbar_ax.title.set_text('Unit Flux')
+cbar_ax.title.set_text('Flux')
 fig.colorbar(im, cax=cbar_ax, orientation='horizontal')
 
-fig.savefig(f"{newpath}/chern_no.pdf", bbox_inches = 'tight')
+fig.savefig(f"{newpath}/chern_no.png", bbox_inches = 'tight', dpi = 1200)
