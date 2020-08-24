@@ -46,7 +46,7 @@ alph_val = joblib.load(f"{path}/{N_or_res}{N}_alph_val")
 # hal_val = np.concatenate((hal_val,hal_val1), axis=0)
 # hal_val = np.concatenate((hal_val,hal_val0), axis=0)
 
-#gap[gap>0.001]= np.NaN
+gap[gap>0.01]= np.NaN
 fig, ax = plt.subplots()
 
 plt.title(r"Log Scaled Phase Boundary: Periodic at M, K, K' points, $\Delta$ = 1e-3")

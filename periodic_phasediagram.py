@@ -7,132 +7,86 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
-lattice = ti.Lattice(
-PBC_i = True,
-PBC_j = True,
-Corners = False,
-alpha = 0,
-hal = 0,
-M=0,
-N=11)
+res = 250
+points = 500
 
-t = 250
-points = 200
-gap = np.zeros((2*t+1,2*t+1,3))
-hal_val = np.zeros(2*t+1)
-alph_val = np.zeros(2*t+1)
-
+r_vals = np.arange(points)
+r1,r2 = np.meshgrid(r_vals,r_vals)
 b1 = np.array([0,4*np.pi*np.sqrt(3)/9])
 b2 = (2*np.pi/9)*np.array([3,np.sqrt(3)])
-# M = np.array([0,2*np.pi*np.sqrt(3)/9])
-# K1 = np.array([-0.5,2*np.pi*np.sqrt(3)/9])
-# K2 = np.array([0.5,2*np.pi*np.sqrt(3)/9])
-# kpoints = [M, K1, K2]
+kx = (b1[0]*r1 + b2[0]*r2)/points
+ky = (b1[1]*r1 + b2[1]*r2)/points
 
-for r in range(0,points):
-    for s in range(0, points):
-    
-        kpoint = (r*b1 + s*b2)/(points)
-        print(f"{r*points+s}/{(points)**2}", end='\r')
+s_vals = np.linspace(0,1,num=res+1)
+ones = np.ones(res)
+up = np.append(s_vals, ones)
+down = np.append(ones, np.flipud(s_vals))
+l,a = np.meshgrid(up,up)
+t,b = np.meshgrid(down,down)
 
-        for k in range(0,t+1):
-            
-            lattice.hal = k/t
-            hal_val[k] = lattice.hal
-            if k != t:
-                hal_val[2*t-k] = 2-lattice.hal
+def min_en(n,m):
+    hamiltonians = np.zeros((points,points,6,6),dtype=complex)
+    phi= np.pi/2
 
-            for m in range(0,t+1):
+    hamiltonians[:,:,2,0] = l[n,m]*np.exp(-1j*phi)*(b[n,m]+a[n,m]*(np.exp(3*1j*kx)+np.exp(1.5*1j*(kx+ky*np.sqrt(3)))))
+    hamiltonians[:,:,3,0] = t[n,m]*a[n,m]*np.exp(1.5*1j*(kx+ky*np.sqrt(3)))
+    hamiltonians[:,:,4,0] = l[n,m]*np.exp(1j*phi)*(b[n,m]+a[n,m]*(np.exp(1.5*1j*(kx+ky*np.sqrt(3)))+np.exp(-1.5*1j*(kx-ky*np.sqrt(3)))))
 
-                lattice.large_alpha = False
+    hamiltonians[:,:,3,1] = l[n,m]*np.exp(-1j*phi)*(b[n,m]+a[n,m]*(np.exp(1.5*1j*(kx+ky*np.sqrt(3)))+np.exp(-1.5*1j*(kx-ky*np.sqrt(3)))))
+    hamiltonians[:,:,4,1] = t[n,m]*a[n,m]*np.exp(-1.5*1j*(kx-ky*np.sqrt(3)))
+    hamiltonians[:,:,5,1] = l[n,m]*np.exp(1j*phi)*(b[n,m]+a[n,m]*(np.exp(-3*1j*kx)+np.exp(-1.5*1j*(kx-ky*np.sqrt(3)))))
 
-                lattice.alpha = m/t
-                alph_val[m] = lattice.alpha
-                if m != t:
-                    alph_val[2*t-m] = 2 - lattice.alpha
+    hamiltonians[:,:,4,2] = l[n,m]*np.exp(-1j*phi)*(b[n,m]+a[n,m]*(np.exp(-3*1j*kx)+np.exp(-1.5*1j*(kx-ky*np.sqrt(3)))))
+    hamiltonians[:,:,5,2] = t[n,m]*a[n,m]*np.exp(-3*1j*kx)
 
-                if (lattice.hal<=0.6) and (lattice.alpha >= (-3/5)*lattice.hal + 0.3) and (lattice.alpha <= -1.5*(lattice.hal-0.1)+1):
-                    e = lattice.min_periodic_energy(kpoint)
-                    if (r == 0 and s ==0) or e < gap[k,m,0]:
-                        gap[k,m,0] = e
-                        gap[k,m,1] = kpoint[0]
-                        gap[k,m,2] = kpoint[1]
-                elif (lattice.hal>0.6) and (lattice.alpha >= lattice.hal - 0.7) and (lattice.alpha <= (5/8)*lattice.hal-1/8):
-                    e = lattice.min_periodic_energy(kpoint)
-                    if (r == 0 and s ==0) or e < gap[k,m,0]:
-                        gap[k,m,0] = e
-                        gap[k,m,1] = kpoint[0]
-                        gap[k,m,2] = kpoint[1]
-                else:
-                    gap[k,m,0] = np.NaN
-                    gap[k,m,1] = np.NaN
-                    gap[k,m,2] = np.NaN 
-                
-                lattice.large_hal = True
+    hamiltonians[:,:,5,3] = l[n,m]*np.exp(-1j*phi)*(b[n,m]+a[n,m]*(np.exp(-3*1j*kx)+np.exp(-1.5*1j*(kx+ky*np.sqrt(3)))))
+    hamiltonians = hamiltonians + np.conjugate(np.swapaxes(hamiltonians,2,3))
+    evals = np.abs(np.linalg.eigvalsh(hamiltonians))
+    min_index = np.argmin(np.abs(evals))
+    return np.amin(evals,axis=None)
 
-                if k != t:
-                    if (lattice.hal<0.1) or ((lattice.alpha >= -(2/9)*(lattice.hal-0.1)+0.45) and (lattice.alpha <= -(5/9)*(lattice.hal-1)+0.5)):
-                        e = lattice.min_periodic_energy(kpoint)
-                        if (r == 0 and s == 0) or e < gap[2*t-k,m,0]:
-                            gap[2*t-k,m,0] = e
-                            gap[2*t-k,m,1] = kpoint[0]
-                            gap[2*t-k,m,2] = kpoint[1]
-                    else:
-                        gap[2*t-k,m,0] = np.NaN
-                        gap[2*t-k,m,1] = np.NaN
-                        gap[2*t-k,m,2] = np.NaN
+def check_eval(n,m):
+    if (l[n,m]<=0.6) and (b[n,m]==1) and (a[n,m] >= (-3/5)*l[n,m] + 0.3) and (a[n,m] <= -1.5*(l[n,m]-0.1)+1):
+        check = True
+    elif (l[n,m]>0.6) and (b[n,m] == 1) and (t[n,m]==1) and (a[n,m] >= l[n,m] - 0.75) and (a[n,m] <= (5/8)*l[n,m]-1/8):
+        check = True
+    elif (t[n,m]<0.1) or ((l[n,m]==1) and (a[n,m] >= -(2/9)*(t[n,m]-0.1)+0.45) and (a[n,m] <= -(5/9)*(t[n,m]-1)+0.5)):
+        check = True
+    elif (a[n,m]==1) and (l[n,m] ==1) and ((b[n,m] >= -(1/6)*(t[n,m]-1)+0.3) and (b[n,m] <= -(5/9)*(t[n,m]-1)+0.5)):
+        check = True
+    elif (l[n,m] >= 0.6) and (t[n,m]==1) and (b[n,m] >= 0.75*(l[n,m]-1) + 0.3) and (b[n,m] <= 0.5*(l[n,m]-1)+0.5):
+        check = True
+    elif (0.3 <= l[n,m] < 0.6) and (b[n,m] <= (6/7)*(l[n,m]-0.25)):
+        check = True
+    elif (l[n,m] < 0.4) and (a[n,m]==1) and (b[n,m] >= (-5/3)*(l[n,m] -0.2)) and (b[n,m] <= (-61/21)*(l[n,m]-0.1)+1):
+        check = True
+    else:
+        check = False
+    return check 
 
-                lattice.large_alpha = True
+gap = np.zeros((2*res+1,2*res+1))
+for n in range(0,2*res+1):
+    for m in range(0,2*res+1):
 
-                if k != t and m != t:     
-                    if (lattice.hal<0.1) or ((lattice.alpha >= -(1/6)*(lattice.hal-1)+0.3) and (lattice.alpha <= -(5/9)*(lattice.hal-1)+0.5)):
-                        e = lattice.min_periodic_energy(kpoint)
-                        if (r == 0 and s == 0) or e < gap[2*t-k,2*t-m,0]:
-                            gap[2*t-k,2*t-m,0] = e
-                            gap[2*t-k,2*t-m,1] = kpoint[0]
-                            gap[2*t-k,2*t-m,2] = kpoint[1]
-                    else:
-                        gap[2*t-k,2*t-m,0] = np.NaN
-                        gap[2*t-k,2*t-m,1] = np.NaN
-                        gap[2*t-k,2*t-m,2] = np.NaN
+        print(f"{n*(2*res+1)+m}/{(2*res+1)**2}", end='\r')
 
-                lattice.large_hal = False
-
-                if m != t:
-                    if (lattice.hal >= 0.6) and (lattice.alpha >= 0.75*(lattice.hal-1) + 0.3) and (lattice.alpha <= 0.5*(lattice.hal-1)+0.5):
-                        e = lattice.min_periodic_energy(kpoint)
-                        if (r == 0 and s == 0) or e < gap[k,2*t-m,0]:
-                            gap[k,2*t-m,0] = e 
-                            gap[k,2*t-m,1] = kpoint[0]
-                            gap[k,2*t-m,2] = kpoint[1]               
-                    elif (0.3 <= lattice.hal < 0.6) and (lattice.alpha <= (6/7)*(lattice.hal-0.25)):
-                        e = lattice.min_periodic_energy(kpoint)
-                        if (r == 0 and s == 0) or e < gap[k,2*t-m,0]:
-                            gap[k,2*t-m,0] = e
-                            gap[k,2*t-m,1] = kpoint[0]
-                            gap[k,2*t-m,2] = kpoint[1]   
-                    elif (lattice.hal < 0.4) and (lattice.alpha >= (-5/3)*(lattice.hal -0.2)) and (lattice.alpha <= (-61/21)*(lattice.hal-0.1)+1):
-                        e = lattice.min_periodic_energy(kpoint)
-                        if (r == 0 and s == 0) or e < gap[k,2*t-m,0]:
-                            gap[k,2*t-m,0] = e 
-                            gap[k,2*t-m,1] = kpoint[0]
-                            gap[k,2*t-m,2] = kpoint[1]   
-                    else:
-                        gap[k,2*t-m,0] = np.NaN
-                        gap[k,2*t-m,1] = np.NaN
-                        gap[k,2*t-m,2] = np.NaN
-
+        check = check_eval(n,m)
+        if check == True:
+            gap[n,m] = min_en(n,m)
+        if check == False:
+            gap[n,m] = np.NaN
+        
 path = "output/phasediagram/periodic"
 if not os.path.exists(path):
             os.makedirs(path)
 
-joblib.dump(gap, f"{path}/res{t}_gap")
-joblib.dump(hal_val, f"{path}/res{t}_hal_val")
-joblib.dump(alph_val, f"{path}/res{t}_alph_val")
+x = np.linspace(0,2,num=2*res+1)
+# joblib.dump(gap, f"{path}/res{t}_gap")
+# joblib.dump(x, f"{path}/res{t}_x")
 # print(gap)
 # print(hal_val)
 # print(alph_val)
 
-# fig = plt.figure()
-# plt.pcolormesh(hal_val, alph_val, np.transpose(gap[:,:,0]), norm = colors.LogNorm(), cmap='inferno')
-# fig.savefig(f"{path}/periodic.png", dpi=1200)
+fig = plt.figure()
+plt.pcolormesh(x, x, gap, norm = colors.LogNorm(), cmap='inferno')
+fig.savefig(f"{path}/periodic.png", dpi=1200)
