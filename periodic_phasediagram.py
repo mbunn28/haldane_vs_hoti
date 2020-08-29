@@ -7,8 +7,8 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
-res = 250
-points = 500
+res = 150
+points = 250
 
 r_vals = np.arange(points)
 r1,r2 = np.meshgrid(r_vals,r_vals)
@@ -27,6 +27,13 @@ t,b = np.meshgrid(down,down)
 def min_en(n,m):
     hamiltonians = np.zeros((points,points,6,6),dtype=complex)
     phi= np.pi/2
+
+    hamiltonians[:,:,1,0] = t[n,m]*b[n,m]
+    hamiltonians[:,:,5,0] = t[n,m]*b[n,m]
+    hamiltonians[:,:,2,1] = t[n,m]*b[n,m]
+    hamiltonians[:,:,3,2] = t[n,m]*b[n,m]
+    hamiltonians[:,:,4,3] = t[n,m]*b[n,m]
+    hamiltonians[:,:,5,4] = t[n,m]*b[n,m]
 
     hamiltonians[:,:,2,0] = l[n,m]*np.exp(-1j*phi)*(b[n,m]+a[n,m]*(np.exp(3*1j*kx)+np.exp(1.5*1j*(kx+ky*np.sqrt(3)))))
     hamiltonians[:,:,3,0] = t[n,m]*a[n,m]*np.exp(1.5*1j*(kx+ky*np.sqrt(3)))
@@ -81,12 +88,9 @@ if not os.path.exists(path):
             os.makedirs(path)
 
 x = np.linspace(0,2,num=2*res+1)
-# joblib.dump(gap, f"{path}/res{t}_gap")
-# joblib.dump(x, f"{path}/res{t}_x")
-# print(gap)
-# print(hal_val)
-# print(alph_val)
+joblib.dump(gap, f"{path}/res{res}_gap")
+joblib.dump(x, f"{path}/res{res}_x")
 
-fig = plt.figure()
-plt.pcolormesh(x, x, gap, norm = colors.LogNorm(), cmap='inferno')
-fig.savefig(f"{path}/periodic.png", dpi=1200)
+# fig = plt.figure()
+# plt.pcolormesh(x, x, gap, norm = colors.LogNorm(), cmap='inferno')
+# fig.savefig(f"{path}/periodic.png", dpi=1200)
