@@ -13,12 +13,14 @@ rc('text', usetex=True)
 plt.rcParams['axes.axisbelow'] = True
 
 N_or_res = "res"
-N = 1000
+N = 300
 path = "output/phasediagram/periodic"
 
 gap = joblib.load(f"{path}/{N_or_res}{N}_gap")
-hal_val = joblib.load(f"{path}/{N_or_res}{N}_hal_val")
-alph_val = joblib.load(f"{path}/{N_or_res}{N}_alph_val")
+x = joblib.load(f"{path}/{N_or_res}{N}_x")
+
+# hal_val = joblib.load(f"{path}/{N_or_res}{N}_hal_val")
+# alph_val = joblib.load(f"{path}/{N_or_res}{N}_alph_val")
 
 # gap0 = joblib.load(f"{path}/N{N}_gap_v0")
 # hal_val0 = joblib.load(f"{path}/N{N}_hal_val_v0")
@@ -49,6 +51,7 @@ alph_val = joblib.load(f"{path}/{N_or_res}{N}_alph_val")
 gap[gap>0.01]= np.NaN
 fig, ax = plt.subplots()
 
+plt.pcolormesh(x, x, gap, norm = colors.LogNorm(), cmap='inferno')
 plt.title(r"Log Scaled Phase Boundary: Periodic at M, K, K' points, $\Delta$ = 1e-3")
 ax.grid(linestyle='--')
 ax.set_xlim([0,2])
@@ -81,10 +84,14 @@ ax2.set_xlabel('t')
 # ax2.set_axisbelow(True)
 ax2.grid(linestyle='--', zorder=0)
 
-plt.pcolormesh(hal_val, alph_val, np.transpose(gap), norm = colors.LogNorm(), cmap='inferno')
+
 cbar = plt.colorbar(pad = 0.15)
 cbar.ax.get_yaxis().labelpad = 15
 cbar.ax.set_title('Energy Gap')
 
 plt.gcf().subplots_adjust(top=0.85)
-fig.savefig(f"{path}/{N_or_res}{N}_diagram.png", dpi=1200)
+fig.savefig(f"{path}/{N_or_res}{N}_diagram.png", dpi=500)
+
+# fig1 = plt.figure()
+# plt.pcolormesh(x, x, gap, norm = colors.LogNorm(), cmap='inferno')
+# fig1.savefig(f"{path}/periodic.png", dpi=500)
