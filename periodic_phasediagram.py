@@ -7,14 +7,20 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import scipy.optimize as optimise
+from matplotlib import rc
 
+rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+rc('text', usetex=True)
+plt.rcParams['axes.axisbelow'] = True
 
 path = "output/phasediagram/periodic"
 if not os.path.exists(path):
             os.makedirs(path)
 
-res = 300
+res = 600
 # points = 250
+
+run = 2*res + 1
 
 # r_vals = np.arange(points)
 # r1,r2 = np.meshgrid(r_vals,r_vals)
@@ -29,6 +35,21 @@ up = np.append(s_vals, ones)
 down = np.append(ones, np.flipud(s_vals))
 l,a = np.meshgrid(up,up)
 t,b = np.meshgrid(down,down)
+
+# l_min = 0.5
+# l_max = 1.0
+
+# lvals = np.linspace(l_min,l_max,num=res)
+
+# b_min = 0
+# b_max = 0.5
+
+# bvals = np.linspace(b_min,b_max,num=res)
+
+# l,b = np.meshgrid(lvals, np.flipud(bvals))
+# ones = np.ones((res,res))
+# a = ones
+# t = ones
 
 def hamil(n,m,kvals):
     if kvals.size != 2:
@@ -88,20 +109,50 @@ def min_en(n,m):
     Kdashpoint = (1/3)*(b1+b2)
     Mpoint = (1/2)*b1
     Gamma = np.array([0,0])
-    energies = hamil(n,m,np.array([Kpoint, Kdashpoint,Mpoint,Gamma]))
+    energies = hamil(n,m,np.array([Kdashpoint, Kpoint,Gamma, Mpoint]))
     min_energy = np.amin(energies)
+    lam_val = np.argmin(energies)
+    if lam_val ==3:
+        lam = 2+np.sqrt(3)/2
+    else:
+        lam = lam_val
+    
     if min_energy != 0:
-        result = optimise.minimize(reduced_zone1,0.15,args=(n,m), bounds=[(0,2/3)],tol=1e-50)
+        result = optimise.minimize(reduced_zone1,0.1,args=(n,m), bounds=[(0,2/3)],tol=1e-50)
         if result.fun < min_energy:
             min_energy = result.fun[0]
-        result = optimise.minimize(reduced_zone1,0.5,args=(n,m), bounds=[(0,2/3)],tol=1e-50)
+            lam = 3*((2/3) - result.x)
+        result = optimise.minimize(reduced_zone1,0.2,args=(n,m), bounds=[(0,2/3)],tol=1e-50)
         if result.fun < min_energy:
             min_energy = result.fun[0]
+            lam = 3*((2/3) - result.x)
+        result = optimise.minimize(reduced_zone1,7/18,args=(n,m), bounds=[(0,2/3)],tol=1e-50)
+        if result.fun < min_energy:
+            min_energy = result.fun[0]
+            lam = 3*((2/3) - result.x)
+        result = optimise.minimize(reduced_zone1,4/9,args=(n,m), bounds=[(0,2/3)],tol=1e-50)
+        if result.fun < min_energy:
+            min_energy = result.fun[0]
+            lam = 3*((2/3) - result.x)
+        result = optimise.minimize(reduced_zone1,5/9,args=(n,m), bounds=[(0,2/3)],tol=1e-50)
+        if result.fun < min_energy:
+            min_energy = result.fun[0]
+            lam = 3*((2/3) - result.x)
+        result = optimise.minimize(reduced_zone1,11/18,args=(n,m), bounds=[(0,2/3)],tol=1e-50)
+        if result.fun < min_energy:
+            min_energy = result.fun[0]
+            lam = 3*((2/3) - result.x)
 
-        result = optimise.minimize(reduced_zone2,0.25,args=(n,m), bounds=[(0,1/2)],tol=1e-50)
+        result = optimise.minimize(reduced_zone2,0.15,args=(n,m), bounds=[(0,1/2)],tol=1e-50)
         if result.fun < min_energy:
             min_energy = result.fun
-    return min_energy
+            lam = 2 + np.sqrt(3)*result.x
+        result = optimise.minimize(reduced_zone2,0.35,args=(n,m), bounds=[(0,1/2)],tol=1e-50)
+        if result.fun < min_energy:
+            min_energy = result.fun
+            lam = 2 + np.sqrt(3)*result.x
+        
+    return min_energy, lam 
 
 def check_eval(n,m):
     if (l[n,m]<=0.6) and (b[n,m]==1) and (a[n,m] >= (-3/5)*l[n,m] + 0.3) and (a[n,m] <= -1.5*(l[n,m]-0.1)+1):
@@ -122,23 +173,37 @@ def check_eval(n,m):
         check = False
     return check 
 
-gap = np.zeros((2*res+1,2*res+1))
-for n in range(0,2*res+1):
-    for m in range(0,2*res+1):
+gap = np.zeros((run,run))
+kgap = np.zeros((run,run))
+for n in range(0,run):
+    for m in range(0,run):
 
-        print(f"{n*(2*res+1)+m}/{(2*res+1)**2}", end='\r')
+        print(f"{n*(run)+m}/{(run)**2}", end='\r')
 
         check = check_eval(n,m)
         if check == True:
-            gap[n,m] = min_en(n,m)
+            gap[n,m], kgap[n,m] = min_en(n,m)
         if check == False:
             gap[n,m] = np.NaN
+            kgap[n,m] = np.NaN
 
-x = np.linspace(0,2,num=2*res+1)
+x = np.linspace(0,2,num=run)
 gap[gap>0.01]= np.NaN
-joblib.dump(gap, f"{path}/res{res}_gap")
+joblib.dump(gap, f"{path}/res{res}_gap_topleft")
+joblib.dump(kgap, f"{path}/res{res}_kgap_topleft")
 joblib.dump(x, f"{path}/res{res}_x")
 
-fig = plt.figure()
-plt.pcolormesh(x, x, gap, norm = colors.LogNorm(), cmap='inferno')
-fig.savefig(f"{path}/periodic.png", dpi=500)
+# fig = plt.figure()
+# plt.pcolormesh(x, x, gap, norm = colors.LogNorm(), cmap='inferno')
+# fig.savefig(f"{path}/periodictopleft.png", dpi=500)
+
+# vmax = (2 + np.sqrt(3)/2)
+# kgap[gap>0.01] = np.NaN
+# cmap1 = colors.LinearSegmentedColormap.from_list('mycmap', [(0/vmax,    '#984ea3'), (0.5/vmax,    '#e41a1c'), (1/vmax, '#4daf4a'), (2/vmax, '#377eb8'), ((2 + np.sqrt(3)/2)/vmax,    '#e41a1c')], N=256)
+# fig1, ax = plt.subplots()
+# im = ax.pcolormesh(x,x,kgap, cmap=cmap1, vmin=0, vmax=vmax)
+# cbar = fig1.colorbar(im)
+# ax.set(aspect=1)
+# cbar.set_ticks([0,0.5,1,2,vmax]) # Integer colorbar tick locations
+# cbar.set_ticklabels(["K\'", "M", "K", "$\Gamma$","M"])
+# fig1.savefig(f"{path}/kpointstopleft.png", dpi=500)

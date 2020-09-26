@@ -16,8 +16,9 @@ N_or_res = "res"
 N = 300
 path = "output/phasediagram/periodic"
 
-gap = joblib.load(f"{path}/{N_or_res}{N}_gap")
-x = joblib.load(f"{path}/{N_or_res}{N}_x")
+gap = joblib.load(f"{path}/{N_or_res}{N}_gap_topmid")
+x = np.linspace(0,2,num=300)
+# x = joblib.load(f"{path}/{N_or_res}{N}_x")
 
 # hal_val = joblib.load(f"{path}/{N_or_res}{N}_hal_val")
 # alph_val = joblib.load(f"{path}/{N_or_res}{N}_alph_val")
@@ -51,8 +52,8 @@ x = joblib.load(f"{path}/{N_or_res}{N}_x")
 gap[gap>0.01]= np.NaN
 fig, ax = plt.subplots()
 
-plt.pcolormesh(x, x, gap, norm = colors.LogNorm(), cmap='inferno')
-plt.title(r"Log Scaled Phase Boundary: Periodic at M, K, K' points, $\Delta$ = 1e-3")
+plt.pcolormesh(x,x,gap, norm = colors.LogNorm(), cmap='inferno')
+plt.title(r"Log Scaled Phase Boundary: Periodic, $\Delta$ = 1.7e-3")
 ax.grid(linestyle='--')
 ax.set_xlim([0,2])
 
