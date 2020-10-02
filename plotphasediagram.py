@@ -13,11 +13,11 @@ rc('text', usetex=True)
 plt.rcParams['axes.axisbelow'] = True
 
 N_or_res = "res"
-N = 300
+N = 600
 path = "output/phasediagram/periodic"
 
-gap = joblib.load(f"{path}/{N_or_res}{N}_gap_topmid")
-x = np.linspace(0,2,num=300)
+gap = joblib.load(f"{path}/{N_or_res}{N}_gap")
+x = np.linspace(0,2,num=1201)
 # x = joblib.load(f"{path}/{N_or_res}{N}_x")
 
 # hal_val = joblib.load(f"{path}/{N_or_res}{N}_hal_val")
@@ -49,7 +49,7 @@ x = np.linspace(0,2,num=300)
 # hal_val = np.concatenate((hal_val,hal_val1), axis=0)
 # hal_val = np.concatenate((hal_val,hal_val0), axis=0)
 
-gap[gap>0.01]= np.NaN
+gap[gap>1e-2]= np.NaN
 fig, ax = plt.subplots()
 
 plt.pcolormesh(x,x,gap, norm = colors.LogNorm(), cmap='inferno')
