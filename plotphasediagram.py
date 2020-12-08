@@ -51,39 +51,40 @@ x = np.linspace(0,2,num=1201)
 
 gap[gap>1e-2]= np.NaN
 fig, ax = plt.subplots()
-
 plt.pcolormesh(x,x,gap, norm = colors.LogNorm(), cmap='inferno')
-plt.title(r"Log Scaled Phase Boundary: Periodic, $\Delta$ = 1.7e-3")
+plt.scatter((2-0.693),(2-0.466),linewidth=0.1,marker='x')
+# plt.title(r"Log Scaled Phase Boundary: Periodic, $\Delta$ = 1.7e-3")
 ax.grid(linestyle='--')
-ax.set_xlim([0,2])
+# ax.set_xlim([0,0.4])
+ax.set_aspect(1)
 
-labels=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
-locs=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+labels=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0, r'$\frac{1}{0.8}$',r'$\frac{1}{0.6}$',r'$\frac{1}{0.4}$',r'$\frac{1}{0.2}$',r'$\infty$']
+locs=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0,1.2,1.4,1.6,1.8,2.0]
 ax.set_yticklabels(labels)
 ax.set_yticks(locs)
 ax.set_ylabel(r'$\alpha$')
 
-ax1 = ax.twinx()
-labels1 =[0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
-locs1 =[2.0, 1.8, 1.6, 1.4, 1.2, 1.0]
-ax1.set_yticklabels(labels1)
-ax1.set_yticks(locs1)
-ax1.set_ylabel(r'$\beta$')
-# ax1.set_axisbelow(True)
-ax1.grid(linestyle='--', zorder=0)
+# ax1 = ax.twinx()
+# labels1 =[0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+# locs1 =[2.0, 1.8, 1.6, 1.4, 1.2, 1.0]
+# ax1.set_yticklabels(labels1)
+# ax1.set_yticks(locs1)
+# ax1.set_ylabel(r'$\beta$')
+# # ax1.set_axisbelow(True)
+# ax1.grid(linestyle='--', zorder=0)
 
 
 ax.set_xticklabels(labels)
 ax.set_xticks(locs)
 ax.set_xlabel(r'$\lambda$')
 
-ax2 = ax.twiny()
-ax2.set_xlim(ax.get_xlim())
-ax2.set_xticklabels(labels1)
-ax2.set_xticks(locs1)
-ax2.set_xlabel('t')
-# ax2.set_axisbelow(True)
-ax2.grid(linestyle='--', zorder=0)
+# ax2 = ax.twiny()
+# ax2.set_xlim(ax.get_xlim())
+# ax2.set_xticklabels(labels1)
+# ax2.set_xticks(locs1)
+# ax2.set_xlabel('t')
+# # ax2.set_axisbelow(True)
+# ax2.grid(linestyle='--', zorder=0)
 
 
 cbar = plt.colorbar(pad = 0.15)
@@ -91,7 +92,8 @@ cbar.ax.get_yaxis().labelpad = 15
 cbar.ax.set_title('Energy Gap')
 
 plt.gcf().subplots_adjust(top=0.85)
-fig.savefig(f"{path}/{N_or_res}{N}_diagram.png", dpi=500)
+fig.tight_layout()
+fig.savefig(f"{path}/{N_or_res}{N}_diagram_yo.png", dpi=500,bbox_inches='tight')
 
 # fig1 = plt.figure()
 # plt.pcolormesh(x, x, gap, norm = colors.LogNorm(), cmap='inferno')

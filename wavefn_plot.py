@@ -11,10 +11,10 @@ lattice = ti.Lattice(
 PBC_i = False,
 PBC_j = False,
 Corners = False,
-alpha = 0.1,
-hal = 0.1,
+alpha = 0.95,
+hal = 0,
 M=0,
-N=20)
+N=24)
 
 lattice.large_alpha = True
 lattice.large_hal = True

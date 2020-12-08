@@ -286,7 +286,7 @@ class Lattice:
             corn = ""
 
         if name == "Energy Eigenstates" or name == "Density of States":
-            title = f"{condition} {corners} {name}: Alpha = {alpha}, Lambda = {hal}"
+            title = f"{condition} {corners} {name}: Alpha = {np.round(alpha,2)}, Lambda = {np.round(hal,2)}"
         elif name == "Energy vs Alpha":
             title = f"{condition} {corners} {name}: Lambda = {hal}"
         elif name == "Energy vs Lambda":
@@ -335,7 +335,9 @@ class Lattice:
             q = np.round(2-self.alpha,4)
         else:
             q = np.round(self.alpha,4)
-        fig.savefig(f"{newpath}/dos_t{p}_a{q}_N{self.N}.pdf")
+        plt.xlabel("E")
+        plt.ylabel("No. of states")
+        fig.savefig(f"{newpath}/dos_t{p}_a{q}_N{self.N}.png",dpi=500)
         plt.close(fig)
         return
 
@@ -401,8 +403,8 @@ class Lattice:
             else:
                 q = np.round(self.alpha,4)
 
-            file = f"{newpath}/mode{m}_h{p}_a{q}_N{self.N}.pdf"
-            fig.savefig(file)
+            file = f"{newpath}/mode{m}_h{p}_a{q}_N{self.N}.png"
+            fig.savefig(file,dpi=500)
             plt.close(fig)
         return
 
@@ -410,7 +412,7 @@ class Lattice:
         self.initialize_hamiltonian()
         self.eigensystem()
         self.densityofstates()
-        self.plot_eigenstates(25)
+        self.plot_eigenstates(5)
         return
 
     def find_energysize(self):

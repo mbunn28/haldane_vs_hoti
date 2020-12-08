@@ -9,14 +9,42 @@ import matplotlib.colors as colors
 import scipy.optimize as optimise
 from matplotlib import rc
 
+rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+rc('text', usetex=True)
+plt.rcParams['axes.axisbelow'] = True
+
+path = "output/phasediagram/ribbon"
+if not os.path.exists(path):
+            os.makedirs(path)
+
 a = 1
-b = 1/6 + 0.1
-t = 1
-l = 1/np.sqrt(3) + 0.15
-N = 96
+b = 0.466
+t = 0.693
+l = 1
+N = 148
 periodic = False
 res=250
 phi = np.pi/2
+
+if a == 1 and b == 1:
+    aorb_name = 'ab'
+    aorb = 1
+elif a == 1:
+    aorb_name = 'b'
+    aorb = b
+else:
+    aorb_name = 'a'
+    aorb = a
+
+if t == 1 and l == 1:
+    torl_name = 'tl'
+    torl = 1
+elif t == 1:
+    torl_name = 'l'
+    torl = l
+else:
+    torl_name = 't'
+    torl = t
 
 def hamiltonian(k):
     A1 = b*t*np.roll(np.eye(6,dtype=complex),1,axis=1)
@@ -48,28 +76,41 @@ def hamiltonian(k):
     hamiltonian = bigA + bigB
     hamiltonian = hamiltonian + np.transpose(np.conjugate(hamiltonian))
     
-    energies = np.linalg.eigvalsh(hamiltonian)
-    return energies
+    return hamiltonian
+
+energy_path = f"{path}/res{res}_energies_{aorb_name}{aorb}_{torl_name}{torl}"
+evecs_path = f"{path}/res{res}_evecs_{aorb_name}{aorb}_{torl_name}{torl}"
 
 k = np.linspace(-np.pi,np.pi,num=res)
-energies = np.zeros((res, 6*N))
-for i in range(res):
-    energies[i,:] = hamiltonian(k[i])
 
-rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
-rc('text', usetex=True)
-plt.rcParams['axes.axisbelow'] = True
+if (os.path.exists(energy_path) and os.path.exists(evecs_path)):
+    energies = joblib.load(energy_path)
+    evecs = joblib.load(evecs_path)
+else:
+    energies = np.zeros((res, 6*N))
+    evecs = np.zeros((res, 6*N, 6*N),dtype=complex)
 
-path = "output/phasediagram/ribbon"
-if not os.path.exists(path):
-            os.makedirs(path)
+    for i in range(res):
+        energies[i,:], evecs[i,:,:] = np.linalg.eigh(hamiltonian(k[i]))
 
+    joblib.dump(energies, energy_path)
+    joblib.dump(evecs, evecs_path)
 
-fig = plt.figure()
+evecs = np.transpose(evecs, axes=(0,2,1))
+waves = np.abs(evecs)**2
+mask_left = np.sum(waves[:,:,:int(np.rint(3*N))],axis=2) > 0.75
+mask_right = np.sum(waves[:,:,:int(np.rint(3*N))],axis=2) < 0.25
+mask_other = np.logical_not(np.logical_or(mask_left,mask_right))
+
+_, k =np.meshgrid(np.zeros(6*N),k)
+
+fig = plt.figure(figsize=(10,20))
 ax = fig.add_subplot(111)
-ax.set_aspect(20)
+ax.set_aspect(5)
 ax.set_ylim((-0.25,0.25))
-ax.plot(k,energies,'b',linewidth=0.5)
+ax.scatter(k[mask_left],energies[mask_left],c='b',s=1)
+ax.scatter(k[mask_right],energies[mask_right],c='r',s=1)
+ax.scatter(k[mask_other],energies[mask_other],c='black',s=0.5,marker='x',linewidth=0.25)
 ax.set_xlabel(r'$ak$')
 ax.set_ylabel(r'$E$')
 ax.set_xticks((-np.pi,-np.pi/2,0,np.pi/2,np.pi))

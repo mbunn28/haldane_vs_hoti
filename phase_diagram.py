@@ -10,10 +10,10 @@ lattice = ti.Lattice(
 PBC_i = True,
 PBC_j = True,
 Corners = False,
-alpha = 1/np.sqrt(3),
-hal = 1/6,
+alpha = 0.38,
+hal = 1,
 M=0,
-N=20)
+N=32)
 
 lattice.large_alpha = True
 lattice.large_hal = False
@@ -23,9 +23,7 @@ lattice.large_hal = False
 # lattice.energies = joblib.load( f"{folder}_energies")
 # lattice.waves = joblib.load(f"{folder}_waves")
 
-lattice.initialize_hamiltonian()
-lattice.eigensystem()
-lattice.densityofstates()
+lattice.single_state()
 
 # index = ti.find_mode(lattice.energies, 13)
 # betweenbands = np.round(np.abs(lattice.energies),4) < np.round(np.abs(lattice.energies[index[1]]),4)
