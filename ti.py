@@ -13,6 +13,7 @@ from scipy import sparse
 from scipy.sparse.linalg import eigsh
 from numpy import random
 import joblib
+import scipy.linalg
 
 def layout(mode):
     if len(mode)<=3:
@@ -302,7 +303,7 @@ class Lattice:
         return [newpath, title]
 
     def eigensystem(self):
-        energies, waves = np.linalg.eigh(self.h)
+        energies, waves = scipy.linalg.eigh(self.h)
         for i in range(0, len(energies)):
             if energies[i]>1000:
                 energies[i] = np.nan

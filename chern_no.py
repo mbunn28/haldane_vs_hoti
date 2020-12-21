@@ -11,7 +11,7 @@ from matplotlib import rc
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
 
-points = 1000
+points = 500
 eigensys = np.zeros((points,points,7,6),dtype=complex)
 
 def u(r,s,n,d):
@@ -57,7 +57,17 @@ def hamiltonian(eigensys):
     hamiltonians[:,:,5,2] = t*a*np.exp(-3*1j*kx)
 
     hamiltonians[:,:,5,3] = l*np.exp(-1j*phi)*(b+a*(np.exp(-3*1j*kx)+np.exp(-1.5*1j*(kx+ky*np.sqrt(3)))))
+    
+    hamiltonians[:,:,1,0] = b*t
+    hamiltonians[:,:,2,1] = b*t
+    hamiltonians[:,:,3,2] = b*t
+    hamiltonians[:,:,4,3] = b*t
+    hamiltonians[:,:,5,4] = b*t
+    hamiltonians[:,:,0,5] = b*t
+
     hamiltonians = hamiltonians + np.conjugate(np.swapaxes(hamiltonians,2,3))
+
+    
     eigvals, eigvec = np.linalg.eigh(hamiltonians)
     eigensys[:,:,0,:] = eigvals
     eigensys[:,:,1:7,:] = np.swapaxes(eigvec, 2, 3)
@@ -78,6 +88,12 @@ for n in range(0,6):
     for r in range(0,points):
         for s in range(0, points):
             F[n,r,s] = np.log(u(r,s,n,1)*u(r+1,s,n,2)*np.conjugate(u(r,s+1,n,1))*np.conjugate(u(r,s,n,2)))
+            while np.imag(F[n,r,s])>np.pi:
+                print('too high')
+                F[n,r,s]=F[n,r,s]-2*np.pi*1j
+            while np.imag(F[n,r,s])<=-np.pi:
+                print('too low')
+                F[n,r,s]=F[n,r,s]+2*np.pi*1j
     chern[n] = np.sum(np.imag(F[n,:,:]))/(2*np.pi)
 
 chernnos = np.round(np.real(chern))
@@ -161,3 +177,26 @@ cbar_ax.title.set_text('Flux')
 fig1.colorbar(im, cax=cbar_ax, orientation='horizontal')
 
 fig1.savefig(f"{newpath}/chern_no.png", bbox_inches = 'tight', dpi = 500)
+
+fig2, (ax21, ax22, ax23) = plt.subplots(3,1)
+
+ax21.plot(np.imag(F[0,r_vals,r_vals]))
+ax21.title.set_text('$n=0$')
+ax21.set_ylabel('Flux')
+ax21.set_xticks((0,int(np.round(points/3)),int(np.round(points/2)),int(np.round(2*points/3)),points))
+ax21.set_xticklabels(('$\Gamma$','$K$','$M$','$K\'$','$\Gamma$'))
+
+ax22.plot(np.imag(F[1,r_vals,r_vals]))
+ax22.title.set_text('$n=1$')
+ax22.set_ylabel('Flux')
+ax22.set_xticks((0,int(np.round(points/3)),int(np.round(points/2)),int(np.round(2*points/3)),points))
+ax22.set_xticklabels(('$\Gamma$','$K$','$M$','$K\'$','$\Gamma$'))
+
+ax23.plot(np.imag(F[2,r_vals,r_vals]))
+ax23.title.set_text('$n=2$')
+ax23.set_ylabel('Flux')
+ax23.set_xticks((0,int(np.round(points/3)),int(np.round(points/2)),int(np.round(2*points/3)),points))
+ax23.set_xticklabels(('$\Gamma$','$K$','$M$','$K\'$','$\Gamma$'))
+
+fig2.tight_layout()
+fig2.savefig(f"{newpath}/chern_no_cross.png", bbox_inches = 'tight', dpi = 500)
