@@ -24,11 +24,11 @@ def u(r,s,n,d):
     result = result/np.absolute(result)
     return result
 
-l = 1
-t = 0.693
+l = 0.05
+t = 1
 
 a = 1
-b = 0.466
+b = 0.5
 
 r_vals = np.arange(points)
 r1,r2 = np.meshgrid(r_vals,r_vals)
@@ -87,7 +87,7 @@ F = np.zeros((6,points,points),dtype=complex)
 for n in range(0,6):
     for r in range(0,points):
         for s in range(0, points):
-            F[n,r,s] = np.log(u(r,s,n,1)*u(r+1,s,n,2)*np.conjugate(u(r,s+1,n,1))*np.conjugate(u(r,s,n,2)))
+            F[n,r,s] = -np.log(u(r,s,n,1)*u(r+1,s,n,2)*np.conjugate(u(r,s+1,n,1))*np.conjugate(u(r,s,n,2)))
             while np.imag(F[n,r,s])>np.pi:
                 print('too high')
                 F[n,r,s]=F[n,r,s]-2*np.pi*1j
@@ -140,7 +140,7 @@ ax3.set_ylabel(r'$k_y$')
 ax3.set_xlabel(r'$k_x$')
 
 fig.tight_layout()
-fig.text(0.5,0.88,"Energy Bands",horizontalalignment='center',fontsize=16)
+# fig.text(0.5,0.88,"Energy Bands",horizontalalignment='center',fontsize=16)
 fig.subplots_adjust(top=0.8, bottom=0.2)
 cbar_ax = fig.add_axes([0.1, 0.1, 0.8, 0.05])
 cbar_ax.set_ylabel('E',rotation=0, fontsize=12,labelpad=10)
