@@ -13,7 +13,7 @@ Corners = False,
 alpha = 0.38,
 hal = 1,
 M=0,
-N=32)
+N=64)
 
 lattice.large_alpha = True
 lattice.large_hal = False
@@ -24,6 +24,7 @@ lattice.large_hal = False
 # lattice.waves = joblib.load(f"{folder}_waves")
 
 lattice.single_state()
+# lattice.densityofstates(r=[-0.1,0.1])
 
 # index = ti.find_mode(lattice.energies, 13)
 # betweenbands = np.round(np.abs(lattice.energies),4) < np.round(np.abs(lattice.energies[index[1]]),4)

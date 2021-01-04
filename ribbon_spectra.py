@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import os
+os.environ["MKL_NUM_THREADS"] = "1" 
+os.environ["NUMEXPR_NUM_THREADS"] = "1" 
+os.environ["OMP_NUM_THREADS"] = "1" 
+
 import ti
 import numpy as np
 import joblib
-import os
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import scipy.optimize as optimise
@@ -21,9 +25,9 @@ a = 1
 b = 0.466
 t = 0.693
 l = 1
-N = 148
+N = 220
 periodic = False
-res=250
+res=125
 phi = np.pi/2
 
 if a == 1 and b == 1:
@@ -106,8 +110,8 @@ _, k =np.meshgrid(np.zeros(6*N),k)
 
 fig = plt.figure(figsize=(10,20))
 ax = fig.add_subplot(111)
-ax.set_aspect(5)
-ax.set_ylim((-0.25,0.25))
+ax.set_aspect(2)
+# ax.set_ylim((-0.25,0.25))
 ax.scatter(k[mask_left],energies[mask_left],c='b',s=1)
 ax.scatter(k[mask_right],energies[mask_right],c='r',s=1)
 ax.scatter(k[mask_other],energies[mask_other],c='black',s=0.5,marker='x',linewidth=0.25)
