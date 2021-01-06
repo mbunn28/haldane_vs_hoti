@@ -21,9 +21,9 @@ path = "output/phasediagram/ribbon"
 if not os.path.exists(path):
             os.makedirs(path)
 
-a = 1
-b = 0.466
-t = 0.693
+a = 0.2
+b = 1
+t = 0.2
 l = 1
 N = 220
 periodic = False

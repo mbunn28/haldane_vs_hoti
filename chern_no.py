@@ -24,11 +24,11 @@ def u(r,s,n,d):
     result = result/np.absolute(result)
     return result
 
-l = 0.05
-t = 1
+l = 1
+t = 0.4
 
-a = 1
-b = 0.5
+a = 0.6
+b = 1
 
 r_vals = np.arange(points)
 r1,r2 = np.meshgrid(r_vals,r_vals)

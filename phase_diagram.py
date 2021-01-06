@@ -7,16 +7,16 @@ import matplotlib.pyplot as plt
 import joblib
 
 lattice = ti.Lattice(
-PBC_i = True,
+PBC_i = False, 
 PBC_j = True,
 Corners = False,
-alpha = 0.38,
-hal = 1,
+alpha = 0.2,
+hal = 0.2,
 M=0,
-N=64)
+N=32)
 
-lattice.large_alpha = True
-lattice.large_hal = False
+lattice.large_alpha = False
+lattice.large_hal = True
 
 # folder = "data/11052020/PBC/t1.9_a1.9_N12"
 
