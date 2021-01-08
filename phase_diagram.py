@@ -7,11 +7,11 @@ import matplotlib.pyplot as plt
 import joblib
 
 lattice = ti.Lattice(
-PBC_i = False, 
+PBC_i = True, 
 PBC_j = True,
 Corners = False,
-alpha = 0.2,
-hal = 0.2,
+alpha = 0.6,
+hal = 0.4,
 M=0,
 N=32)
 

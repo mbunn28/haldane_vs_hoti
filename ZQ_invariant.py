@@ -18,14 +18,14 @@ t = 1
 a = 0.15
 b = 1
 
-N = 10
+N = 5
 M = 0
 
 PBC_i = False
 PBC_j = False
 Corners = False
 
-location = np.array([5,5], dtype=int)
+location = np.array([2,2], dtype=int)
 
 def lat(i,j,s): return(6*N*i+6*j+s)
 

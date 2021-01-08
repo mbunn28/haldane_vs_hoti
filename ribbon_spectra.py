@@ -17,17 +17,17 @@ rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
 plt.rcParams['axes.axisbelow'] = True
 
-path = "output/phasediagram/ribbon"
+path = "output/ribbon"
 if not os.path.exists(path):
             os.makedirs(path)
 
-a = 0.2
-b = 1
+a = 1
+b = 0.5575
 t = 0.2
 l = 1
-N = 220
+N = 400
 periodic = False
-res=125
+res=100
 phi = np.pi/2
 
 if a == 1 and b == 1:
@@ -82,28 +82,34 @@ def hamiltonian(k):
     
     return hamiltonian
 
-energy_path = f"{path}/res{res}_energies_{aorb_name}{aorb}_{torl_name}{torl}"
-evecs_path = f"{path}/res{res}_evecs_{aorb_name}{aorb}_{torl_name}{torl}"
+energy_path = f"{path}/res{res}_N{N}_energies_{aorb_name}{aorb}_{torl_name}{torl}"
+mask_left_path = f"{path}/res{res}_N{N}_left_{aorb_name}{aorb}_{torl_name}{torl}"
+mask_right_path = f"{path}/res{res}_N{N}_right_{aorb_name}{aorb}_{torl_name}{torl}"
 
 k = np.linspace(-np.pi,np.pi,num=res)
 
-if (os.path.exists(energy_path) and os.path.exists(evecs_path)):
+if (os.path.exists(energy_path) and os.path.exists(mask_left_path) and os.path.exists(mask_right_path)):
     energies = joblib.load(energy_path)
-    evecs = joblib.load(evecs_path)
+    mask_left = joblib.load(mask_left_path)
+    mask_right = joblib.load(mask_right_path)
 else:
     energies = np.zeros((res, 6*N))
-    evecs = np.zeros((res, 6*N, 6*N),dtype=complex)
+    mask_left = np.zeros((res, 6*N),dtype=bool)
+    mask_right = np.zeros((res, 6*N),dtype=bool)
 
     for i in range(res):
-        energies[i,:], evecs[i,:,:] = np.linalg.eigh(hamiltonian(k[i]))
+        print(f"{i}/{res}", end='\r')
+
+        energies[i,:], evecs = np.linalg.eigh(hamiltonian(k[i]))
+        evecs = np.transpose(evecs, axes=(1,0))
+        waves = np.abs(evecs)**2
+        mask_left[i,:] = np.sum(waves[:,:int(np.rint(3*N))],axis=1) > 0.75
+        mask_right[i,:] = np.sum(waves[:,:int(np.rint(3*N))],axis=1) < 0.25
 
     joblib.dump(energies, energy_path)
-    joblib.dump(evecs, evecs_path)
+    joblib.dump(mask_left, mask_left_path)
+    joblib.dump(mask_right, mask_right_path)
 
-evecs = np.transpose(evecs, axes=(0,2,1))
-waves = np.abs(evecs)**2
-mask_left = np.sum(waves[:,:,:int(np.rint(3*N))],axis=2) > 0.75
-mask_right = np.sum(waves[:,:,:int(np.rint(3*N))],axis=2) < 0.25
 mask_other = np.logical_not(np.logical_or(mask_left,mask_right))
 
 _, k =np.meshgrid(np.zeros(6*N),k)
@@ -120,4 +126,6 @@ ax.set_ylabel(r'$E$')
 ax.set_xticks((-np.pi,-np.pi/2,0,np.pi/2,np.pi))
 ax.set_xticklabels((r'$-\pi$',r'$-\frac{\pi}{2}$',0,r'$\frac{\pi}{2}$',r'$\pi$'))
 fig.tight_layout()
-fig.savefig(f"{path}/ribbonspectra.png", dpi=500, bbox_inches='tight')
+
+fig_path = f"{path}/res{res}_N{N}_ribbonspectrum_{aorb_name}{aorb}_{torl_name}{torl}"
+fig.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
