@@ -25,9 +25,9 @@ a = 1
 b = 0.5575
 t = 0.2
 l = 1
-N = 400
+N = 1000
 periodic = False
-res=100
+res=250
 phi = np.pi/2
 
 if a == 1 and b == 1:
@@ -110,6 +110,7 @@ else:
     joblib.dump(mask_left, mask_left_path)
     joblib.dump(mask_right, mask_right_path)
 
+<<<<<<< HEAD
 mask_other = np.logical_not(np.logical_or(mask_left,mask_right))
 
 _, k =np.meshgrid(np.zeros(6*N),k)
@@ -129,3 +130,24 @@ fig.tight_layout()
 
 fig_path = f"{path}/res{res}_N{N}_ribbonspectrum_{aorb_name}{aorb}_{torl_name}{torl}"
 fig.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
+=======
+# mask_other = np.logical_not(np.logical_or(mask_left,mask_right))
+
+# _, k =np.meshgrid(np.zeros(6*N),k)
+
+# fig = plt.figure(figsize=(10,20))
+# ax = fig.add_subplot(111)
+# ax.set_aspect(2)
+# # ax.set_ylim((-0.25,0.25))
+# ax.scatter(k[mask_left],energies[mask_left],c='b',s=1)
+# ax.scatter(k[mask_right],energies[mask_right],c='r',s=1)
+# ax.scatter(k[mask_other],energies[mask_other],c='black',s=0.5,marker='x',linewidth=0.25)
+# ax.set_xlabel(r'$ak$')
+# ax.set_ylabel(r'$E$')
+# ax.set_xticks((-np.pi,-np.pi/2,0,np.pi/2,np.pi))
+# ax.set_xticklabels((r'$-\pi$',r'$-\frac{\pi}{2}$',0,r'$\frac{\pi}{2}$',r'$\pi$'))
+# fig.tight_layout()
+
+# fig_path = f"{path}/res{res}_N{N}_ribbonspectrum_{aorb_name}{aorb}_{torl_name}{torl}"
+# fig.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
+>>>>>>> bc824f01d89768d31e34146f69a93377f7a7bde6
