@@ -14,6 +14,11 @@ from scipy.sparse.linalg import eigsh
 from numpy import random
 import joblib
 import scipy.linalg
+from matplotlib import rc
+
+rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+rc('text', usetex=True)
+plt.rcParams['axes.axisbelow'] = True
 
 def layout(mode):
     if len(mode)<=3:
@@ -80,7 +85,7 @@ class Lattice:
     def lat(self,i,j,s): return(6*self.N*i+6*j+s)
 
     def initialize_hamiltonian(self):
-        vv = 100000
+        vv = 1e7
         h = np.zeros((6*(self.N)**2,6*(self.N)**2), dtype = complex)
 
         if ((self.large_hal == False) and (self.large_alpha == False)):
@@ -191,18 +196,26 @@ class Lattice:
         if self.PBC_j == False and self.Corners == True:
             for i in range(0,self.N):
                 for s in [0,3,4,5]:
+                    h[self.lat(i,0,s),:] = 0
+                    h[:,self.lat(i,0,s)] = 0
                     h[self.lat(i,0,s),self.lat(i,0,s)] = vv
 
                 for s in [0,1,2,3]:
+                    h[self.lat(i,self.N-1,s),:] = 0
+                    h[:, self.lat(i,self.N-1,s)] = 0
                     h[self.lat(i,self.N-1,s),self.lat(i,self.N-1,s)] = vv
 
 
         if self.PBC_i==False and self.Corners == True:
             for j in range(0,self.N):
                 for s in [2,3,4,5]:
+                    h[self.lat(0,j,s),:]=0
+                    h[:,self.lat(0,j,s)]=0
                     h[self.lat(0,j,s),self.lat(0,j,s)] = vv
 
                 for s in [0,1,2,5]:
+                    h[self.lat(self.N-1,j,s),:]=0
+                    h[:,self.lat(self.N-1,j,s)]=0
                     h[self.lat(self.N-1,j,s),self.lat(self.N-1,j,s)] = vv
 
         h = np.conjugate(h.transpose()) + h
@@ -338,7 +351,12 @@ class Lattice:
             q = np.round(self.alpha,4)
         plt.xlabel("E")
         plt.ylabel("No. of states")
-        fig.savefig(f"{newpath}/dos_t{p}_a{q}_N{self.N}.png",dpi=500)
+
+        if r == None:
+            zoom = ""
+        else:
+            zoom = "_zoom"
+        fig.savefig(f"{newpath}/dos_t{p}_a{q}_N{self.N}{zoom}.png",dpi=500)
         plt.close(fig)
         return
 

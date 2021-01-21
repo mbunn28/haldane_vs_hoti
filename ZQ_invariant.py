@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from matplotlib import rc
 import scipy.linalg
+import numpy.random
 
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
@@ -18,14 +19,15 @@ t = 1
 a = 0.15
 b = 1
 
-N = 5
-M = 0
+N = 8
+mass = 0
 
 PBC_i = False
 PBC_j = False
 Corners = False
 
 location = np.array([2,2], dtype=int)
+iterations = 100
 
 def lat(i,j,s): return(6*N*i+6*j+s)
 
@@ -96,9 +98,9 @@ def twist_hamiltonian(theta):
                     h[lat(i,j,5), lat((i+1)%N,j,3)] = -1j*l*a
 
             for s in [0,2,4]:
-                h[lat(i,j,s), lat(i,j,s)] = +M/2
+                h[lat(i,j,s), lat(i,j,s)] = +mass/2
             for s in [1,3,5]:
-                h[lat(i,j,s), lat(i,j,s)] = -M/2
+                h[lat(i,j,s), lat(i,j,s)] = -mass/2
 
 
 
@@ -152,7 +154,7 @@ def twist_hamiltonian(theta):
 
     h = np.conjugate(h.transpose()) + h
 
-    _, evecs = scipy.linalg(h)
+    _, evecs = scipy.linalg.eigh(h)
     return evecs
 
 def u(theta1,theta2,n):
@@ -173,12 +175,37 @@ def curve(tau):
 
     if tau <= 0.5:
         theta = 2*tau*CoG
-    else:
+    elif tau <= 1:
         theta = (1-2*tau)*CoG+(2*tau-1)*e1
+    else:
+        print("error! poorly parameterised curve")
 
     return theta
 
+M = int(3*(N**2))
+# D = np.eye(M, dtype=complex)
+D = 1
+evecs = twist_hamiltonian(curve(0))
+singlestates_a = evecs[:,:M]
+pa = np.matmul(singlestates_a,np.transpose(np.conjugate(singlestates_a)))
+phi = np.random.rand(2*M,M)
+ua = np.matmul(pa,phi)
+for i in range(iterations):
+    print(f"{i+1}/{iterations}", end='\r')
 
+    evecs = twist_hamiltonian(curve((i+1)/iterations))
+    singlestates_b = evecs[:,:M]
+    pb = np.matmul(singlestates_b,np.transpose(np.conjugate(singlestates_b)))
+    ub = np.matmul(pb,phi)
+
+    Di = np.matmul(np.transpose(np.conjugate(ua)),ub)
+    det_Di = scipy.linalg.det(Di)
+    U_i = det_Di/np.abs(det_Di)
+    D = D*U_i
+    ua = ub
+
+phase = np.angle(D)
+print(phase)
 
 
 
