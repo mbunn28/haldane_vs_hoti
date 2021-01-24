@@ -14,6 +14,10 @@ from scipy.sparse.linalg import eigsh
 from numpy import random
 import joblib
 import scipy.linalg
+from matplotlib import rc
+
+rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+rc('text', usetex=True)
 
 def layout(mode):
     if len(mode)<=3:
