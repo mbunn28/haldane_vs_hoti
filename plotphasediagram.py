@@ -98,3 +98,4 @@ fig.savefig(f"{path}/{N_or_res}{N}_diagram_yo.png", dpi=500,bbox_inches='tight')
 # fig1 = plt.figure()
 # plt.pcolormesh(x, x, gap, norm = colors.LogNorm(), cmap='inferno')
 # fig1.savefig(f"{path}/periodic.png", dpi=500)
+

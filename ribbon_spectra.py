@@ -110,7 +110,6 @@ else:
     joblib.dump(mask_left, mask_left_path)
     joblib.dump(mask_right, mask_right_path)
 
-<<<<<<< HEAD
 mask_other = np.logical_not(np.logical_or(mask_left,mask_right))
 
 _, k =np.meshgrid(np.zeros(6*N),k)
@@ -130,7 +129,6 @@ fig.tight_layout()
 
 fig_path = f"{path}/res{res}_N{N}_ribbonspectrum_{aorb_name}{aorb}_{torl_name}{torl}"
 fig.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
-=======
 # mask_other = np.logical_not(np.logical_or(mask_left,mask_right))
 
 # _, k =np.meshgrid(np.zeros(6*N),k)
@@ -150,4 +148,3 @@ fig.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
 
 # fig_path = f"{path}/res{res}_N{N}_ribbonspectrum_{aorb_name}{aorb}_{torl_name}{torl}"
 # fig.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
->>>>>>> bc824f01d89768d31e34146f69a93377f7a7bde6
