@@ -79,8 +79,6 @@ def hamiltonian(eigensys):
 
     return eigensys
 
-
-
 eigensys = hamiltonian(eigensys)
 chern = np.zeros(6,dtype=complex)
 F = np.zeros((6,points,points),dtype=complex)

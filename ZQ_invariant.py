@@ -27,7 +27,7 @@ gap = joblib.load(f"{path_phasediagram}/{N_or_res}{Nphase}_gap")
 x = np.linspace(0,2,num=1201)
 gapmask = gap < 1e-2
 j = min(range(len(x)), key=lambda i: abs(x[i]-0.4))
-x[~gapmask[:,j]] = np.NaN
+x[~gapmask[j,:]] = np.NaN
 x = x[~np.isnan(x)]
 for i in range(len(x)):
     if 2 > x[i] > 1:
@@ -43,14 +43,14 @@ z6_phases = np.zeros(num)
 z2_phases = np.zeros(num)
 alphs = np.zeros(num)
 for n in range(num):
-    l = 0.4
+    l = 0.04*n
     t = 1
 
-    a = 0.21 + 0.02*n
-    alphs[n] = a
+    a = 0.4
+    alphs[n] = l
     b = 1
 
-    N = 10
+    N = 15
     mass = 0
 
     PBC_i = True
@@ -58,7 +58,7 @@ for n in range(num):
     Corners = False
 
     location = np.array([4,4], dtype=int)
-    iterations = 500 
+    iterations = 100 
 
     def lat(i,j,s): return(6*N*i+6*j+s)
 
@@ -82,7 +82,7 @@ for n in range(num):
                     h[lat(i,j,4), lat(i,j,5)] = -t*b*np.exp(-1j*the5)
                     h[lat(i,j,4), lat((i-1)%N,(j-1)%N,1)] = -t*a
 
-                    h[lat(i,j,0), lat(i,j,4)] = -1j*l*b*np.exp(1j*(the[4]+the[3]+the[2]+the[1]))
+                    h[lat(i,j,0), lat(i,j,4)] = -1j*l*b*np.exp(-1j*(the[4]+the[3]+the[2]+the[1]))
                     h[lat(i,j,1), lat(i,j,5)] = -1j*l*b*np.exp(1j*(the[1]+the[0]))
                     h[lat(i,j,2), lat(i,j,0)] = -1j*l*b*np.exp(1j*(the[2]+the[1]))
                     h[lat(i,j,3), lat(i,j,1)] = -1j*l*b*np.exp(1j*(the[3]+the[2]))
@@ -129,24 +129,24 @@ for n in range(num):
                     h[lat(i,j,4), lat(i,j,2)] = -1j*l*b
                     h[lat(i,j,5), lat(i,j,3)] = -1j*l*b
 
-                    if N !=1:
-                        h[lat(i,j,0), lat((i+1)%N,j,4)] = -1j*l*a
-                        h[lat(i,j,0), lat((i+1)%N,(j+1)%N,4)] = -1j*l*a
+                if N !=1:
+                    h[lat(i,j,0), lat((i+1)%N,j,4)] = -1j*l*a
+                    h[lat(i,j,0), lat((i+1)%N,(j+1)%N,4)] = -1j*l*a
 
-                        h[lat(i,j,1), lat((i+1)%N,(j+1)%N,5)] = -1j*l*a
-                        h[lat(i,j,1), lat(i,(j+1)%N,5)] = -1j*l*a
+                    h[lat(i,j,1), lat((i+1)%N,(j+1)%N,5)] = -1j*l*a
+                    h[lat(i,j,1), lat(i,(j+1)%N,5)] = -1j*l*a
 
-                        h[lat(i,j,2), lat(i,(j+1)%N,0)] = -1j*l*a
-                        h[lat(i,j,2), lat((i-1)%N,j,0)] = -1j*l*a
+                    h[lat(i,j,2), lat(i,(j+1)%N,0)] = -1j*l*a
+                    h[lat(i,j,2), lat((i-1)%N,j,0)] = -1j*l*a
 
-                        h[lat(i,j,3), lat((i-1)%N,j,1)] = -1j*l*a
-                        h[lat(i,j,3), lat((i-1)%N,(j-1)%N,1)] = -1j*l*a
+                    h[lat(i,j,3), lat((i-1)%N,j,1)] = -1j*l*a
+                    h[lat(i,j,3), lat((i-1)%N,(j-1)%N,1)] = -1j*l*a
 
-                        h[lat(i,j,4), lat((i-1)%N,(j-1)%N,2)] = -1j*l*a
-                        h[lat(i,j,4), lat(i,(j-1)%N,2)] = -1j*l*a
+                    h[lat(i,j,4), lat((i-1)%N,(j-1)%N,2)] = -1j*l*a
+                    h[lat(i,j,4), lat(i,(j-1)%N,2)] = -1j*l*a
 
-                        h[lat(i,j,5), lat(i,(j-1)%N,3)] = -1j*l*a
-                        h[lat(i,j,5), lat((i+1)%N,j,3)] = -1j*l*a
+                    h[lat(i,j,5), lat(i,(j-1)%N,3)] = -1j*l*a
+                    h[lat(i,j,5), lat((i+1)%N,j,3)] = -1j*l*a
 
                 for s in [0,2,4]:
                     h[lat(i,j,s), lat(i,j,s)] = +mass/2
@@ -206,7 +206,7 @@ for n in range(num):
         h = np.conjugate(h.transpose()) + h
 
         ener, evecs = scipy.linalg.eigh(h)
-        if min(np.abs(ener)) < 1e-2:
+        if (ener[3*(N**2)]-ener[3*(N**2)-1]) < 1e-3:
             print('energy very small!\n')
         return ener, evecs
 
@@ -273,46 +273,48 @@ for n in range(num):
     z6_phase = z6_phase/(2*np.pi)
     z6_phases[n] = z6_phase
 
-    D = 1
-    evecs = twist_hamiltonian(0,zq='z2')
-    singlestates_a = evecs[:,:M]
-    pa = np.matmul(singlestates_a,np.conjugate(singlestates_a.transpose()))
-    ua = np.matmul(pa,phi)
-    for i in range(iterations):
-        print(f"{iterations*(2*n+1)+i+1}/{2*iterations*num}", end='\r')
+    # D = 1
+    # _, evecs = twist_hamiltonian(0,zq='z2')
+    # singlestates_a = evecs[:,:M]
+    # pa = np.matmul(singlestates_a,np.conjugate(singlestates_a.transpose()))
+    # ua = np.matmul(pa,phi)
+    # for i in range(iterations):
+    #     print(f"{iterations*(2*n+1)+i+1}/{2*iterations*num}", end='\r')
 
-        theta = 2*np.pi*(i+1)/iterations
-        evecs = twist_hamiltonian(theta,zq='z2')
-        singlestates_b = evecs[:,:M]
-        pb = np.matmul(singlestates_b,np.conjugate(singlestates_b.transpose()))
-        ub = np.matmul(pb,phi)
-        Di = np.matmul(np.conjugate(ua.transpose()),ub)
-        det_Di = scipy.linalg.det(Di)
-        U_i = det_Di/np.abs(det_Di)
-        D = D*U_i
-        ua = ub
+    #     theta = 2*np.pi*(i+1)/iterations
+    #     _, evecs = twist_hamiltonian(theta,zq='z2')
+    #     singlestates_b = evecs[:,:M]
+    #     pb = np.matmul(singlestates_b,np.conjugate(singlestates_b.transpose()))
+    #     ub = np.matmul(pb,phi)
+    #     Di = np.matmul(np.conjugate(ua.transpose()),ub)
+    #     det_Di = scipy.linalg.det(Di)
+    #     U_i = det_Di/np.abs(det_Di)
+    #     D = D*U_i
+    #     ua = ub
 
-        z2_phase = np.angle(D)
-        if z2_phase < -1e-3:
-            z2_phase = z2_phase + 2*np.pi
-        z2_phase = z2_phase/(2*np.pi)
-        z2_phases[n] = z2_phase
+    #     z2_phase = np.angle(D)
+    #     if z2_phase < -1e-3:
+    #         z2_phase = z2_phase + 2*np.pi
+    #     z2_phase = z2_phase/(2*np.pi)
+    #     z2_phases[n] = z2_phase
 
     ui_angles = np.angle(ui)
-    print(ui_angles*np.pi)
+    # print(ui_angles*np.pi)
+
+
 print(z6_phases)
-print(z2_phases)
+# print(z2_phases)
 fig, ax = plt.subplots()
 ax.plot(alphs, z6_phases,'bo-',fillstyle="none")
 # ax.plot(alphs, z2_phases,'k^-',fillstyle="none")
-ax.set_title(r'$\mathbb{Z}_Q$ Berry Phase: $\lambda = 0.4, N = 16,$ it $= 500$')
-ax.set_xlabel(r'$\alpha$')
+ax.set_title(r'$\mathbb{Z}_Q$ Berry Phase: $\alpha = 0.4, N = 16,$ it $= 500$')
+ax.set_xlabel(r'$\lambda$')
 ax.set_ylabel(r'$\gamma / 2\pi$')
-ax.legend({r'$\mathbb{Z}_2$', r'$\mathbb{Z}_6$'})
+# ax.legend({r'$\mathbb{Z}_2$', r'$\mathbb{Z}_6$'})
 for i in range(len(x)):
     if min(alphs) <= x[i] <= max(alphs):
         ax.axvline(x[i],ls='--', c='gray')
-fig_path = f"{path}/l04_N{N}_iter{iterations}"
+fig_path = f"{path}/a04_N{N}_iter{iterations}"
 fig.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
 
 # fig, ax = plt.subplots()
