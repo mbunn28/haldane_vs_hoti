@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import ti
 import numpy as np
+import numpy.linalg
 import joblib
 import os
 import matplotlib.pyplot as plt
@@ -10,6 +11,8 @@ from matplotlib import rc
 import scipy.linalg
 import numpy.random
 import numpy.ma
+from tqdm import tqdm
+from scipy.signal import argrelextrema
 
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
@@ -26,31 +29,35 @@ path_phasediagram = "output/phasediagram/periodic"
 gap = joblib.load(f"{path_phasediagram}/{N_or_res}{Nphase}_gap")
 x = np.linspace(0,2,num=1201)
 gapmask = gap < 1e-2
-j = min(range(len(x)), key=lambda i: abs(x[i]-0.4))
-x[~gapmask[j,:]] = np.NaN
-x = x[~np.isnan(x)]
+j = min(range(len(x)), key=lambda i: abs(x[i]-0.1))
+x[~gapmask[:,j]] = np.NaN
+# x = x[~np.isnan(x)]
+x = x[argrelextrema(gap[:,j], np.less)[0]]
+gap_vals = gap[:,j]
+gap_vals = gap_vals[argrelextrema(gap[:,j], np.less)[0]]
 for i in range(len(x)):
     if 2 > x[i] > 1:
         x[i] = 2 - x[i]
         x[i] = 1/x[i]
 
-x = np.round(x,2)
-x = np.delete(x, np.argwhere(np.ediff1d(x) <= 0.02) + 1) 
-x = np.unique(x)
+# x = np.round(x,2)
+# x = np.delete(x, np.argwhere(np.ediff1d(x) <= 0.02) + 1) 
+# x = np.unique(x)
 print(x)
-num = 20
+
+num = 80
 z6_phases = np.zeros(num)
 z2_phases = np.zeros(num)
 alphs = np.zeros(num)
-for n in range(num):
-    l = 0.04*n
+for n in tqdm(range(num)):
+    l = 0.2
     t = 1
 
-    a = 0.4
-    alphs[n] = l
+    a = x[0] + 0.1/(2**n)
+    alphs[n] = a
     b = 1
 
-    N = 15
+    N = 5
     mass = 0
 
     PBC_i = True
@@ -247,19 +254,22 @@ for n in range(num):
     # phi = scipy.linalg.orth(phi)
     ua = np.matmul(pa,phi)
     for i in range(iterations):
-        print(f"{iterations*n+i+1}/{iterations*num}", end='\r')
+        # print(f"{iterations*(2*n+1)+i+1}/{2*iterations*num}", end='\r')
 
         energies[:,i+1],evecs = twist_hamiltonian(curve((i+1)/iterations),zq='z6')
         singlestates_b = evecs[:,:M]
         pb = np.matmul(singlestates_b,np.conjugate(singlestates_b.transpose()))
         ub = np.matmul(pb,phi)
         Di = np.matmul(np.conjugate(ua.transpose()),ub)
-        det_Di = scipy.linalg.det(Di)
+        det_Di = numpy.linalg.slogdet(Di)
+        # print(det_Di)
         if det_Di == 0:
             print('error! det zero!\n')
-        U_i = det_Di/np.abs(det_Di)
-        ui[i] = U_i
-        D = D*U_i
+        # U_i = det_Di/np.abs(det_Di)
+        # print(U_i)
+        ui[i] = det_Di[0]
+        D = D*ui[i]
+        # print(D)
         ua = ub
 
         Nphi = np.matmul(np.conjugate(ub.transpose()), ub)
@@ -273,48 +283,49 @@ for n in range(num):
     z6_phase = z6_phase/(2*np.pi)
     z6_phases[n] = z6_phase
 
-    # D = 1
-    # _, evecs = twist_hamiltonian(0,zq='z2')
-    # singlestates_a = evecs[:,:M]
-    # pa = np.matmul(singlestates_a,np.conjugate(singlestates_a.transpose()))
-    # ua = np.matmul(pa,phi)
-    # for i in range(iterations):
-    #     print(f"{iterations*(2*n+1)+i+1}/{2*iterations*num}", end='\r')
+    D = 1
+    _, evecs = twist_hamiltonian(0,zq='z2')
+    singlestates_a = evecs[:,:M]
+    pa = np.matmul(singlestates_a,np.conjugate(singlestates_a.transpose()))
+    ua = np.matmul(pa,phi)
+    for i in range(iterations):
+        # print(f"{iterations*(2*n+1)+i+1}/{2*iterations*num}", end='\r')
 
-    #     theta = 2*np.pi*(i+1)/iterations
-    #     _, evecs = twist_hamiltonian(theta,zq='z2')
-    #     singlestates_b = evecs[:,:M]
-    #     pb = np.matmul(singlestates_b,np.conjugate(singlestates_b.transpose()))
-    #     ub = np.matmul(pb,phi)
-    #     Di = np.matmul(np.conjugate(ua.transpose()),ub)
-    #     det_Di = scipy.linalg.det(Di)
-    #     U_i = det_Di/np.abs(det_Di)
-    #     D = D*U_i
-    #     ua = ub
+        theta = 2*np.pi*(i+1)/iterations
+        _, evecs = twist_hamiltonian(theta,zq='z2')
+        singlestates_b = evecs[:,:M]
+        pb = np.matmul(singlestates_b,np.conjugate(singlestates_b.transpose()))
+        ub = np.matmul(pb,phi)
+        Di = np.matmul(np.conjugate(ua.transpose()),ub)
+        det_Di = numpy.linalg.slogdet(Di)
+        U_i = det_Di[0]
+        D = D*U_i
+        ua = ub
 
-    #     z2_phase = np.angle(D)
-    #     if z2_phase < -1e-3:
-    #         z2_phase = z2_phase + 2*np.pi
-    #     z2_phase = z2_phase/(2*np.pi)
-    #     z2_phases[n] = z2_phase
+        z2_phase = np.angle(D)
+        if z2_phase < -1e-3:
+            z2_phase = z2_phase + 2*np.pi
+        z2_phase = z2_phase/(2*np.pi)
+        z2_phases[n] = z2_phase
 
     ui_angles = np.angle(ui)
     # print(ui_angles*np.pi)
 
 
 print(z6_phases)
-# print(z2_phases)
+print(z2_phases)
 fig, ax = plt.subplots()
 ax.plot(alphs, z6_phases,'bo-',fillstyle="none")
-# ax.plot(alphs, z2_phases,'k^-',fillstyle="none")
-ax.set_title(r'$\mathbb{Z}_Q$ Berry Phase: $\alpha = 0.4, N = 16,$ it $= 500$')
-ax.set_xlabel(r'$\lambda$')
+ax.plot(alphs, z2_phases,'k^-',fillstyle="none")
+title = '$\mathbb{Z}_Q$ Berry Phase'
+ax.set_title(rf'{title}: $\lambda = {l}, N = {N},$ it $= {iterations}$')
+ax.set_xlabel(r'$\alpha$')
 ax.set_ylabel(r'$\gamma / 2\pi$')
-# ax.legend({r'$\mathbb{Z}_2$', r'$\mathbb{Z}_6$'})
+ax.legend({r'$\mathbb{Z}_2$', r'$\mathbb{Z}_6$'})
 for i in range(len(x)):
-    if min(alphs) <= x[i] <= max(alphs):
+    if (min(alphs)-0.1) <= x[i] <= (max(alphs)+0.1):
         ax.axvline(x[i],ls='--', c='gray')
-fig_path = f"{path}/a04_N{N}_iter{iterations}"
+fig_path = f"{path}/a{l}_N{N}_iter{iterations}"
 fig.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
 
 # fig, ax = plt.subplots()
