@@ -30,11 +30,15 @@ gap = joblib.load(f"{path_phasediagram}/{N_or_res}{Nphase}_gap")
 x = np.linspace(0,2,num=1201)
 gapmask = gap < 1e-2
 j = min(range(len(x)), key=lambda i: abs(x[i]-0.1))
-x[~gapmask[:,j]] = np.NaN
-# x = x[~np.isnan(x)]
-x = x[argrelextrema(gap[:,j], np.less)[0]]
-gap_vals = gap[:,j]
-gap_vals = gap_vals[argrelextrema(gap[:,j], np.less)[0]]
+x[~gapmask[j,:]] = np.NaN
+x = x[~np.isnan(x)]
+gap_vals = gap[j,:]
+gap_vals[~gapmask[j,:]] = np.NaN
+gap_vals = gap_vals[~np.isnan(gap_vals)]
+print(gap_vals)
+x = x[argrelextrema(gap_vals, np.less)[0]]
+gap_vals = gap_vals[argrelextrema(gap_vals, np.less)[0]]
+print(gap_vals)
 for i in range(len(x)):
     if 2 > x[i] > 1:
         x[i] = 2 - x[i]
@@ -45,7 +49,7 @@ for i in range(len(x)):
 # x = np.unique(x)
 print(x)
 
-num = 80
+num = 20
 z6_phases = np.zeros(num)
 z2_phases = np.zeros(num)
 alphs = np.zeros(num)
@@ -53,7 +57,7 @@ for n in tqdm(range(num)):
     l = 0.2
     t = 1
 
-    a = x[0] + 0.1/(2**n)
+    a = x[1] + 0.1/(2**n)
     alphs[n] = a
     b = 1
 
@@ -251,7 +255,7 @@ for n in tqdm(range(num)):
     singlestates_a = evecs[:,:M]
     pa = np.matmul(singlestates_a,np.conjugate(singlestates_a.transpose()))
     phi = np.random.rand(2*M,M)
-    # phi = scipy.linalg.orth(phi)
+    phi = scipy.linalg.orth(phi)
     ua = np.matmul(pa,phi)
     for i in range(iterations):
         # print(f"{iterations*(2*n+1)+i+1}/{2*iterations*num}", end='\r')

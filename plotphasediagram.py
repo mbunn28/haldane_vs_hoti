@@ -7,6 +7,7 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from matplotlib import rc
+from scipy.signal import argrelextrema
 
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
@@ -50,10 +51,101 @@ x = np.linspace(0,2,num=1201)
 # hal_val = np.concatenate((hal_val,hal_val0), axis=0)
 
 gap[gap>1e-2]= np.NaN
+gap_mask = np.zeros((2*N+1,2*N+1),dtype=bool)
+for i in range(2*N+1):
+    gap_mask_row = np.zeros((2*N+1),dtype=bool)
+    gap_mask_row[argrelextrema(gap[:,i], np.less)[0]] = True
+    gap_mask[:,i] = gap_mask_row
+gap[gap_mask == False] = np.NaN
+   
+x_mesh, y_mesh = np.meshgrid(x,x)
+x_mesh[gap_mask == False] = np.NaN
+y_mesh[gap_mask == False] = np.NaN
+x_mesh[:,-8:] = np.NaN
+y_mesh[:,-8:] = np.NaN
+
+x = np.zeros((1,1))
+x[0,0]=np.NaN
+y = np.zeros((1,1))
+y[0,0]=np.NaN
+
+
+m = 1
+num = np.array([0])
+for i in range(1201):
+    x_vals = x_mesh[:,i]
+    y_vals = y_mesh[:,i]
+    
+    x_vals = x_vals[~np.isnan(x_vals)]
+    y_vals = y_vals[~np.isnan(y_vals)]
+
+    n = np.shape(x_vals)[0]
+    if n == m:
+        x_row = np.empty((np.shape(x)[0],1))
+        x_row[:] = np.NaN
+        y_row = np.empty((np.shape(y)[0],1))
+        y_row[:] = np.NaN
+
+        for j in range(len(num)):
+            x_row[num[j],0] = x_vals[j]
+            y_row[num[j],0] = y_vals[j]
+        
+        x = np.append(x, x_row, axis=1)
+        y = np.append(y, y_row, axis=1)
+        # print(np.shape(x))
+
+    if (n != m and n > 0):
+        max = num[-1]
+        for j in range(n):
+            if j == 0:
+                num = np.array([max+1])
+            else:
+                num = np.append(num, num[-1]+1)
+
+        m = n
+        
+        x_col =  np.empty((m,np.shape(x)[1]))
+        x_col[:] = np.NaN
+        
+        x = np.append(x, x_col, axis=0)
+        y = np.append(y, x_col, axis=0)
+        # print(np.shape(x))
+
+        x_row = np.empty((np.shape(x)[0],1))
+        x_row[:] = np.NaN
+        y_row = np.empty((np.shape(y)[0],1))
+        y_row[:] = np.NaN
+
+        for j in range(len(num)):
+            x_row[num[j],0] = x_vals[j]
+            y_row[num[j],0] = y_vals[j]
+
+        x = np.append(x, x_row, axis=1)
+        y = np.append(y, y_row, axis=1)
+        # print(np.shape(x))
+
+x_row = np.empty((np.shape(x)[0],1))
+x_row[:] = np.NaN
+y_row = np.empty((np.shape(x)[0],1))
+y_row[:,0] = y[:,-1]
+
+for j in range(5):
+    x_row[-1-j,0] = 2
+
+x = np.append(x, x_row, axis=1)
+y = np.append(y, y_row, axis=1)
+y[-3,-1] = 1
+y[-4,-1] = 1
+
+print(x[-20:,-5:])
+print(y[-20:,-5:])
+
 fig, ax = plt.subplots()
-plt.pcolormesh(x,x,gap, norm = colors.LogNorm(), cmap='inferno')
-plt.scatter((2-0.693),(2-0.466),linewidth=0.1,marker='x')
-# plt.title(r"Log Scaled Phase Boundary: Periodic, $\Delta$ = 1.7e-3")
+for i in range(np.shape(x)[0]):
+    plt.plot(x[i,:],y[i,:],c='k',lw=0.75)
+# plt.pcolormesh(x,x,gap, norm = colors.LogNorm(), cmap='inferno')
+# plt.scatter((2-0.693),(2-0.466),linewidth=0.1,marker='x')
+plt.title("Phase Boundary Diagram")
 ax.grid(linestyle='--')
 # ax.set_xlim([0,0.4])
 ax.set_aspect(1)
@@ -63,7 +155,8 @@ locs=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0,1.2,1.4,1.6,1.8,2.0]
 ax.set_yticklabels(labels)
 ax.set_yticks(locs)
 ax.set_ylabel(r'$\alpha$')
-
+ax.set_xlim((0,2))
+ax.set_ylim((0,2))
 # ax1 = ax.twinx()
 # labels1 =[0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
 # locs1 =[2.0, 1.8, 1.6, 1.4, 1.2, 1.0]
@@ -87,15 +180,15 @@ ax.set_xlabel(r'$\lambda$')
 # ax2.grid(linestyle='--', zorder=0)
 
 
-cbar = plt.colorbar(pad = 0.15)
-cbar.ax.get_yaxis().labelpad = 15
-cbar.ax.set_title('Energy Gap')
+# cbar = plt.colorbar(pad = 0.15)
+# cbar.ax.get_yaxis().labelpad = 15
+# cbar.ax.set_title('Energy Gap')
 
-plt.gcf().subplots_adjust(top=0.85)
+# plt.gcf().subplots_adjust(top=0.85)
 fig.tight_layout()
 fig.savefig(f"{path}/{N_or_res}{N}_diagram_yo.png", dpi=500,bbox_inches='tight')
 
-# fig1 = plt.figure()
-# plt.pcolormesh(x, x, gap, norm = colors.LogNorm(), cmap='inferno')
-# fig1.savefig(f"{path}/periodic.png", dpi=500)
+fig1 = plt.figure()
+plt.pcolormesh(x, x, gap, norm = colors.LogNorm(), cmap='inferno')
+fig1.savefig(f"{path}/periodic.png", dpi=500)
 
