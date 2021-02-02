@@ -188,7 +188,10 @@ ax.set_xlabel(r'$\lambda$')
 fig.tight_layout()
 fig.savefig(f"{path}/{N_or_res}{N}_diagram_yo.png", dpi=500,bbox_inches='tight')
 
-fig1 = plt.figure()
-plt.pcolormesh(x, x, gap, norm = colors.LogNorm(), cmap='inferno')
-fig1.savefig(f"{path}/periodic.png", dpi=500)
+# fig1 = plt.figure()
+# plt.pcolormesh(x, x, gap, norm = colors.LogNorm(), cmap='inferno')
+# fig1.savefig(f"{path}/periodic.png", dpi=500)
+
+joblib.dump(x_mesh, f"{path}/{N_or_res}{N}_xmesh")
+joblib.dump(y_mesh, f"{path}/{N_or_res}{N}_ymesh")
 
