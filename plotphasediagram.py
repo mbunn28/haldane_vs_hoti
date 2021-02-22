@@ -17,7 +17,7 @@ N_or_res = "res"
 N = 600
 path = "output/phasediagram/periodic"
 
-# gap = joblib.load(f"{path}/{N_or_res}{N}_gap")
+gap = joblib.load(f"{path}/{N_or_res}{N}_gap")
 x = np.linspace(0,2,num=1201)
 # x = joblib.load(f"{path}/{N_or_res}{N}_x")
 
@@ -50,22 +50,22 @@ x = np.linspace(0,2,num=1201)
 # hal_val = np.concatenate((hal_val,hal_val1), axis=0)
 # hal_val = np.concatenate((hal_val,hal_val0), axis=0)
 
-# gap[gap>1e-2]= np.NaN
-# gap_mask = np.zeros((2*N+1,2*N+1),dtype=bool)
-# for i in range(2*N+1):
-#     gap_mask_row = np.zeros((2*N+1),dtype=bool)
-#     gap_mask_row[argrelextrema(gap[:,i], np.less)[0]] = True
-#     gap_mask[:,i] = gap_mask_row
-# gap[gap_mask == False] = np.NaN
+gap[gap>1e-2]= np.NaN
+gap_mask = np.zeros((2*N+1,2*N+1),dtype=bool)
+for i in range(2*N+1):
+    gap_mask_row = np.zeros((2*N+1),dtype=bool)
+    gap_mask_row[argrelextrema(gap[:,i], np.less)[0]] = True
+    gap_mask[:,i] = gap_mask_row
+gap[gap_mask == False] = np.NaN
    
-# x_mesh, y_mesh = np.meshgrid(x,x)
-# x_mesh[gap_mask == False] = np.NaN
-# y_mesh[gap_mask == False] = np.NaN
-# x_mesh[:,-8:] = np.NaN
-# y_mesh[:,-8:] = np.NaN
+x_mesh, y_mesh = np.meshgrid(x,x)
+x_mesh[gap_mask == False] = np.NaN
+y_mesh[gap_mask == False] = np.NaN
+x_mesh[:,-8:] = np.NaN
+y_mesh[:,-8:] = np.NaN
 
-x_mesh = joblib.load(f"{path}/{N_or_res}{N}_xmesh")
-y_mesh = joblib.load(f"{path}/{N_or_res}{N}_ymesh")
+# x_mesh = joblib.load(f"{path}/{N_or_res}{N}_xmesh")
+# y_mesh = joblib.load(f"{path}/{N_or_res}{N}_ymesh")
 
 x = np.zeros((1,1))
 x[0,0]=np.NaN

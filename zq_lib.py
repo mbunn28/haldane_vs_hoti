@@ -23,15 +23,15 @@ def curve(tau, zq):
         CoG = (2*np.pi/6)*np.array([1,1,1,1,1])
         # e0 = np.zeros(6,dtype=float)
         e1 = np.array([2*np.pi,0,0,0,0])
-        # e2 = np.array([0,2*np.pi,0,0,0])
+        e2 = np.array([0,2*np.pi,0,0,0])
         # e3 = np.array([0,0,2*np.pi,0,0])
         # e4 = np.array([0,0,0,2*np.pi,0])
         # e5 = np.array([0,0,0,0,2*np.pi])
 
         if tau <= 0.5:
-            the = 2*tau*CoG
-        elif tau <= 1:
-            the = 2*(1-tau)*CoG+(2*tau-1)*e1
+            the = 2*tau*CoG + (1 - 2*tau)*e1
+        elif 0.5 < tau <= 1:
+            the = 2*(1-tau)*CoG+(2*tau-1)*e2
         else:
             print("error! poorly parameterised curve")
             the = None
@@ -90,12 +90,19 @@ class zq_lattice:
                         h[self.lat(i,j,4), self.lat(i,j,5)] = -self.t*self.b*np.exp(-1j*the5)
                         h[self.lat(i,j,4), self.lat((i-1)%self.N,(j-1)%self.N,1)] = -self.t*self.a
 
-                        h[self.lat(i,j,0), self.lat(i,j,4)] = -1j*self.l*self.b*np.exp(-1j*(self.the[4]+self.the[3]+self.the[2]+self.the[1]))
-                        h[self.lat(i,j,1), self.lat(i,j,5)] = -1j*self.l*self.b*np.exp(1j*(self.the[1]+self.the[0]))
-                        h[self.lat(i,j,2), self.lat(i,j,0)] = -1j*self.l*self.b*np.exp(1j*(self.the[2]+self.the[1]))
-                        h[self.lat(i,j,3), self.lat(i,j,1)] = -1j*self.l*self.b*np.exp(1j*(self.the[3]+self.the[2]))
-                        h[self.lat(i,j,4), self.lat(i,j,2)] = -1j*self.l*self.b*np.exp(1j*(self.the[4]+self.the[3]))
-                        h[self.lat(i,j,5), self.lat(i,j,3)] = -1j*self.l*self.b*np.exp(-1j*(self.the[3]+self.the[2]+self.the[1]+self.the[0]))
+                        # h[self.lat(i,j,0), self.lat(i,j,4)] = -1j*self.l*self.b*np.exp(-1j*(self.the[4]+self.the[3]+self.the[2]+self.the[1]))
+                        # h[self.lat(i,j,1), self.lat(i,j,5)] = -1j*self.l*self.b*np.exp(1j*(self.the[1]+self.the[0]))
+                        # h[self.lat(i,j,2), self.lat(i,j,0)] = -1j*self.l*self.b*np.exp(1j*(self.the[2]+self.the[1]))
+                        # h[self.lat(i,j,3), self.lat(i,j,1)] = -1j*self.l*self.b*np.exp(1j*(self.the[3]+self.the[2]))
+                        # h[self.lat(i,j,4), self.lat(i,j,2)] = -1j*self.l*self.b*np.exp(1j*(self.the[4]+self.the[3]))
+                        # h[self.lat(i,j,5), self.lat(i,j,3)] = -1j*self.l*self.b*np.exp(-1j*(self.the[3]+self.the[2]+self.the[1]+self.the[0]))
+
+                        h[self.lat(i,j,0), self.lat(i,j,4)] = -1j*self.l*self.b
+                        h[self.lat(i,j,1), self.lat(i,j,5)] = -1j*self.l*self.b
+                        h[self.lat(i,j,2), self.lat(i,j,0)] = -1j*self.l*self.b
+                        h[self.lat(i,j,3), self.lat(i,j,1)] = -1j*self.l*self.b
+                        h[self.lat(i,j,4), self.lat(i,j,2)] = -1j*self.l*self.b
+                        h[self.lat(i,j,5), self.lat(i,j,3)] = -1j*self.l*self.b
                     
                     elif (i == self.location[0] and j == self.location[1] and self.zq == 'z2'):
                         h[self.lat(i,j,0), self.lat(i,j,1)] = -self.t*self.b
@@ -215,8 +222,6 @@ class zq_lattice:
             self.h = h
 
             ener, evecs = scipy.linalg.eigh(h)
-            if (ener[3*(self.N**2)]-ener[3*(self.N**2)-1]) < 1e-3:
-                print('energy very small!')
             self.energies = ener
             self.waves = evecs
             return

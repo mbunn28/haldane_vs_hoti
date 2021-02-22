@@ -15,13 +15,13 @@ rc('text', usetex=True)
 plt.rcParams['axes.axisbelow'] = True
 
 #creating the folder where you want to store the output
-path = "output/phasediagram/periodic"
+path = "output/phasediagram/periodic/semenoff"
 if not os.path.exists(path):
             os.makedirs(path)
 
 #the resolution of the energy diagram
-res = 300
-run = res #ignore this: I use this when I want to create a zoomed in portion of the hase diagram
+res = 50
+run = 2*res+1 #ignore this: I use this when I want to create a zoomed in portion of the hase diagram
 
 #Defining my parameter values:
 #meshgrid is an easy way to create a Cartesian plane of coords
@@ -37,7 +37,7 @@ t,b = np.meshgrid(down,down)
 #alpha, mu = np.meshgrid(alpha_vals,mu_vals)
 #alpha and mu are two arrays which tell you your alpha and mu vals at each point in a 2d space.
 #highly recommend v nifty
-
+M = 0.025
 
 
 # Ignore this: this is just my zoomed in version
@@ -114,6 +114,13 @@ def hamil(n,m,kvals):
 
     hamiltonians[:,5,3] = l[n,m]*np.exp(-1j*phi)*(b[n,m]+a[n,m]*(np.exp(-3*1j*kx)+np.exp(-1.5*1j*(kx+ky*np.sqrt(3)))))
 
+    hamiltonians[:,0,0] = M/2
+    hamiltonians[:,2,2] = M/2
+    hamiltonians[:,4,4] = M/2
+
+    hamiltonians[:,1,1] = -M/2
+    hamiltonians[:,3,3] = -M/2
+    hamiltonians[:,5,5] = -M/2
 
     hamiltonians = hamiltonians + np.conjugate(np.swapaxes(hamiltonians,1,2))
     evals = np.abs(np.linalg.eigvalsh(hamiltonians))

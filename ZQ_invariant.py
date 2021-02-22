@@ -22,17 +22,19 @@ path_zq = "output/zq"
 if not os.path.exists(path_zq):
             os.makedirs(path_zq)
 
-it = np.array([2,4,8,10,20,30,40,50,60,70,80,90,100,120,140,160,180,200,250,300,350,400,450,500,600,700,800,900,1000])
+it = np.array([2,3,4,5,6,7,8,9,10])
+#,11,12,13,14,15,16,17,18,19,20])
+#,120,140,160,180,200,250,300,350,400,450,500,600,700,800,900,1000])
 zq_phases = np.zeros((len(it),2))
 for m in tqdm(range(len(it))):
     indep = 'Alpha'
-    val = 0.15
+    val = 0.5
     num = 1
-    iterations = it[m]
+    iterations = 4
     location = np.array([4,4], dtype=int)
-    N = 10
-    max_x = 0.15
-    min_x = 0.15
+    N = it[m]
+    max_x = 1.8
+    min_x = 1.8
 
     def rule(n):
         grad = (max_x-min_x)/num
@@ -140,7 +142,6 @@ for m in tqdm(range(len(it))):
                     zq = zq[j],
                     N = N
                 )
-
                 # print(f'lattice1: a = {lattice2.a}, b= {lattice2.b}, t={lattice2.t}, l={lattice2.l}')
 
                 lattice2.twist_hamiltonian()
@@ -235,13 +236,13 @@ def format_func(value):
         return f'{value}'
     else:
         v = np.round(2 - value, 3)
-        part1 = r'$\frac{1}{'
-        part2 = r'}$'
+        part1 = r'\frac{1}{'
+        part2 = r'}'
         return fr'{part1}{v}{part2}'
 
 fig, ax = plt.subplots()
-ax.semilogx(it, zq_phases[:,0],'bo-',fillstyle="none")
-ax.semilogx(it, zq_phases[:,1],'k^-',fillstyle="none")
+ax.semilogx(it, zq_phases[:,0],'bo-',fillstyle="none", label=r'$\mathbb{Z}_6$')
+ax.semilogx(it, zq_phases[:,1],'k^-',fillstyle="none", label=r'$\mathbb{Z}_2$')
 title = '$\mathbb{Z}_Q$ Berry Phase'
 if b < 1:
     a = 2 -b
@@ -250,10 +251,10 @@ if t < 1:
     
 a_val = format_func(a)
 l_val = format_func(l)
-ax.set_title(rf'{title}: $ \alpha = {a_val}, \lambda = {l_val}, N = {N}$')
-ax.set_xlabel("iterations")
+ax.set_title(rf'{title}: $ \alpha = {a_val}, \lambda = {l_val}, $it$ = {iterations}$')
+ax.set_xlabel(r"$N$")
 ax.set_ylabel(r'$\gamma / 2\pi$')
-ax.legend({r'$\mathbb{Z}_6$', r'$\mathbb{Z}_2$'})
+ax.legend()
 
-fig_path = f"{path_zq}/a{a}_l{l}_N{N}"
+fig_path = f"{path_zq}/a{a}_l{l}_it{iterations}"
 fig.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
