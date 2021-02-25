@@ -22,13 +22,13 @@ path_zq = "output/zq/diagrams"
 if not os.path.exists(path_zq):
             os.makedirs(path_zq)
     
-points = 20
+points = 5
 iterations = 4
 location = np.array([2,2], dtype=int)
 N = 6
-max_x = 2
+max_x = 1
 min_x = 0
-max_y = 2
+max_y = 1
 min_y = 0
 
 def rule(y):
@@ -59,11 +59,11 @@ t, b = np.meshgrid(t_vals,b_vals)
 # l,a = np.meshgrid(up,up)
 # t,b = np.meshgrid(down,down)
 
-zq = ['z6','z2']
+zq = ['z6']
 zq_phases = np.zeros((res,res,len(zq)))
 small_energy = np.zeros((res,res,len(zq)))
-M = int(3*(N**2))
-phi = np.random.rand(2*M,M)
+M = int(2*(N**2))
+phi = np.random.rand(6*(N**2),M)
 phi = scipy.linalg.orth(phi)
 for m in tqdm(range(res)):
     for n in range(res):        
@@ -85,7 +85,7 @@ for m in tqdm(range(res)):
             evecs = lattice1.waves
             singlestates_a = evecs[:,:M]
             pa = np.einsum('ij,jk',singlestates_a,np.conjugate(singlestates_a.transpose()))
-            lattice1.proj = np.matmul(pa,phi)
+            lattice1.proj = np.einsum('ij,jk',pa,phi)
 
             for i in range(iterations):
 
@@ -106,7 +106,7 @@ for m in tqdm(range(res)):
                 evecs = lattice2.waves
                 singlestates_b = evecs[:,:M]
                 pb = np.einsum('ij,jk',singlestates_b,np.conjugate(singlestates_b.transpose()))
-                lattice2.proj = np.matmul(pb,phi)
+                lattice2.proj = np.einsum('ij,jk',pb,phi)
                 Di = np.einsum('ij,jk',np.conjugate(lattice1.proj.transpose()),lattice2.proj)
                 det_Di = numpy.linalg.slogdet(Di)
                 if det_Di == 0:
@@ -121,10 +121,13 @@ for m in tqdm(range(res)):
                 lattice1 = lattice2
 
             zq_phase = np.angle(D)
-            if zq_phase < -1e-1:
-                zq_phase = zq_phase + 2*np.pi
-            zq_phase = 6*zq_phase/(2*np.pi)
-            zq_phases[n,m,j] = zq_phase
+            zq_phase1 = 6*zq_phase/(2*np.pi)
+            zq_phase2 = np.round(zq_phase1,2)
+            if np.isclose(zq_phase1,zq_phase2) != True:
+                zq_phase2 = np.NaN
+            if zq_phase2 < -1e-1:
+                zq_phase2 = zq_phase2 + 6
+            zq_phases[n,m,j] = zq_phase2
 
 
 joblib.dump(zq_phases,f'{path_zq}/zq_phases_N{N}_it{iterations}_res{points}')
@@ -135,7 +138,7 @@ path_phasediagram = "output/phasediagram/periodic"
 x_to_plot = joblib.load(f"{path_phasediagram}/{N_or_res}{Nphase}_x_to_plot")
 y_to_plot = joblib.load(f"{path_phasediagram}/{N_or_res}{Nphase}_y_to_plot")
 
-print(zq_phases)
+print(zq_phases[:,:,0])
 fig1, ax1 = plt.subplots()
 # x = np.linspace(0,2,num=res)
 for i in range(np.shape(x_to_plot)[0]):
@@ -164,21 +167,21 @@ ax1.yaxis.set_major_formatter(plt.FuncFormatter(format_func))
 fig_path = f"{path_zq}/N{N}_iter{iterations}_res{points}_z6"
 fig1.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
 
-fig2, ax2 = plt.subplots()
-for i in range(np.shape(x_to_plot)[0]):
-    ax2.plot(x_to_plot[i,:],y_to_plot[i,:],c='k',lw=0.75)
-im1 = ax2.pcolormesh(x,y,zq_phases[:,:,1],cmap='Accent')
-fig2.colorbar(im1)
-title1 = '$\mathbb{Z}_2$ Berry Phase'
-ax2.set_title(rf'{title1}: $ N = {N},$ it $= {iterations}$, res $= {points}$')
-ax2.set_xlabel(r'$\alpha$')
-ax2.set_ylabel(r'$\lambda$')
-ax2.set_xlim(min_x,max_x)
-ax2.set_ylim(min_y,max_y)
-ax2.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
-ax2.yaxis.set_major_formatter(plt.FuncFormatter(format_func))
-fig_path1 = f"{path_zq}/N{N}_iter{iterations}_res{points}_z2"
-fig2.savefig(f"{fig_path1}.png", dpi=500, bbox_inches='tight')
+# fig2, ax2 = plt.subplots()
+# for i in range(np.shape(x_to_plot)[0]):
+#     ax2.plot(x_to_plot[i,:],y_to_plot[i,:],c='k',lw=0.75)
+# im1 = ax2.pcolormesh(x,y,zq_phases[:,:,1],cmap='Accent')
+# fig2.colorbar(im1)
+# title1 = '$\mathbb{Z}_2$ Berry Phase'
+# ax2.set_title(rf'{title1}: $ N = {N},$ it $= {iterations}$, res $= {points}$')
+# ax2.set_xlabel(r'$\alpha$')
+# ax2.set_ylabel(r'$\lambda$')
+# ax2.set_xlim(min_x,max_x)
+# ax2.set_ylim(min_y,max_y)
+# ax2.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
+# ax2.yaxis.set_major_formatter(plt.FuncFormatter(format_func))
+# fig_path1 = f"{path_zq}/N{N}_iter{iterations}_res{points}_z2"
+# fig2.savefig(f"{fig_path1}.png", dpi=500, bbox_inches='tight')
 
 small_energy[small_energy>1e-2] = np.NaN
 
@@ -199,18 +202,18 @@ ax3.yaxis.set_major_formatter(plt.FuncFormatter(format_func))
 fig_path2 = f"{path_zq}/N{N}_iter{iterations}_res{points}_z6_energy"
 fig3.savefig(f"{fig_path2}.png", dpi=500, bbox_inches='tight')
 
-fig4, ax4 = plt.subplots()
-for i in range(np.shape(x_to_plot)[0]):
-    ax4.plot(x_to_plot[i,:],y_to_plot[i,:],c='k',lw=0.75)
-im3 = ax4.pcolormesh(x,y,small_energy[:,:,1], norm = colors.LogNorm(), cmap='inferno')
-fig4.colorbar(im3)
-title3 = f'Small energy in {title1} calc'
-ax4.set_title(rf'{title3}: $ N = {N},$ it $= {iterations}$, res $= {points}$')
-ax4.set_ylabel(r'$\alpha$')
-ax4.set_xlabel(r'$\lambda$')
-ax4.set_xlim(min_x,max_x)
-ax4.set_ylim(min_y,max_y)
-ax4.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
-ax4.yaxis.set_major_formatter(plt.FuncFormatter(format_func))
-fig_path3 = f"{path_zq}/N{N}_iter{iterations}_res{points}_z2_energy"
-fig4.savefig(f"{fig_path3}.png", dpi=500, bbox_inches='tight')
+# fig4, ax4 = plt.subplots()
+# for i in range(np.shape(x_to_plot)[0]):
+#     ax4.plot(x_to_plot[i,:],y_to_plot[i,:],c='k',lw=0.75)
+# im3 = ax4.pcolormesh(x,y,small_energy[:,:,1], norm = colors.LogNorm(), cmap='inferno')
+# fig4.colorbar(im3)
+# title3 = f'Small energy in {title1} calc'
+# ax4.set_title(rf'{title3}: $ N = {N},$ it $= {iterations}$, res $= {points}$')
+# ax4.set_ylabel(r'$\alpha$')
+# ax4.set_xlabel(r'$\lambda$')
+# ax4.set_xlim(min_x,max_x)
+# ax4.set_ylim(min_y,max_y)
+# ax4.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
+# ax4.yaxis.set_major_formatter(plt.FuncFormatter(format_func))
+# fig_path3 = f"{path_zq}/N{N}_iter{iterations}_res{points}_z2_energy"
+# fig4.savefig(f"{fig_path3}.png", dpi=500, bbox_inches='tight')

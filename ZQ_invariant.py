@@ -22,19 +22,21 @@ path_zq = "output/zq"
 if not os.path.exists(path_zq):
             os.makedirs(path_zq)
 
-it = np.array([2,3,4,5,6,7,8,9,10])
+it = np.array([4])
+#150,200,250])
+# it = np.array([2,3,4,5,6,7,8,9,10,11,12,13,14,15])
 #,11,12,13,14,15,16,17,18,19,20])
 #,120,140,160,180,200,250,300,350,400,450,500,600,700,800,900,1000])
 zq_phases = np.zeros((len(it),2))
 for m in tqdm(range(len(it))):
     indep = 'Alpha'
-    val = 0.5
+    val = 0
     num = 1
-    iterations = 4
+    iterations = it[m]
     location = np.array([4,4], dtype=int)
-    N = it[m]
-    max_x = 1.8
-    min_x = 1.8
+    N = 6
+    max_x = 0.1
+    min_x = 0.1
 
     def rule(n):
         grad = (max_x-min_x)/num
@@ -74,8 +76,8 @@ for m in tqdm(range(len(it))):
     zq = ['z6', 'z2']
     # zq_phases = np.zeros((num,len(zq)))
     alphs = np.zeros(num)
-    M = int(3*(N**2))
-    phi = np.random.rand(2*M,M)
+    M = int((N**2))
+    phi = np.random.rand(6*M,M)
     phi = scipy.linalg.orth(phi)
     for n in range(num):
         if indep == 'Alpha':
@@ -128,7 +130,7 @@ for m in tqdm(range(len(it))):
             evecs = lattice1.waves
             singlestates_a = evecs[:,:M]
             pa = np.einsum('ij,jk',singlestates_a,np.conjugate(singlestates_a.transpose()))
-            lattice1.proj = np.matmul(pa,phi)
+            lattice1.proj = np.einsum('ij,jk',pa,phi)
 
             for i in range(iterations):
 
@@ -149,7 +151,7 @@ for m in tqdm(range(len(it))):
                 evecs = lattice2.waves
                 singlestates_b = evecs[:,:M]
                 pb = np.einsum('ij,jk',singlestates_b,np.conjugate(singlestates_b.transpose()))
-                lattice2.proj = np.matmul(pb,phi)
+                lattice2.proj = np.einsum('ij,jk',pb,phi)
                 Di = np.einsum('ij,jk',np.conjugate(lattice1.proj.transpose()),lattice2.proj)
                 det_Di = numpy.linalg.slogdet(Di)
                 if det_Di == 0:
@@ -256,5 +258,5 @@ ax.set_xlabel(r"$N$")
 ax.set_ylabel(r'$\gamma / 2\pi$')
 ax.legend()
 
-fig_path = f"{path_zq}/a{a}_l{l}_it{iterations}"
+fig_path = f"{path_zq}/a{a}_l{l}_N{N}"
 fig.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')

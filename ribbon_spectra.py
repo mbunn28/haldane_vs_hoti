@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import scipy.optimize as optimise
 from matplotlib import rc
+from tqdm import tqdm
 
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
@@ -22,10 +23,11 @@ if not os.path.exists(path):
             os.makedirs(path)
 
 a = 1
-b = 0.5575
-t = 0.2
+b = 0.466
+t = 0.693
 l = 1
-N = 1000
+N = 100
+M=0.1
 periodic = False
 res=250
 phi = np.pi/2
@@ -97,8 +99,7 @@ else:
     mask_left = np.zeros((res, 6*N),dtype=bool)
     mask_right = np.zeros((res, 6*N),dtype=bool)
 
-    for i in range(res):
-        print(f"{i}/{res}", end='\r')
+    for i in tqdm(range(res)):
 
         energies[i,:], evecs = np.linalg.eigh(hamiltonian(k[i]))
         evecs = np.transpose(evecs, axes=(1,0))
@@ -127,7 +128,7 @@ ax.set_xticks((-np.pi,-np.pi/2,0,np.pi/2,np.pi))
 ax.set_xticklabels((r'$-\pi$',r'$-\frac{\pi}{2}$',0,r'$\frac{\pi}{2}$',r'$\pi$'))
 fig.tight_layout()
 
-fig_path = f"{path}/res{res}_N{N}_ribbonspectrum_{aorb_name}{aorb}_{torl_name}{torl}"
+fig_path = f"{path}/res{res}_N{N}_ribbonspectrum_{aorb_name}{aorb}_{torl_name}{torl}_M{M}"
 fig.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
 # mask_other = np.logical_not(np.logical_or(mask_left,mask_right))
 
