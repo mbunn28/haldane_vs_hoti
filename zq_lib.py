@@ -78,31 +78,31 @@ class zq_lattice:
                 for j in range(self.N):
                     if (i == self.location[0] and j == self.location[1] and self.zq == 'z6'):
                         the5 = -np.sum(self.the)
-                        h[self.lat(i,j,0), self.lat(i,j,1)] = -self.t*self.b*np.exp(-1j*self.the[1])
-                        h[self.lat(i,j,0), self.lat(i,j,5)] = -self.t*self.b*np.exp(1j*self.the[0])
+                        h[self.lat(i,j,0), self.lat(i,j,1)] = -self.t*self.b*np.exp(1j*self.the[1])
+                        h[self.lat(i,j,0), self.lat(i,j,5)] = -self.t*self.b*np.exp(-1j*self.the[0])
                         h[self.lat(i,j,0), self.lat((i+1)%self.N,j,3)] = -self.t*self.a
 
-                        h[self.lat(i,j,2), self.lat(i,j,1)] = -self.t*self.b*np.exp(1j*self.the[2])
-                        h[self.lat(i,j,2), self.lat(i,j,3)] = -self.t*self.b*np.exp(-1j*self.the[3])
+                        h[self.lat(i,j,2), self.lat(i,j,1)] = -self.t*self.b*np.exp(-1j*self.the[2])
+                        h[self.lat(i,j,2), self.lat(i,j,3)] = -self.t*self.b*np.exp(1j*self.the[3])
                         h[self.lat(i,j,2), self.lat(i,(j+1)%self.N,5)] = -self.t*self.a
 
-                        h[self.lat(i,j,4), self.lat(i,j,3)] = -self.t*self.b*np.exp(1j*self.the[4])
-                        h[self.lat(i,j,4), self.lat(i,j,5)] = -self.t*self.b*np.exp(-1j*the5)
+                        h[self.lat(i,j,4), self.lat(i,j,3)] = -self.t*self.b*np.exp(-1j*self.the[4])
+                        h[self.lat(i,j,4), self.lat(i,j,5)] = -self.t*self.b*np.exp(1j*the5)
                         h[self.lat(i,j,4), self.lat((i-1)%self.N,(j-1)%self.N,1)] = -self.t*self.a
 
-                        # h[self.lat(i,j,0), self.lat(i,j,4)] = -1j*self.l*self.b*np.exp(-1j*(self.the[4]+self.the[3]+self.the[2]+self.the[1]))
-                        # h[self.lat(i,j,1), self.lat(i,j,5)] = -1j*self.l*self.b*np.exp(1j*(self.the[1]+self.the[0]))
-                        # h[self.lat(i,j,2), self.lat(i,j,0)] = -1j*self.l*self.b*np.exp(1j*(self.the[2]+self.the[1]))
-                        # h[self.lat(i,j,3), self.lat(i,j,1)] = -1j*self.l*self.b*np.exp(1j*(self.the[3]+self.the[2]))
-                        # h[self.lat(i,j,4), self.lat(i,j,2)] = -1j*self.l*self.b*np.exp(1j*(self.the[4]+self.the[3]))
-                        # h[self.lat(i,j,5), self.lat(i,j,3)] = -1j*self.l*self.b*np.exp(-1j*(self.the[3]+self.the[2]+self.the[1]+self.the[0]))
+                        h[self.lat(i,j,0), self.lat(i,j,4)] = -1j*self.l*self.b*np.exp(1j*(self.the[4]+self.the[3]+self.the[2]+self.the[1]))
+                        h[self.lat(i,j,1), self.lat(i,j,5)] = -1j*self.l*self.b*np.exp(-1j*(self.the[1]+self.the[0]))
+                        h[self.lat(i,j,2), self.lat(i,j,0)] = -1j*self.l*self.b*np.exp(-1j*(self.the[2]+self.the[1]))
+                        h[self.lat(i,j,3), self.lat(i,j,1)] = -1j*self.l*self.b*np.exp(-1j*(self.the[3]+self.the[2]))
+                        h[self.lat(i,j,4), self.lat(i,j,2)] = -1j*self.l*self.b*np.exp(-1j*(self.the[4]+self.the[3]))
+                        h[self.lat(i,j,5), self.lat(i,j,3)] = -1j*self.l*self.b*np.exp(1j*(self.the[3]+self.the[2]+self.the[1]+self.the[0]))
 
-                        h[self.lat(i,j,0), self.lat(i,j,4)] = -1j*self.l*self.b
-                        h[self.lat(i,j,1), self.lat(i,j,5)] = -1j*self.l*self.b
-                        h[self.lat(i,j,2), self.lat(i,j,0)] = -1j*self.l*self.b
-                        h[self.lat(i,j,3), self.lat(i,j,1)] = -1j*self.l*self.b
-                        h[self.lat(i,j,4), self.lat(i,j,2)] = -1j*self.l*self.b
-                        h[self.lat(i,j,5), self.lat(i,j,3)] = -1j*self.l*self.b
+                        # h[self.lat(i,j,0), self.lat(i,j,4)] = -1j*self.l*self.b
+                        # h[self.lat(i,j,1), self.lat(i,j,5)] = -1j*self.l*self.b
+                        # h[self.lat(i,j,2), self.lat(i,j,0)] = -1j*self.l*self.b
+                        # h[self.lat(i,j,3), self.lat(i,j,1)] = -1j*self.l*self.b
+                        # h[self.lat(i,j,4), self.lat(i,j,2)] = -1j*self.l*self.b
+                        # h[self.lat(i,j,5), self.lat(i,j,3)] = -1j*self.l*self.b
                     
                     elif (i == self.location[0] and j == self.location[1] and self.zq == 'z2'):
                         h[self.lat(i,j,0), self.lat(i,j,1)] = -self.t*self.b
