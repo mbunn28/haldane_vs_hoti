@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import scipy.optimize as optimise
 from matplotlib import rc
+from tqdm import tqdm
 
 # just a code snippet that makes all the fonts used in the plot LaTeX font
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
@@ -21,42 +22,41 @@ if not os.path.exists(path):
 
 #the resolution of the energy diagram
 res = 50
-run = 2*res+1 #ignore this: I use this when I want to create a zoomed in portion of the hase diagram
+run1 = res #ignore this: I use this when I want to create a zoomed in portion of the hase diagram
+run2= int(res/2)
 
 #Defining my parameter values:
 #meshgrid is an easy way to create a Cartesian plane of coords
-s_vals = np.linspace(0,1,num=res+1)
-ones = np.ones(res)
-up = np.append(s_vals, ones)
-down = np.append(ones, np.flipud(s_vals))
-l,a = np.meshgrid(up,up)
-t,b = np.meshgrid(down,down)
+# s_vals = np.linspace(0,1,num=res+1)
+# ones = np.ones(res)
+# up = np.append(s_vals, ones)
+# down = np.append(ones, np.flipud(s_vals))
+# l,a = np.meshgrid(up,up)
+# t,b = np.meshgrid(down,down)
 #mine are odd bc my paramter space is odd, but a basic one can be made as:
 #alpha_vals = np.linspace(min, max, num=res)
 #mu_vals = np.linspace(min,max,num=res)
 #alpha, mu = np.meshgrid(alpha_vals,mu_vals)
 #alpha and mu are two arrays which tell you your alpha and mu vals at each point in a 2d space.
 #highly recommend v nifty
-M = 0.025
+M = 0.015
 
 
 # Ignore this: this is just my zoomed in version
-# t_min = 0.675
-# t_max = 0.725
+t_min = 0.625
+t_max = 0.725
 
-# tvals = np.linspace(t_min,t_max,num=res)
+tvals = np.linspace(t_min,t_max,num=run1)
 
-# b_min = 0.45
-# b_max = 0.5
+b_min = 0.45
+b_max = 0.5
 
-# bvals = np.linspace(b_min,b_max,num=res)
+bvals = np.linspace(b_min,b_max,num=run2)
 
-# t,b = np.meshgrid(np.flipud(tvals), np.flipud(bvals))
-# ones = np.ones((res,res))
-# a = ones
-# l = ones
-
-
+t,b = np.meshgrid(np.flipud(tvals), np.flipud(bvals))
+ones = np.ones((run2,run1))
+a = ones
+l = ones
 
 
 #lattice vectors
@@ -215,14 +215,14 @@ def check_eval(n,m):
 
 
 #defining the arrays where I store the min energy and where it was along the red BZ
-gap = np.zeros((run,run))
-kgap = np.zeros((run,run))
+gap = np.zeros((run2,run1))
+kgap = np.zeros((run2,run1))
 #summing over each point in the discretized BZ
-for n in range(0,run):
-    for m in range(0,run):
+for n in tqdm(range(0,run2)):
+    for m in range(0,run1):
 
         #a v handy ticker that tells you how far along your calc is
-        print(f"{n*(run)+m}/{(run)**2}", end='\r')
+        # print(f"{n*(run1)+m}/{run1*run2}", end='\r')
 
         #check if the I want to evaluate the point or not
         check = check_eval(n,m)
@@ -235,7 +235,8 @@ for n in range(0,run):
             kgap[n,m] = np.NaN
 
 #the values I plot against. You could prob switch this to alpha_vals
-x = np.linspace(0,2,num=run)
+x = np.linspace(0,2,num=run1)
+
 
 #deleteing all the values greater than 0.01. Better resolution, and you can drop this down
 gap[gap>0.01]= np.NaN
@@ -247,21 +248,21 @@ joblib.dump(x, f"{path}/res{res}_x")
 
 #plot the data
 fig, ax = plt.subplots()
-plt.pcolormesh(x,x,gap, norm = colors.LogNorm(), cmap='inferno')
+plt.pcolormesh(gap, norm = colors.LogNorm(), cmap='inferno')
 # plt.title(r"Log Scaled Phase Boundary: Periodic, $\Delta$ = 1.7e-3")
 ax.grid(linestyle='--')
 # ax.set_xlim([0,0.4])
 ax.set_aspect(1)
 
-labels=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0, r'$\frac{1}{0.8}$',r'$\frac{1}{0.6}$',r'$\frac{1}{0.4}$',r'$\frac{1}{0.2}$',r'$\infty$']
-locs=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0,1.2,1.4,1.6,1.8,2.0]
-ax.set_yticklabels(labels)
-ax.set_yticks(locs)
-ax.set_ylabel(r'$\alpha$')
+# labels=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0, r'$\frac{1}{0.8}$',r'$\frac{1}{0.6}$',r'$\frac{1}{0.4}$',r'$\frac{1}{0.2}$',r'$\infty$']
+# locs=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0,1.2,1.4,1.6,1.8,2.0]
+# ax.set_yticklabels(labels)
+# ax.set_yticks(locs)
+# ax.set_ylabel(r'$\alpha$')
 
-ax.set_xticklabels(labels)
-ax.set_xticks(locs)
-ax.set_xlabel(r'$\lambda$')
+# ax.set_xticklabels(labels)
+# ax.set_xticks(locs)
+# ax.set_xlabel(r'$\lambda$')
 
 cbar = plt.colorbar(pad = 0.15)
 cbar.ax.get_yaxis().labelpad = 15

@@ -10,10 +10,10 @@ lattice = ti.Lattice(
 PBC_i = False, 
 PBC_j = False,
 Corners = True,
-a = 0.15,
+a = 0.2,
 b = 1,
 t = 1,
-l = 0.15,
+l = 1,
 M=0,
 N=10)
 
@@ -30,7 +30,9 @@ print(f"PBC_j = {lattice.PBC_j}")
 print(f"Corners = {lattice.Corners}")
 
 lattice.single_state()
-lattice.energy_plot(r=[-0.5,0.5])
+lattice.energy_plot(r=0.5)
+lattice.plot_mode(200)
+# print(lattice.h[:12,:12])
 
 
 # index = ti.find_mode(lattice.energies, 13)

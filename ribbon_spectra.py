@@ -12,20 +12,21 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import scipy.optimize as optimise
 from matplotlib import rc
-
+from tqdm import tqdm
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
 plt.rcParams['axes.axisbelow'] = True
 
-path = "output/ribbon"
+path = "output/ribbon_spectra"
 if not os.path.exists(path):
             os.makedirs(path)
 
-a = 1
-b = 0.5575
+a = 0.4
+b = 1
 t = 0.2
 l = 1
-N = 1000
+N = 100
+M=0.01
 periodic = False
 res=250
 phi = np.pi/2
@@ -77,7 +78,10 @@ def hamiltonian(k):
     if periodic == False:
         bigB[:,:6] = np.zeros((6*N,6),dtype=complex)
 
-    hamiltonian = bigA + bigB
+    little_M = np.array([[M,0],[0,-M]])
+    bigM = np.kron(np.eye(3*N,dtype=complex),little_M)
+
+    hamiltonian = bigA + bigB + bigM
     hamiltonian = hamiltonian + np.transpose(np.conjugate(hamiltonian))
     
     return hamiltonian
@@ -97,8 +101,7 @@ else:
     mask_left = np.zeros((res, 6*N),dtype=bool)
     mask_right = np.zeros((res, 6*N),dtype=bool)
 
-    for i in range(res):
-        print(f"{i}/{res}", end='\r')
+    for i in tqdm(range(res)):
 
         energies[i,:], evecs = np.linalg.eigh(hamiltonian(k[i]))
         evecs = np.transpose(evecs, axes=(1,0))
@@ -116,8 +119,8 @@ _, k =np.meshgrid(np.zeros(6*N),k)
 
 fig = plt.figure(figsize=(10,20))
 ax = fig.add_subplot(111)
-ax.set_aspect(10)
-ax.set_ylim((-0.25,0.25))
+ax.set_aspect(2)
+# ax.set_ylim((-0.25,0.25))
 ax.scatter(k[mask_left],energies[mask_left],c='b',s=1)
 ax.scatter(k[mask_right],energies[mask_right],c='r',s=1)
 ax.scatter(k[mask_other],energies[mask_other],c='black',s=0.5,marker='x',linewidth=0.25)
