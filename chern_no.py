@@ -67,7 +67,6 @@ def hamiltonian(eigensys):
 
     hamiltonians = hamiltonians + np.conjugate(np.swapaxes(hamiltonians,2,3))
 
-    
     eigvals, eigvec = np.linalg.eigh(hamiltonians)
     eigensys[:,:,0,:] = eigvals
     eigensys[:,:,1:7,:] = np.swapaxes(eigvec, 2, 3)

@@ -25,10 +25,10 @@ a = 1
 b = 0.466
 t = 0.693
 l = 1
-N = 100
-M=0.1
+N = 500
+M = 0.2
 periodic = False
-res=250
+res= 250
 phi = np.pi/2
 
 if a == 1 and b == 1:
@@ -78,7 +78,7 @@ def hamiltonian(k):
     if periodic == False:
         bigB[:,:6] = np.zeros((6*N,6),dtype=complex)
 
-    little_M = np.array([[M,0],[0,-M]])
+    little_M = np.array([[M/2,0],[0,-M/2]])
     bigM = np.kron(np.eye(3*N,dtype=complex),little_M)
 
     hamiltonian = bigA + bigB + bigM
@@ -86,9 +86,9 @@ def hamiltonian(k):
     
     return hamiltonian
 
-energy_path = f"{path}/res{res}_N{N}_energies_{aorb_name}{aorb}_{torl_name}{torl}"
-mask_left_path = f"{path}/res{res}_N{N}_left_{aorb_name}{aorb}_{torl_name}{torl}"
-mask_right_path = f"{path}/res{res}_N{N}_right_{aorb_name}{aorb}_{torl_name}{torl}"
+energy_path = f"{path}/res{res}_N{N}_energies_{aorb_name}{aorb}_{torl_name}{torl}_M{M}"
+mask_left_path = f"{path}/res{res}_N{N}_left_{aorb_name}{aorb}_{torl_name}{torl}_M{M}"
+mask_right_path = f"{path}/res{res}_N{N}_right_{aorb_name}{aorb}_{torl_name}{torl}_M{M}"
 
 k = np.linspace(-np.pi,np.pi,num=res)
 
@@ -119,8 +119,8 @@ _, k =np.meshgrid(np.zeros(6*N),k)
 
 fig = plt.figure(figsize=(10,20))
 ax = fig.add_subplot(111)
-ax.set_aspect(2)
-# ax.set_ylim((-0.25,0.25))
+ax.set_aspect(10)
+ax.set_ylim((-0.25,0.25))
 ax.scatter(k[mask_left],energies[mask_left],c='b',s=1)
 ax.scatter(k[mask_right],energies[mask_right],c='r',s=1)
 ax.scatter(k[mask_other],energies[mask_other],c='black',s=0.5,marker='x',linewidth=0.25)
@@ -130,7 +130,7 @@ ax.set_xticks((-np.pi,-np.pi/2,0,np.pi/2,np.pi))
 ax.set_xticklabels((r'$-\pi$',r'$-\frac{\pi}{2}$',0,r'$\frac{\pi}{2}$',r'$\pi$'))
 fig.tight_layout()
 
-fig_path = f"{path}/res{res}_N{N}_ribbonspectrum_{aorb_name}{aorb}_{torl_name}{torl}_M{M}"
+fig_path = f"{path}/res{res}_N{N}_ribbonspectrum_{aorb_name}{aorb}_{torl_name}{torl}_M{M}_zoom"
 fig.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
 # mask_other = np.logical_not(np.logical_or(mask_left,mask_right))
 

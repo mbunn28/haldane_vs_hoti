@@ -4,6 +4,7 @@ import numpy as np
 import numpy.linalg
 import joblib
 import os
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from matplotlib import rc
@@ -22,13 +23,13 @@ path_zq = "output/zq/diagrams"
 if not os.path.exists(path_zq):
             os.makedirs(path_zq)
     
-points = 5
+points = 2
 iterations = 4
 location = np.array([2,2], dtype=int)
-N = 6
-max_x = 1
+N = 14
+max_x = 2
 min_x = 0
-max_y = 1
+max_y = 2
 min_y = 0
 
 def rule(y):
@@ -59,10 +60,10 @@ t, b = np.meshgrid(t_vals,b_vals)
 # l,a = np.meshgrid(up,up)
 # t,b = np.meshgrid(down,down)
 
-zq = ['z6']
+zq = ['z6','z2']
 zq_phases = np.zeros((res,res,len(zq)))
 small_energy = np.zeros((res,res,len(zq)))
-M = int(2*(N**2))
+M = int(3*(N**2))
 phi = np.random.rand(6*(N**2),M)
 phi = scipy.linalg.orth(phi)
 for m in tqdm(range(res)):
@@ -138,17 +139,28 @@ path_phasediagram = "output/phasediagram/periodic"
 x_to_plot = joblib.load(f"{path_phasediagram}/{N_or_res}{Nphase}_x_to_plot")
 y_to_plot = joblib.load(f"{path_phasediagram}/{N_or_res}{Nphase}_y_to_plot")
 
-print(zq_phases[:,:,0])
 fig1, ax1 = plt.subplots()
 # x = np.linspace(0,2,num=res)
 for i in range(np.shape(x_to_plot)[0]):
     ax1.plot(x_to_plot[i,:],y_to_plot[i,:],c='k',lw=0.75)
-im = ax1.pcolormesh(x,y,zq_phases[:,:,0],cmap='Accent')
-fig1.colorbar(im)
+
+cmap = plt.cm.Dark2  # define the colormap
+# extract all colors from the .jet map
+cmaplist = [cmap(i) for i in range(6)]
+cmaplist[0] = (0,0,0,0)
+# create the new map
+cmap = mpl.colors.ListedColormap(cmaplist)
+
+im = ax1.pcolormesh(x,y,zq_phases[:,:,0],cmap=cmap)
+cb1 = fig1.colorbar(im,cmap=cmap, format='%1i')
+labels = np.arange(0,6,1)
+loc    = np.array([5/12,15/12,25/12,35/12,45/12,55/12])
+cb1.set_ticks(loc)
+cb1.set_ticklabels(labels)
 title = '$\mathbb{Z}_6$ Berry Phase'
 ax1.set_title(rf'{title}: $ N = {N},$ it $= {iterations}$, $res = {points}$')
-ax1.set_xlabel(r'$\alpha$')
-ax1.set_ylabel(r'$\lambda$')
+ax1.set_ylabel(r'$\alpha$')
+ax1.set_xlabel(r'$\lambda$')
 ax1.set_xlim(min_x,max_x)
 ax1.set_ylim(min_y,max_y)
 
@@ -167,21 +179,33 @@ ax1.yaxis.set_major_formatter(plt.FuncFormatter(format_func))
 fig_path = f"{path_zq}/N{N}_iter{iterations}_res{points}_z6"
 fig1.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
 
-# fig2, ax2 = plt.subplots()
-# for i in range(np.shape(x_to_plot)[0]):
-#     ax2.plot(x_to_plot[i,:],y_to_plot[i,:],c='k',lw=0.75)
-# im1 = ax2.pcolormesh(x,y,zq_phases[:,:,1],cmap='Accent')
-# fig2.colorbar(im1)
-# title1 = '$\mathbb{Z}_2$ Berry Phase'
-# ax2.set_title(rf'{title1}: $ N = {N},$ it $= {iterations}$, res $= {points}$')
-# ax2.set_xlabel(r'$\alpha$')
-# ax2.set_ylabel(r'$\lambda$')
-# ax2.set_xlim(min_x,max_x)
-# ax2.set_ylim(min_y,max_y)
-# ax2.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
-# ax2.yaxis.set_major_formatter(plt.FuncFormatter(format_func))
-# fig_path1 = f"{path_zq}/N{N}_iter{iterations}_res{points}_z2"
-# fig2.savefig(f"{fig_path1}.png", dpi=500, bbox_inches='tight')
+fig2, ax2 = plt.subplots()
+for i in range(np.shape(x_to_plot)[0]):
+    ax2.plot(x_to_plot[i,:],y_to_plot[i,:],c='k',lw=0.75)
+
+cmap = plt.cm.tab10  # define the colormap
+# extract all colors from the .jet map
+cmaplist = [cmap(i) for i in range(2)]
+cmaplist[0] = (0,0,0,0)
+# create the new map
+cmap = mpl.colors.ListedColormap(cmaplist)
+
+im1 = ax2.pcolormesh(x,y,zq_phases[:,:,1]/3,cmap=cmap)
+cb2 = fig2.colorbar(im1,cmap=cmap, format='%1i')
+labels1 = [0,1]
+loc1    = np.array([1/4,3/4])
+cb2.set_ticks(loc1)
+cb2.set_ticklabels(labels1)
+title1 = '$\mathbb{Z}_2$ Berry Phase'
+ax2.set_title(rf'{title1}: $ N = {N},$ it $= {iterations}$, res $= {points}$')
+ax2.set_ylabel(r'$\alpha$')
+ax2.set_xlabel(r'$\lambda$')
+ax2.set_xlim(min_x,max_x)
+ax2.set_ylim(min_y,max_y)
+ax2.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
+ax2.yaxis.set_major_formatter(plt.FuncFormatter(format_func))
+fig_path1 = f"{path_zq}/N{N}_iter{iterations}_res{points}_z2"
+fig2.savefig(f"{fig_path1}.png", dpi=500, bbox_inches='tight')
 
 small_energy[small_energy>1e-2] = np.NaN
 
@@ -192,8 +216,8 @@ im2 = ax3.pcolormesh(x,y,small_energy[:,:,0], norm = colors.LogNorm(), cmap='inf
 fig3.colorbar(im2)
 title2 = f'Small energy in {title} calc'
 ax3.set_title(rf'{title2}: $ N = {N},$ it $= {iterations}$, $res = {points}$')
-ax3.set_xlabel(r'$\alpha$')
-ax3.set_ylabel(r'$\lambda$')
+ax3.set_ylabel(r'$\alpha$')
+ax3.set_xlabel(r'$\lambda$')
 ax3.set_xlim(min_x,max_x)
 ax3.set_ylim(min_y,max_y)
 ax3.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
@@ -202,18 +226,18 @@ ax3.yaxis.set_major_formatter(plt.FuncFormatter(format_func))
 fig_path2 = f"{path_zq}/N{N}_iter{iterations}_res{points}_z6_energy"
 fig3.savefig(f"{fig_path2}.png", dpi=500, bbox_inches='tight')
 
-# fig4, ax4 = plt.subplots()
-# for i in range(np.shape(x_to_plot)[0]):
-#     ax4.plot(x_to_plot[i,:],y_to_plot[i,:],c='k',lw=0.75)
-# im3 = ax4.pcolormesh(x,y,small_energy[:,:,1], norm = colors.LogNorm(), cmap='inferno')
-# fig4.colorbar(im3)
-# title3 = f'Small energy in {title1} calc'
-# ax4.set_title(rf'{title3}: $ N = {N},$ it $= {iterations}$, res $= {points}$')
-# ax4.set_ylabel(r'$\alpha$')
-# ax4.set_xlabel(r'$\lambda$')
-# ax4.set_xlim(min_x,max_x)
-# ax4.set_ylim(min_y,max_y)
-# ax4.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
-# ax4.yaxis.set_major_formatter(plt.FuncFormatter(format_func))
-# fig_path3 = f"{path_zq}/N{N}_iter{iterations}_res{points}_z2_energy"
-# fig4.savefig(f"{fig_path3}.png", dpi=500, bbox_inches='tight')
+fig4, ax4 = plt.subplots()
+for i in range(np.shape(x_to_plot)[0]):
+    ax4.plot(x_to_plot[i,:],y_to_plot[i,:],c='k',lw=0.75)
+im3 = ax4.pcolormesh(x,y,small_energy[:,:,1], norm = colors.LogNorm(), cmap='inferno')
+fig4.colorbar(im3)
+title3 = f'Small energy in {title1} calc'
+ax4.set_title(rf'{title3}: $ N = {N},$ it $= {iterations}$, res $= {points}$')
+ax4.set_ylabel(r'$\alpha$')
+ax4.set_xlabel(r'$\lambda$')
+ax4.set_xlim(min_x,max_x)
+ax4.set_ylim(min_y,max_y)
+ax4.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
+ax4.yaxis.set_major_formatter(plt.FuncFormatter(format_func))
+fig_path3 = f"{path_zq}/N{N}_iter{iterations}_res{points}_z2_energy"
+fig4.savefig(f"{fig_path3}.png", dpi=500, bbox_inches='tight')
