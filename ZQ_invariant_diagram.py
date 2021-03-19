@@ -11,7 +11,7 @@ from matplotlib import rc
 import scipy.linalg
 import numpy.random
 import numpy.ma
-from tqdm import tqdm
+from tqdm.auto import trange
 from scipy.signal import argrelextrema
 import zq_lib
 
@@ -23,9 +23,9 @@ path_zq = "output/zq/diagrams"
 if not os.path.exists(path_zq):
             os.makedirs(path_zq)
     
-points = 2
+points = 100
 iterations = 4
-location = np.array([2,2], dtype=int)
+location = np.array([10,2], dtype=int)
 N = 14
 max_x = 2
 min_x = 0
@@ -66,8 +66,8 @@ small_energy = np.zeros((res,res,len(zq)))
 M = int(3*(N**2))
 phi = np.random.rand(6*(N**2),M)
 phi = scipy.linalg.orth(phi)
-for m in tqdm(range(res)):
-    for n in range(res):        
+for m in trange(res):
+    for n in trange(res,leave=False):        
         for j in range(len(zq)):
             lattice1 = zq_lib.zq_lattice(
                 a = a[n,m],
@@ -132,6 +132,7 @@ for m in tqdm(range(res)):
 
 
 joblib.dump(zq_phases,f'{path_zq}/zq_phases_N{N}_it{iterations}_res{points}')
+joblib.dump(small_energy,f'{path_zq}/small_energy_N{N}_it{iterations}_res{points}')
 
 N_or_res = "res"
 Nphase = 600
