@@ -9,13 +9,13 @@ import joblib
 lattice = ti.Lattice(
 PBC_i = False, 
 PBC_j = False,
-Corners = True,
-a = 0.2,
+Corners = False,
+a = 1,
 b = 1,
 t = 1,
-l = 1,
+l = 0.4,
 M=0,
-N=10)
+N=16)
 
 # folder = "data/11052020/PBC/t1.9_a1.9_N12"
 
@@ -29,11 +29,12 @@ print(f"PBC_i = {lattice.PBC_i}")
 print(f"PBC_j = {lattice.PBC_j}")
 print(f"Corners = {lattice.Corners}")
 
-lattice.single_state()
-lattice.energy_plot(r=0.5)
-lattice.plot_mode(200)
+# lattice.single_state()
+# lattice.energy_plot(r=0.5)
+
 # print(lattice.h[:12,:12])
 
+lattice.energy_spectrum('a',t=50)
 
 # index = ti.find_mode(lattice.energies, 13)
 # betweenbands = np.round(np.abs(lattice.energies),4) < np.round(np.abs(lattice.energies[index[1]]),4)
@@ -42,6 +43,6 @@ lattice.plot_mode(200)
 # print(np.shape(lattice.energies))
 
 # lattice.initialize_hamiltonian()
-# E = 0.3
+# E = -1.8
 # lattice.energies = lattice.energies - E
 # lattice.plot_mode(0, shift=E)
