@@ -22,15 +22,22 @@ rc('text.latex', preamble= r'\usepackage{amsfonts}')
 path_zq = "output/zq/diagrams"
 if not os.path.exists(path_zq):
             os.makedirs(path_zq)
-    
-points = 2
+
+
+points = 81
 iterations = 4
 location = np.array([2,2], dtype=int)
-N = 14
-max_x = 2
+N = 8
+max_x = 1
 min_x = 0
 max_y = 2
 min_y = 0
+
+res = int((points-1)/2)
+x = np.linspace(min_x, max_x, num=res+1)
+y = np.linspace(min_y, max_y, num=points)
+
+zq_phases_path = f'{path_zq}/zq_phases_N{N}_it{iterations}_res{res}'
 
 def rule(y):
     a = np.zeros(len(y))
@@ -44,106 +51,106 @@ def rule(y):
             b[i] = 2 - y[i]
     return a, b
 
-res = points
-x = np.linspace(min_x, max_x, num=points)
-y = np.linspace(min_y, max_y, num=points)
-a_vals, b_vals = rule(y)
-l_vals, t_vals = rule(x)
+if (os.path.exists(zq_phases_path)):
+    zq_phases = joblib.load(zq_phases_path)
+else:
+    a_vals, b_vals = rule(y)
+    l_vals, t_vals = rule(x)
+    l, a = np.meshgrid(l_vals,a_vals)
+    t, b = np.meshgrid(t_vals,b_vals)
 
-l, a = np.meshgrid(l_vals,a_vals)
-t, b = np.meshgrid(t_vals,b_vals)
+    # s_vals = np.linspace(0,1,num=points+1)
+    # ones = np.ones(points)
+    # up = np.append(s_vals, ones)
+    # down = np.append(ones, np.flipud(s_vals))
+    # l,a = np.meshgrid(up,up)
+    # t,b = np.meshgrid(down,down)
 
-# s_vals = np.linspace(0,1,num=points+1)
-# ones = np.ones(points)
-# up = np.append(s_vals, ones)
-# down = np.append(ones, np.flipud(s_vals))
-# l,a = np.meshgrid(up,up)
-# t,b = np.meshgrid(down,down)
-
-zq = ['z6','z2']
-zq_phases = np.zeros((res,res,len(zq)))
-small_energy = np.zeros((res,res,len(zq)))
-M = int(3*(N**2))
-phi = np.random.rand(6*(N**2),M)
-phi = scipy.linalg.orth(phi)
-for m in tqdm(range(res)):
-    for n in range(res):        
-        for j in range(len(zq)):
-            lattice1 = zq_lib.zq_lattice(
-                a = a[n,m],
-                b = b[n,m],
-                l = l[n,m],
-                t = t[n,m],
-                the = zq_lib.curve(0, zq=zq[j]),
-                loc = location,
-                zq = zq[j],
-                N = N
-            )
-            
-            D = 1
-            lattice1.twist_hamiltonian()
-            small_energy[n,m,j] = np.min(np.abs(lattice1.energies))
-            evecs = lattice1.waves
-            singlestates_a = evecs[:,:M]
-            pa = np.einsum('ij,jk',singlestates_a,np.conjugate(singlestates_a.transpose()))
-            lattice1.proj = np.einsum('ij,jk',pa,phi)
-
-            for i in range(iterations):
-
-                lattice2 = zq_lib.zq_lattice(
+    zq = ['z6','z2']
+    zq_phases = np.zeros((res,res,len(zq)))
+    small_energy = np.zeros((res,res,len(zq)))
+    M = int(3*(N**2))
+    phi = np.random.rand(6*(N**2),M)
+    phi = scipy.linalg.orth(phi)
+    for m in tqdm(range(res)):
+        for n in range(res):        
+            for j in range(len(zq)):
+                lattice1 = zq_lib.zq_lattice(
                     a = a[n,m],
                     b = b[n,m],
                     l = l[n,m],
                     t = t[n,m],
-                    the = zq_lib.curve((i+1)/iterations, zq = zq[j]),
+                    the = zq_lib.curve(0, zq=zq[j]),
                     loc = location,
                     zq = zq[j],
                     N = N
                 )
-
-                lattice2.twist_hamiltonian()
-                if np.min(np.abs(lattice2.energies)) < small_energy[n,m,j]:
-                    small_energy[n,m,j] = np.min(np.abs(lattice2.energies))
-                evecs = lattice2.waves
-                singlestates_b = evecs[:,:M]
-                pb = np.einsum('ij,jk',singlestates_b,np.conjugate(singlestates_b.transpose()))
-                lattice2.proj = np.einsum('ij,jk',pb,phi)
-                Di = np.einsum('ij,jk',np.conjugate(lattice1.proj.transpose()),lattice2.proj)
-                det_Di = numpy.linalg.slogdet(Di)
-                if det_Di == 0:
-                    print('error! det zero!\n')
-                D = D*det_Di[0]
                 
-                Nphi = np.einsum('ij,jk',np.conjugate(lattice2.proj.transpose()), lattice2.proj)
-                _, det_Nphi = numpy.linalg.slogdet(Nphi)
-                if det_Nphi == -np.Inf:
-                    print('The overlap matrix det = 0!')
-                
-                lattice1 = lattice2
+                D = 1
+                lattice1.twist_hamiltonian()
+                small_energy[n,m,j] = np.min(np.abs(lattice1.energies))
+                evecs = lattice1.waves
+                singlestates_a = evecs[:,:M]
+                pa = np.einsum('ij,jk',singlestates_a,np.conjugate(singlestates_a.transpose()))
+                lattice1.proj = np.einsum('ij,jk',pa,phi)
 
-            zq_phase = np.angle(D)
-            zq_phase1 = 6*zq_phase/(2*np.pi)
-            zq_phase2 = np.round(zq_phase1,2)
-            if np.isclose(zq_phase1,zq_phase2) != True:
-                zq_phase2 = np.NaN
-            if zq_phase2 < -1e-1:
-                zq_phase2 = zq_phase2 + 6
-            zq_phases[n,m,j] = zq_phase2
+                for i in range(iterations):
+
+                    lattice2 = zq_lib.zq_lattice(
+                        a = a[n,m],
+                        b = b[n,m],
+                        l = l[n,m],
+                        t = t[n,m],
+                        the = zq_lib.curve((i+1)/iterations, zq = zq[j]),
+                        loc = location,
+                        zq = zq[j],
+                        N = N
+                    )
+
+                    lattice2.twist_hamiltonian()
+                    if np.min(np.abs(lattice2.energies)) < small_energy[n,m,j]:
+                        small_energy[n,m,j] = np.min(np.abs(lattice2.energies))
+                    evecs = lattice2.waves
+                    singlestates_b = evecs[:,:M]
+                    pb = np.einsum('ij,jk',singlestates_b,np.conjugate(singlestates_b.transpose()))
+                    lattice2.proj = np.einsum('ij,jk',pb,phi)
+                    Di = np.einsum('ij,jk',np.conjugate(lattice1.proj.transpose()),lattice2.proj)
+                    det_Di = numpy.linalg.slogdet(Di)
+                    if det_Di == 0:
+                        print('error! det zero!\n')
+                    D = D*det_Di[0]
+                    
+                    Nphi = np.einsum('ij,jk',np.conjugate(lattice2.proj.transpose()), lattice2.proj)
+                    _, det_Nphi = numpy.linalg.slogdet(Nphi)
+                    if det_Nphi == -np.Inf:
+                        print('The overlap matrix det = 0!')
+                    
+                    lattice1 = lattice2
+
+                zq_phase = np.angle(D)
+                zq_phase1 = 6*zq_phase/(2*np.pi)
+                zq_phase2 = np.round(zq_phase1,2)
+                if np.isclose(zq_phase1,zq_phase2) != True:
+                    zq_phase2 = np.NaN
+                if zq_phase2 < -1e-1:
+                    zq_phase2 = zq_phase2 + 6
+                zq_phases[n,m,j] = zq_phase2
 
 
-joblib.dump(zq_phases,f'{path_zq}/zq_phases_N{N}_it{iterations}_res{points}')
+    joblib.dump(zq_phases,zq_phases_path)
+    joblib.dump(small_energy,f'{path_zq}/small_energy_N{N}_it{iterations}_res{points}')
 
+zq_phases = zq_phases[:,:(res+1)]
 N_or_res = "res"
 Nphase = 600
 path_phasediagram = "output/phasediagram/periodic"
 x_to_plot = joblib.load(f"{path_phasediagram}/{N_or_res}{Nphase}_x_to_plot")
 y_to_plot = joblib.load(f"{path_phasediagram}/{N_or_res}{Nphase}_y_to_plot")
 
+
 fig1, ax1 = plt.subplots()
 # x = np.linspace(0,2,num=res)
-for i in range(np.shape(x_to_plot)[0]):
-    ax1.plot(x_to_plot[i,:],y_to_plot[i,:],c='k',lw=0.75)
-
+ax1.set_aspect(1)
 cmap = plt.cm.Dark2  # define the colormap
 # extract all colors from the .jet map
 cmaplist = [cmap(i) for i in range(6)]
@@ -152,6 +159,8 @@ cmaplist[0] = (0,0,0,0)
 cmap = mpl.colors.ListedColormap(cmaplist)
 
 im = ax1.pcolormesh(x,y,zq_phases[:,:,0],cmap=cmap)
+for i in range(np.shape(x_to_plot)[0]):
+    ax1.plot(x_to_plot[i,:],y_to_plot[i,:],c='k',lw=0.75)
 cb1 = fig1.colorbar(im,cmap=cmap, format='%1i')
 labels = np.arange(0,6,1)
 loc    = np.array([5/12,15/12,25/12,35/12,45/12,55/12])
@@ -180,9 +189,9 @@ fig_path = f"{path_zq}/N{N}_iter{iterations}_res{points}_z6"
 fig1.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
 
 fig2, ax2 = plt.subplots()
+ax2.set_aspect(1)
 for i in range(np.shape(x_to_plot)[0]):
     ax2.plot(x_to_plot[i,:],y_to_plot[i,:],c='k',lw=0.75)
-
 cmap = plt.cm.tab10  # define the colormap
 # extract all colors from the .jet map
 cmaplist = [cmap(i) for i in range(2)]
@@ -193,14 +202,14 @@ cmap = mpl.colors.ListedColormap(cmaplist)
 im1 = ax2.pcolormesh(x,y,zq_phases[:,:,1]/3,cmap=cmap)
 cb2 = fig2.colorbar(im1,cmap=cmap, format='%1i')
 labels1 = [0,1]
-loc1    = np.array([1/4,3/4])
+loc1    = np.array([1/2,3/2])
 cb2.set_ticks(loc1)
 cb2.set_ticklabels(labels1)
 title1 = '$\mathbb{Z}_2$ Berry Phase'
 ax2.set_title(rf'{title1}: $ N = {N},$ it $= {iterations}$, res $= {points}$')
 ax2.set_ylabel(r'$\alpha$')
 ax2.set_xlabel(r'$\lambda$')
-ax2.set_xlim(min_x,max_x)
+ax2.set_xlim(min_x,1)
 ax2.set_ylim(min_y,max_y)
 ax2.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
 ax2.yaxis.set_major_formatter(plt.FuncFormatter(format_func))
