@@ -11,7 +11,7 @@ from matplotlib import rc
 import scipy.linalg
 import numpy.random
 import numpy.ma
-from tqdm import tqdm
+from tqdm.auto import trange
 from scipy.signal import argrelextrema
 import zq_lib
 

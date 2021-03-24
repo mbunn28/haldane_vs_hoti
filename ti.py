@@ -15,10 +15,20 @@ from numpy import random
 import joblib
 import scipy.linalg
 from matplotlib import rc
+from tqdm import tqdm
 
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
 plt.rcParams['axes.axisbelow'] = True
+
+def format_func(value, tick_number):
+    if value <= 1:
+        return f'{np.round(value,3)}'
+    else:
+        v = np.round(2 - value, 3)
+        part1 = r'$\frac{1}{'
+        part2 = r'}$'
+        return fr'{part1}{v}{part2}'
 
 def layout(mode):
     if len(mode)<=3:
@@ -189,6 +199,49 @@ class Lattice:
                     h[:,self.lat(self.N-1,j,s)]=0
                     h[self.lat(self.N-1,j,s),self.lat(self.N-1,j,s)] = vv
 
+        #5 site corners
+        # h[self.lat(0,0,4),:]=0
+        # h[:,self.lat(0,0,4)]=0
+        # h[self.lat(0,0,4),self.lat(0,0,4)]=vv
+
+        # h[self.lat(self.N-1,self.N-1,1),:]=0
+        # h[:,self.lat(self.N-1,self.N-1,1)]=0
+        # h[self.lat(self.N-1,self.N-1,1),self.lat(self.N-1,self.N-1,1)]=vv
+
+        # #4 site corners
+        h[self.lat(0,self.N-1,2),:]=0
+        h[:,self.lat(0,self.N-1,2)]=0
+        h[self.lat(0,self.N-1,2),self.lat(0,self.N-1,2)]=vv
+
+        h[self.lat(0,self.N-1,3),:]=0
+        h[:,self.lat(0,self.N-1,3)]=0
+        h[self.lat(0,self.N-1,3),self.lat(0,self.N-1,3)]=vv
+
+        h[self.lat(self.N-1,0,5),:]=0
+        h[:,self.lat(self.N-1,0,5)]=0
+        h[self.lat(self.N-1,0,5),self.lat(self.N-1,0,5)]=vv
+
+        h[self.lat(self.N-1,0,0),:]=0
+        h[:,self.lat(self.N-1,0,0)]=0
+        h[self.lat(self.N-1,0,0),self.lat(self.N-1,0,0)]=vv
+
+        # #3 site corners
+        # h[self.lat(0,0,5),:]=0
+        # h[:,self.lat(0,0,5)]=0
+        # h[self.lat(0,0,5),self.lat(0,0,5)]=vv
+
+        # h[self.lat(self.N-1,self.N-1,2),:]=0
+        # h[:,self.lat(self.N-1,self.N-1,2)]=0
+        # h[self.lat(self.N-1,self.N-1,2),self.lat(self.N-1,self.N-1,2)]=vv
+
+        # h[self.lat(0,0,3),:]=0
+        # h[:,self.lat(0,0,3)]=0
+        # h[self.lat(0,0,3),self.lat(0,0,3)]=vv
+
+        # h[self.lat(self.N-1,self.N-1,0),:]=0
+        # h[:,self.lat(self.N-1,self.N-1,0)]=0
+        # h[self.lat(self.N-1,self.N-1,0),self.lat(self.N-1,self.N-1,0)]=vv
+
         h = np.conjugate(h.transpose()) + h
         self.h = h
         return
@@ -266,9 +319,10 @@ class Lattice:
         if name == "Energy Eigenstates" or name == "Density of States" or name == "Energy Eigenvalues of the Hamiltonian":
             title = rf"{condition} {corners} {name}: $\alpha =$ {alph}, $\lambda =$ {lamb}"
         elif name == "Energy vs Alpha":
-            title = rf"{condition} {corners} {name}: $\lambda =$ {lamb}"
+            title = rf"{condition} {corners} $E$ vs. $\alpha$: $\lambda =$ {lamb}"
+            p = q
         elif name == "Energy vs Lambda":
-            title = rf"{condition} {corners} {name}: $\alpha =$ {alph}"
+            title = rf"{condition} {corners} $E$ vs. $\lambda$: $\alpha =$ {alph}"
         else:
             title = ""
 
@@ -395,7 +449,7 @@ class Lattice:
         self.initialize_hamiltonian()
         self.eigensystem()
         self.energy_plot()
-        self.plot_eigenstates(5)
+        self.plot_eigenstates(120)
         return
 
     def find_energysize(self):
@@ -493,78 +547,80 @@ class Lattice:
     #     self.large_alpha = large_alpha
     #     return
 
-    # def energy_spectrum(self, indep, set_val, t=100, max_val=2):
-    #     a = self.find_energysize()
-    #     bigenergies = np.zeros((a, t))
-    #     vals = np.zeros(t)
-    #     al = self.alpha
-    #     ha = self.hal
-
-    #     for k in range(0,t):
-    #         value = round(k*max_val/t, 3)
-    #         vals[k] = value
-
-    #         if indep == 'Lambda':
-    #             self.alpha = set_val
-    #             self.hal = value
-    #         elif indep == 'Alpha':
-    #             self.alpha = value
-    #             self.hal = set_val
-    #         else:
-    #             self.alpha = 0
-    #             self.hal = 0
-
-    #         print(f"{k}/{t}", end='\r')
-
-    #         self.initialize_hamiltonian()
-    #         self.eigenvalues()
-    #         bigenergies[:,k] = self.energies
-
-    #         for i in range(0, len(bigenergies[:,k])):
-    #             if bigenergies[i,k]>1000:
-    #                 bigenergies[i,k] = np.nan
-
-
-    #     bigenergies = np.round(bigenergies, 4)
-    #     new_array = [tuple(row) for row in bigenergies]
-    #     uniques = np.unique(new_array, axis=0)
-
-    #     fig = plt.figure()
-    #     for m in range(0,uniques.shape[0]):
-    #         plt.plot(vals, uniques[m,:], self.colour(), alpha=0.7, linewidth=0.1)
-
-    #     plt.xlabel(indep)
-    #     plt.ylabel("E/self.b*self.t")
-
-    #     if indep == "Lambda":
-    #         [newpath, name] = self.make_names("Energy vs Lambda")
-    #     else:
-    #         [newpath, name] = self.make_names("Energy vs Alpha")
-
-    #     if not os.path.exists(f"{newpath}/M{self.M}"):
-    #         os.makedirs(f"{newpath}/M{self.M}")
-
-    #     plt.title(f"{name}, M = {self.M}")
-
-    #     if (indep == 'Lambda' and self.large_hal == True) or (indep == 'Alpha' and self.large_alpha == True):
-    #         q = 2-set_val
-    #     else:
-    #         q=set_val
-
-    #     if (indep == 'Lambda' and self.large_alpha == True) or (indep == 'Alpha' and self.large_hal == True):
-    #         large = "large"
-    #     else:
-    #         large = ""
+    def energy_spectrum(self, indep, t=100, min_val=0, max_val=1):
+        #to use this function: create a lattice w all other param values
+        #... and feed this fn the min and max vals you want to plot over
+        a = self.find_energysize()
+        bigenergies = np.zeros((a, t))
+        vals = np.round(np.linspace(min_val,max_val,num=t),3)
+        a0 = self.a
+        b0 = self.b
+        l0 = self.l
+        t0 = self.t
         
-    #     fig.savefig(f"{newpath}/M{self.M}/{indep}{q}{large}_N{self.N}.pdf")
-    #     plt.close(fig)
+        for k in tqdm(range(0,t)):
+            if indep == 'l':
+                self.l = vals[k]
+            elif indep == 'a':
+                self.a = vals[k]
+            elif indep == 'b':
+                self.b = vals[k]
+            elif indep == 't':
+                self.t = vals[k]
+            else:
+                print("That's not a parameter!")
+                return
 
-    #     joblib.dump(vals, f"{newpath}/M{self.M}/{indep}{q}{large}_N{self.N}_xvals")
-    #     joblib.dump(uniques, f"{newpath}/M{self.M}/{indep}{q}{large}_N{self.N}_evals")
+            self.initialize_hamiltonian()
+            self.eigenvalues()
+            bigenergies[:,k] = self.energies
 
-    #     self.alpha = al
-    #     self.hal = ha
-    #     return
+            for i in range(0, len(bigenergies[:,k])):
+                if bigenergies[i,k]>1000:
+                    bigenergies[i,k] = np.nan
+
+
+        bigenergies = np.round(bigenergies, 4)
+        new_array = [tuple(row) for row in bigenergies]
+        uniques = np.unique(new_array, axis=0)
+
+        if indep == 't' or indep == 'b':
+            vals = 2 - vals
+
+        if indep == 'l' or indep == 't':
+            var = r'$\lambda$'
+            thing = "Energy vs Lambda"
+            name_var = 'a'
+        elif indep == 'a' or indep == 'b':
+            var = r'$\alpha$'
+            thing = "Energy vs Alpha"
+            name_var = 'l'
+        fig, ax = plt.subplots()
+        for m in range(0,uniques.shape[0]):
+            plt.plot(vals, uniques[m,:], color='k', alpha=0.7, linewidth=0.2)
+
+        ax.set_xlabel(var)
+        ax.set_ylabel(r"$E$")
+        ax.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
+
+        [newpath, name, p, _] = self.make_names(thing)
+        
+        ax.set_title(name)
+        file_path = f"{newpath}/M{self.M}"
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
+        file_name = f"{file_path}/{indep}_{name_var}{p}_N{self.N}.png"
+        fig.savefig(file_name, dpi=500)
+        plt.close(fig)
+
+        joblib.dump(vals, f"{newpath}/M{self.M}/{indep}_{name_var}{p}_N{self.N}_xvals")
+        joblib.dump(uniques, f"{newpath}/M{self.M}/{indep}_{name_var}{p}_N{self.N}_evals")
+
+        self.a = a0
+        self.b = b0
+        self.l = l0
+        self.t = t0
+        return
 
     # def plot_groundstate(self):
     #     mode = find_mode(self.energies,0)
