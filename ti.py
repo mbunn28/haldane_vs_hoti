@@ -15,7 +15,7 @@ from numpy import random
 import joblib
 import scipy.linalg
 from matplotlib import rc
-from tqdm import tqdm
+from tqdm.auto import trange
 
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
@@ -90,6 +90,9 @@ class Lattice:
         self.energies_low = None
         self.waves = None
         self.periodic_hamiltonian = False
+        self.fivesites = False
+        self.foursites = False
+        self.threesites = False
 
     def lat(self,i,j,s): return(6*self.N*i+6*j+s)
 
@@ -200,47 +203,58 @@ class Lattice:
                     h[self.lat(self.N-1,j,s),self.lat(self.N-1,j,s)] = vv
 
         #5 site corners
-        # h[self.lat(0,0,4),:]=0
-        # h[:,self.lat(0,0,4)]=0
-        # h[self.lat(0,0,4),self.lat(0,0,4)]=vv
+        if self.fivesites == True:
+            h[self.lat(0,0,4),:]=0
+            h[:,self.lat(0,0,4)]=0
+            h[self.lat(0,0,4),self.lat(0,0,4)]=vv
 
-        # h[self.lat(self.N-1,self.N-1,1),:]=0
-        # h[:,self.lat(self.N-1,self.N-1,1)]=0
-        # h[self.lat(self.N-1,self.N-1,1),self.lat(self.N-1,self.N-1,1)]=vv
+            h[self.lat(self.N-1,self.N-1,1),:]=0
+            h[:,self.lat(self.N-1,self.N-1,1)]=0
+            h[self.lat(self.N-1,self.N-1,1),self.lat(self.N-1,self.N-1,1)]=vv
 
         # #4 site corners
-        h[self.lat(0,self.N-1,2),:]=0
-        h[:,self.lat(0,self.N-1,2)]=0
-        h[self.lat(0,self.N-1,2),self.lat(0,self.N-1,2)]=vv
+        if self.foursites == True:
+            h[self.lat(0,self.N-1,2),:]=0
+            h[:,self.lat(0,self.N-1,2)]=0
+            h[self.lat(0,self.N-1,2),self.lat(0,self.N-1,2)]=vv
 
-        h[self.lat(0,self.N-1,3),:]=0
-        h[:,self.lat(0,self.N-1,3)]=0
-        h[self.lat(0,self.N-1,3),self.lat(0,self.N-1,3)]=vv
+            h[self.lat(0,self.N-1,3),:]=0
+            h[:,self.lat(0,self.N-1,3)]=0
+            h[self.lat(0,self.N-1,3),self.lat(0,self.N-1,3)]=vv
 
-        h[self.lat(self.N-1,0,5),:]=0
-        h[:,self.lat(self.N-1,0,5)]=0
-        h[self.lat(self.N-1,0,5),self.lat(self.N-1,0,5)]=vv
+            h[self.lat(self.N-1,0,5),:]=0
+            h[:,self.lat(self.N-1,0,5)]=0
+            h[self.lat(self.N-1,0,5),self.lat(self.N-1,0,5)]=vv
 
-        h[self.lat(self.N-1,0,0),:]=0
-        h[:,self.lat(self.N-1,0,0)]=0
-        h[self.lat(self.N-1,0,0),self.lat(self.N-1,0,0)]=vv
+            h[self.lat(self.N-1,0,0),:]=0
+            h[:,self.lat(self.N-1,0,0)]=0
+            h[self.lat(self.N-1,0,0),self.lat(self.N-1,0,0)]=vv
 
         # #3 site corners
-        # h[self.lat(0,0,5),:]=0
-        # h[:,self.lat(0,0,5)]=0
-        # h[self.lat(0,0,5),self.lat(0,0,5)]=vv
+        if self.threesites == True:
+            h[self.lat(0,0,4),:]=0
+            h[:,self.lat(0,0,4)]=0
+            h[self.lat(0,0,4),self.lat(0,0,4)]=vv
 
-        # h[self.lat(self.N-1,self.N-1,2),:]=0
-        # h[:,self.lat(self.N-1,self.N-1,2)]=0
-        # h[self.lat(self.N-1,self.N-1,2),self.lat(self.N-1,self.N-1,2)]=vv
+            h[self.lat(self.N-1,self.N-1,1),:]=0
+            h[:,self.lat(self.N-1,self.N-1,1)]=0
+            h[self.lat(self.N-1,self.N-1,1),self.lat(self.N-1,self.N-1,1)]=vv
+            
+            h[self.lat(0,0,5),:]=0
+            h[:,self.lat(0,0,5)]=0
+            h[self.lat(0,0,5),self.lat(0,0,5)]=vv
 
-        # h[self.lat(0,0,3),:]=0
-        # h[:,self.lat(0,0,3)]=0
-        # h[self.lat(0,0,3),self.lat(0,0,3)]=vv
+            h[self.lat(self.N-1,self.N-1,2),:]=0
+            h[:,self.lat(self.N-1,self.N-1,2)]=0
+            h[self.lat(self.N-1,self.N-1,2),self.lat(self.N-1,self.N-1,2)]=vv
 
-        # h[self.lat(self.N-1,self.N-1,0),:]=0
-        # h[:,self.lat(self.N-1,self.N-1,0)]=0
-        # h[self.lat(self.N-1,self.N-1,0),self.lat(self.N-1,self.N-1,0)]=vv
+            h[self.lat(0,0,3),:]=0
+            h[:,self.lat(0,0,3)]=0
+            h[self.lat(0,0,3),self.lat(0,0,3)]=vv
+
+            h[self.lat(self.N-1,self.N-1,0),:]=0
+            h[:,self.lat(self.N-1,self.N-1,0)]=0
+            h[self.lat(self.N-1,self.N-1,0),self.lat(self.N-1,self.N-1,0)]=vv
 
         h = np.conjugate(h.transpose()) + h
         self.h = h
@@ -335,10 +349,10 @@ class Lattice:
 
     def eigensystem(self):
         energies, waves = scipy.linalg.eigh(self.h)
-        for i in range(0, len(energies)):
-            if energies[i]>1000:
-                energies[i] = np.nan
-        energies = energies[~np.isnan(energies)]
+        # for i in range(0, len(energies)):
+        #     if energies[i]>1000:
+        #         energies[i] = np.nan
+        # energies = energies[~np.isnan(energies)]
         self.energies = energies
         self.waves = waves
         return
@@ -552,13 +566,15 @@ class Lattice:
         #... and feed this fn the min and max vals you want to plot over
         a = self.find_energysize()
         bigenergies = np.zeros((a, t))
+        edgeenergies = np.zeros((a, t))
+        edge_states = np.zeros((a, t),dtype=bool)
         vals = np.round(np.linspace(min_val,max_val,num=t),3)
         a0 = self.a
         b0 = self.b
         l0 = self.l
         t0 = self.t
         
-        for k in tqdm(range(0,t)):
+        for k in trange(0,t):
             if indep == 'l':
                 self.l = vals[k]
             elif indep == 'a':
@@ -572,15 +588,52 @@ class Lattice:
                 return
 
             self.initialize_hamiltonian()
-            self.eigenvalues()
+            self.eigensystem()
             bigenergies[:,k] = self.energies
+            prob = np.multiply(np.conjugate(self.waves),self.waves)
+            
+            #5 site corners
+            if self.fivesites == True:
+                for i in range(a):
+                    p = prob[self.lat(0,0,0),i]+prob[self.lat(0,0,1),i]+prob[self.lat(0,0,2),i]+prob[self.lat(0,0,3),i]+prob[self.lat(0,0,5),i]
+                    p = p+prob[self.lat(self.N-1,self.N-1,0),i]+prob[self.lat(self.N-1,self.N-1,2),i]+prob[self.lat(self.N-1,self.N-1,3),i]+prob[self.lat(self.N-1,self.N-1,4),i]+prob[self.lat(self.N-1,self.N-1,5),i]
+                    if p > 0.3:
+                        edgeenergies[i,k] = bigenergies[i,k]
+                        bigenergies[i,k] = np.NaN
+                    else:
+                        edgeenergies[i,k] = np.NaN
+
+            #4 site corners
+            if self.foursites == True:
+                for i in range(a):
+                    p = prob[self.lat(0,self.N-1,0),i]+prob[self.lat(0,self.N-1,1),i]+prob[self.lat(0,self.N-1,4),i]+prob[self.lat(0,self.N-1,5),i]
+                    p = p+prob[self.lat(self.N-1,0,1),i]+prob[self.lat(self.N-1,0,2),i]+prob[self.lat(self.N-1,0,3),i]+prob[self.lat(self.N-1,0,4),i]
+                    if p > 0.3:
+                        edgeenergies[i,k] = bigenergies[i,k]
+                        bigenergies[i,k] = np.NaN
+                    else:
+                        edgeenergies[i,k] = np.NaN
+
+            #3 site corners
+            if self.threesites == True:
+                for i in range(a):
+                    p = prob[self.lat(0,0,0),i]+prob[self.lat(0,0,1),i]+prob[self.lat(0,0,2),i]
+                    p = p+prob[self.lat(self.N-1,self.N-1,3),i]+prob[self.lat(self.N-1,self.N-1,4),i]+prob[self.lat(self.N-1,self.N-1,5),i]
+                    if p > 0.3:
+                        edgeenergies[i,k] = bigenergies[i,k]
+                        bigenergies[i,k] = np.NaN
+                    else:
+                        edgeenergies[i,k] = np.NaN
 
             for i in range(0, len(bigenergies[:,k])):
                 if bigenergies[i,k]>1000:
                     bigenergies[i,k] = np.nan
-
+                if edgeenergies[i,k]>1000:
+                    edgeenergies[i,k] = np.nan
 
         bigenergies = np.round(bigenergies, 4)
+        other_energies = bigenergies
+        # other_energies[edge_states == 1] = np.NaN
         new_array = [tuple(row) for row in bigenergies]
         uniques = np.unique(new_array, axis=0)
 
@@ -596,11 +649,13 @@ class Lattice:
             thing = "Energy vs Alpha"
             name_var = 'l'
         fig, ax = plt.subplots()
-        for m in range(0,uniques.shape[0]):
-            plt.plot(vals, uniques[m,:], color='k', alpha=0.7, linewidth=0.2)
+        for m in range(a):
+            ax.plot(vals, bigenergies[m,:], color='k', alpha=0.7, linewidth=0.2)
+            ax.plot(vals, edgeenergies[m,:], color='r', alpha=0.7, linewidth=0.2)
 
         ax.set_xlabel(var)
         ax.set_ylabel(r"$E$")
+        # ax.set_xlim(min_val,max_val)
         ax.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
 
         [newpath, name, p, _] = self.make_names(thing)
@@ -613,8 +668,8 @@ class Lattice:
         fig.savefig(file_name, dpi=500)
         plt.close(fig)
 
-        joblib.dump(vals, f"{newpath}/M{self.M}/{indep}_{name_var}{p}_N{self.N}_xvals")
-        joblib.dump(uniques, f"{newpath}/M{self.M}/{indep}_{name_var}{p}_N{self.N}_evals")
+        # joblib.dump(vals, f"{newpath}/M{self.M}/{indep}_{name_var}{p}_N{self.N}_xvals")
+        # joblib.dump(uniques, f"{newpath}/M{self.M}/{indep}_{name_var}{p}_N{self.N}_evals")
 
         self.a = a0
         self.b = b0

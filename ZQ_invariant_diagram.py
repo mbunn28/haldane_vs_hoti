@@ -72,8 +72,8 @@ else:
     M = int(3*(N**2))
     phi = np.random.rand(6*(N**2),M)
     phi = scipy.linalg.orth(phi)
-    for m in tqdm(range(res)):
-        for n in range(res):        
+    for m in trange(res)):
+        for n in trange(res):        
             for j in range(len(zq)):
                 lattice1 = zq_lib.zq_lattice(
                     a = a[n,m],
