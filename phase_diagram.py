@@ -11,20 +11,20 @@ lattice = ti.Lattice(
 PBC_i = False, 
 PBC_j = False,
 Corners = False,
-a = 1,
+a = 0.1,
 b = 1,
 t = 1,
-l = 1,
+l = 0.4,
 M=0,
-N=10)
+N=6)
 
-lattice.foursites=True
+lattice.fivesites=True
 # folder = "data/11052020/PBC/t1.9_a1.9_N12"
 
 # lattice.energies = joblib.load( f"{folder}_energies")
 # lattice.waves = joblib.load(f"{folder}_waves")
-t_vals = [0.1,0.2,0.3]
-for i in range(len(t_vals)):
+# t_vals = [0.1,0.2,0.3]
+# for i in range(len(t_vals)):
 # [_,_,p,q] = lattice.make_names()
 
 # print(f"a = {p}, l = {q}")
@@ -32,10 +32,10 @@ for i in range(len(t_vals)):
 # print(f"PBC_j = {lattice.PBC_j}")
 # print(f"Corners = {lattice.Corners}")
 
-# lattice.single_state()
+lattice.single_state()
 # lattice.energy_plot(r=0.5)
-    lattice.a = t_vals[i]
-    lattice.energy_spectrum('l',t=500,min_val=0,max_val=1)
+    # lattice.a = t_vals[i]
+    # lattice.energy_spectrum('l',t=500,min_val=0,max_val=1)
         
 
 # index = ti.find_mode(lattice.energies, 13)

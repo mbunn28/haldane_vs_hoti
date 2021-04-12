@@ -382,12 +382,17 @@ class Lattice:
     
     def energy_plot(self, r=None):
         fig = plt.figure()
+        en = self.energies
+        for i in range(0, len(en)):
+            if en[i]>1000:
+                en[i] = np.nan
+        en = en[~np.isnan(en)]
         if r != None:
             min_en = int(min(range(len(self.energies)), key=lambda i: abs(self.energies[i]+r))+1)
             max_en = int((6*(self.N**2)-min_en))
-            plt.plot(self.energies[min_en:max_en],'ko',markersize=0.5)
+            plt.plot(en[min_en:max_en],'ko',markersize=0.5)
         else:
-            plt.plot(self.energies,'ko',markersize=0.5)
+            plt.plot(en,'ko',markersize=0.5)
         [newpath, name, p ,q] = self.make_names("Energy Eigenvalues of the Hamiltonian")
         fig.suptitle(name)
         plt.xlabel(r"$n$")
