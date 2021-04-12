@@ -418,7 +418,7 @@ class Lattice:
         if r != None:
             min_en = int(min(range(len(self.energies)), key=lambda i: abs(self.energies[i]+r))+1)
             max_en = int((6*(self.N**2)-min_en))
-            plt.plot(self.energies[min_en:max_en],'ko',markersize=0.5)
+            plt.plot(en[min_en:max_en],'ko',markersize=0.5)
         else:
             x = np.arange(a)
             plt.plot(x[~edge_energies],self.energies[~edge_energies],'ko',markersize=0.5)

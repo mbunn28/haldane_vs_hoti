@@ -16,7 +16,7 @@ b = 1,
 t = 1,
 l = 0.2,
 M=0,
-N=10)
+N=6)
 
 lattice.fivesites=True
 # folder = "data/11052020/PBC/t1.9_a1.9_N12"
