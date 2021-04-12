@@ -9,6 +9,8 @@ import matplotlib.colors as colors
 import scipy.optimize as optimise
 from matplotlib import rc
 from tqdm import tqdm
+import copy
+import matplotlib.cm as cm
 
 # just a code snippet that makes all the fonts used in the plot LaTeX font
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
@@ -16,12 +18,12 @@ rc('text', usetex=True)
 plt.rcParams['axes.axisbelow'] = True
 
 #creating the folder where you want to store the output
-path = "output/phasediagram/periodic/sixth"
+path = "output/phasediagram/periodic/third"
 if not os.path.exists(path):
             os.makedirs(path)
 
 #the resolution of the energy diagram
-res = 100
+res = 20
 run = 2*res+1 #ignore this: I use this when I want to create a zoomed in portion of the hase diagram
 
 #Defining my parameter values:
@@ -110,11 +112,11 @@ def hamil(n,m,kvals):
 
 def energy_5(n,m,k):
     en = hamil(n,m,k)
-    return en[0,1]
+    return en[0,2]
 
 def energy_6(n,m,k):
     en = hamil(n,m,k)
-    return en[0,5]
+    return en[0,4]
 
 #reduced zone functions
 #the reduced zone is a path through the BZ which I've parameterised. Split into two functions
@@ -230,15 +232,21 @@ for n in tqdm(range(0,run)):
 x = np.linspace(0,2,num=run)
 
 #deleteing all the values greater than 0.01. Better resolution, and you can drop this down
-gap[gap <= 0]= np.NaN
+
+gap[gap <= 0]= 0
+gap_mask = gap == 0
 
 #saves all the data so you can plot again without having to calculate again
-joblib.dump(gap, f"{path}/res{res}_gap_topmid")
+joblib.dump(gap_mask, f"{path}/res{res}_gapmask")
+joblib.dump(gap, f"{path}/res{res}_gap")
 joblib.dump(x, f"{path}/res{res}_x")
 
 #plot the data
 fig, ax = plt.subplots()
-plt.pcolormesh(x,x,gap, norm = colors.LogNorm(), cmap='inferno')
+my_cmap = copy.copy(cm.get_cmap('inferno'))
+my_cmap.set_bad('k')
+
+plt.pcolormesh(x,x,gap, norm = colors.LogNorm(), cmap=my_cmap)
 # plt.title(r"Log Scaled Phase Boundary: Periodic, $\Delta$ = 1.7e-3")
 ax.grid(linestyle='--')
 # ax.set_xlim([0,0.4])
@@ -254,8 +262,8 @@ ax.set_xticklabels(labels)
 ax.set_xticks(locs)
 ax.set_xlabel(r'$\lambda$')
 
-cbar = plt.colorbar(pad = 0.15)
-cbar.ax.get_yaxis().labelpad = 15
+cbar = plt.colorbar() #pad = 0.15)
+# cbar.ax.get_yaxis().labelpad = 15
 cbar.ax.set_title('Energy Gap')
 
 plt.gcf().subplots_adjust(top=0.85)

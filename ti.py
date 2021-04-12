@@ -349,12 +349,12 @@ class Lattice:
 
     def eigensystem(self):
         energies, waves = scipy.linalg.eigh(self.h)
-        # for i in range(0, len(energies)):
-        #     if energies[i]>1000:
-        #         energies[i] = np.nan
-        # energies = energies[~np.isnan(energies)]
+        for i in range(0, len(energies)):
+            if energies[i]>1000:
+                energies[i] = np.nan
+        self.waves = waves[:,~np.isnan(energies)]
+        energies = energies[~np.isnan(energies)]
         self.energies = energies
-        self.waves = waves
         return
 
     def eigenvalues(self):
@@ -382,14 +382,49 @@ class Lattice:
     
     def energy_plot(self, r=None):
         fig = plt.figure()
+        a = len(self.energies)
+        edge_energies = np.zeros(a,dtype=bool)
+        prob = np.multiply(np.conjugate(self.waves),self.waves)
+        #5 site corners
+        if self.fivesites == True:
+            for i in range(a):
+                p = prob[self.lat(0,0,0),i]+prob[self.lat(0,0,1),i]+prob[self.lat(0,0,2),i]+prob[self.lat(0,0,3),i]+prob[self.lat(0,0,5),i]
+                p = p+prob[self.lat(self.N-1,self.N-1,0),i]+prob[self.lat(self.N-1,self.N-1,2),i]+prob[self.lat(self.N-1,self.N-1,3),i]+prob[self.lat(self.N-1,self.N-1,4),i]+prob[self.lat(self.N-1,self.N-1,5),i]
+                if p > 0.3:
+                    edge_energies[i] = True
+                else:
+                    edge_energies[i] = False
+
+        #4 site corners
+        if self.foursites == True:
+            for i in range(a):
+                p = prob[self.lat(0,self.N-1,0),i]+prob[self.lat(0,self.N-1,1),i]+prob[self.lat(0,self.N-1,4),i]+prob[self.lat(0,self.N-1,5),i]
+                p = p+prob[self.lat(self.N-1,0,1),i]+prob[self.lat(self.N-1,0,2),i]+prob[self.lat(self.N-1,0,3),i]+prob[self.lat(self.N-1,0,4),i]
+                if p > 0.3:
+                    edge_energies[i] = True
+                else:
+                    edge_energies[i] = False
+
+        #3 site corners
+        if self.threesites == True:
+            for i in range(a):
+                p = prob[self.lat(0,0,0),i]+prob[self.lat(0,0,1),i]+prob[self.lat(0,0,2),i]
+                p = p+prob[self.lat(self.N-1,self.N-1,3),i]+prob[self.lat(self.N-1,self.N-1,4),i]+prob[self.lat(self.N-1,self.N-1,5),i]
+                if p > 0.3:
+                    edge_energies[i] = True
+                else:
+                    edge_energies[i] = False
+
         if r != None:
             min_en = int(min(range(len(self.energies)), key=lambda i: abs(self.energies[i]+r))+1)
             max_en = int((6*(self.N**2)-min_en))
             plt.plot(self.energies[min_en:max_en],'ko',markersize=0.5)
         else:
-            plt.plot(self.energies,'ko',markersize=0.5)
+            x = np.arange(a)
+            plt.plot(x[~edge_energies],self.energies[~edge_energies],'ko',markersize=0.5)
+            plt.plot(x[edge_energies],self.energies[edge_energies],'ro',markersize=0.5)
         [newpath, name, p ,q] = self.make_names("Energy Eigenvalues of the Hamiltonian")
-        fig.suptitle(name)
+        # fig.suptitle(name)
         plt.xlabel(r"$n$")
         plt.ylabel(r"$E$")
 
@@ -397,7 +432,9 @@ class Lattice:
             zoom = ""
         else:
             zoom = "_zoom"
-        fig.savefig(f"{newpath}/energyplot_l{q}_a{p}_N{self.N}{zoom}.png",dpi=500)
+        file_name = f"{newpath}/energyplot_l{q}_a{p}_N{self.N}{zoom}"
+        file_name = file_name.replace('.','')
+        fig.savefig(f'{file_name}.png',dpi=500,bbox_inches='tight')
         plt.close(fig)
         return
 
@@ -420,7 +457,7 @@ class Lattice:
                 proba = (np.abs(psi))**2
                 proba = proba/np.max(proba)
 
-                axes.set_title(f"E: {np.round(self.energies[mode[count]],4)+shift}, Mode:{m}.{count}", fontsize=10)
+                axes.set_title(rf"$E$: {np.round(self.energies[mode[count]],4)+shift}", fontsize=10)
                 count +=1
 
                 cmap = matplotlib.cm.get_cmap('inferno_r')
@@ -441,21 +478,80 @@ class Lattice:
 
                 axes.set_ylim(pos(0,self.N-1,3)[-1]-4,pos(self.N-1,0,0)[-1]+4)
                 axes.set_xlim(pos(0,0,5)[0]-4,pos(self.N-1,self.N-1,1)[0]+4)
-                axes.set_yticklabels([])
-                axes.set_xticklabels([])
+                axes.set_yticks([])
+                axes.set_xticks([])
                 axes.set_aspect('equal')
 
                 plt.scatter(x,y,s=0, c=proba, cmap= 'inferno_r',vmin=min(proba), vmax=max(proba), facecolors='none')
-                plt.colorbar(ax=axes, use_gridspec=True)
+                cb = plt.colorbar(ax=axes,fraction=0.1, shrink=0.74)
+                cb.set_ticks([])
+                cb.ax.set_ylabel(r'$|\psi_i|^2$',rotation=0,labelpad=12)
 
             [newpath, name, p, q] = self.make_names("Energy Eigenstates")
-            if len(mode)>6:
-                plt.suptitle(f"First 6 {name}, Total States: {len(mode)}", fontsize = 10)
-            else:
-                plt.suptitle(name)
+            # if len(mode)>6:
+            #     plt.suptitle(f"First 6 {name}, Total States: {len(mode)}", fontsize = 12)
+            # else:
+            #     plt.suptitle(name)
 
             file = f"{newpath}/mode{m}_l{q}_a{p}_N{self.N}.png"
+            fig.tight_layout()
             fig.savefig(file,dpi=500)
+            plt.close(fig)
+        return
+    
+    def plot_estate(self, m):
+        en = np.arange(len(self.energies))
+        mode = [i for i, e in enumerate(en) if e == m]
+        rows, columns = layout(mode)
+        fig, ax_array = plt.subplots(rows, columns, squeeze=False)
+        count = 0
+
+        for l, ax_row in enumerate(ax_array):
+            for k,axes in enumerate(ax_row):
+                psi = np.transpose(self.waves)[mode[count]] #wavefunction
+                proba = (np.abs(psi))**2
+                proba = proba/np.max(proba)
+
+                axes.set_title(rf"$E$: {np.round(self.energies[mode[count]],4)}", fontsize=10)
+                count +=1
+
+                cmap = matplotlib.cm.get_cmap('inferno_r')
+                normalize = matplotlib.colors.Normalize(vmin=0, vmax=1)
+                colors = [cmap(normalize(value)) for value in proba]
+
+                #plot the probability distribution:
+                x  = np.zeros(6*(self.N)**2)
+                y = np.zeros(6*(self.N)**2)
+                for i in range(self.N):
+                    for j in range(self.N):
+                        for l in range(6):
+                            if self.h[self.lat(i,j,l),self.lat(i,j,l)] < 99:
+                                x[self.lat(i,j,l)] = pos(i,j,l)[0]
+                                y[self.lat(i,j,l)] = pos(i,j,l)[1]
+                                circle = Circle(pos(i,j,l),0.5,color=colors[self.lat(i,j,l)],alpha=1,ec=None,zorder=1)
+                                axes.add_artist(circle)
+
+                axes.set_ylim(pos(0,self.N-1,3)[-1]-4,pos(self.N-1,0,0)[-1]+4)
+                axes.set_xlim(pos(0,0,5)[0]-4,pos(self.N-1,self.N-1,1)[0]+4)
+                axes.set_yticks([])
+                axes.set_xticks([])
+                axes.set_aspect('equal',adjustable='box')
+
+                plt.scatter(x,y,s=0, c=proba, cmap= 'inferno_r',vmin=min(proba), vmax=max(proba), facecolors='none')
+                cb = plt.colorbar(ax=axes)#,fraction=0.1, shrink=0.74)
+                cb.set_ticks([])
+                cb.ax.set_ylabel(r'$|\psi_i|^2$',rotation=0,labelpad=12)
+
+            [newpath, name, p, q] = self.make_names("Energy Eigenstates")
+            # if len(mode)>6:
+            #     plt.suptitle(f"First 6 {name}, Total States: {len(mode)}", fontsize = 12)
+            # else:
+            #     plt.suptitle(name)
+
+            file = f"{newpath}/estate{m}_l{q}_a{p}_N{self.N}"
+            file = file.replace('.','')
+            fig.tight_layout()
+            fig.savefig(file,dpi=500,bbox_inches='tight')
             plt.close(fig)
         return
 
@@ -463,7 +559,49 @@ class Lattice:
         self.initialize_hamiltonian()
         self.eigensystem()
         self.energy_plot()
-        self.plot_eigenstates(120)
+        self.plot_cornerstates()
+        return
+
+    def plot_cornerstates(self):
+        a = len(self.energies)
+        edge_energies = np.zeros(a,dtype=bool)
+        prob = np.multiply(np.conjugate(self.waves),self.waves)
+        #5 site corners
+        if self.fivesites == True:
+            for i in range(a):
+                p = prob[self.lat(0,0,0),i]+prob[self.lat(0,0,1),i]+prob[self.lat(0,0,2),i]+prob[self.lat(0,0,3),i]+prob[self.lat(0,0,5),i]
+                p = p+prob[self.lat(self.N-1,self.N-1,0),i]+prob[self.lat(self.N-1,self.N-1,2),i]+prob[self.lat(self.N-1,self.N-1,3),i]+prob[self.lat(self.N-1,self.N-1,4),i]+prob[self.lat(self.N-1,self.N-1,5),i]
+                if p > 0.3:
+                    edge_energies[i] = True
+                else:
+                    edge_energies[i] = False
+
+        #4 site corners
+        if self.foursites == True:
+            for i in range(a):
+                p = prob[self.lat(0,self.N-1,0),i]+prob[self.lat(0,self.N-1,1),i]+prob[self.lat(0,self.N-1,4),i]+prob[self.lat(0,self.N-1,5),i]
+                p = p+prob[self.lat(self.N-1,0,1),i]+prob[self.lat(self.N-1,0,2),i]+prob[self.lat(self.N-1,0,3),i]+prob[self.lat(self.N-1,0,4),i]
+                if p > 0.3:
+                    edge_energies[i] = True
+                else:
+                    edge_energies[i] = False
+
+        #3 site corners
+        if self.threesites == True:
+            for i in range(a):
+                p = prob[self.lat(0,0,0),i]+prob[self.lat(0,0,1),i]+prob[self.lat(0,0,2),i]
+                p = p+prob[self.lat(self.N-1,self.N-1,3),i]+prob[self.lat(self.N-1,self.N-1,4),i]+prob[self.lat(self.N-1,self.N-1,5),i]
+                if p > 0.3:
+                    edge_energies[i] = True
+                else:
+                    edge_energies[i] = False
+        states = np.argwhere(edge_energies)
+        # eners = self.energies[states].transpose()
+        # same_ener = np.round(np.diff(eners,prepend=0),2)==0
+        # same_ener = same_ener.transpose()
+        # states = states[~same_ener]
+        for i in range(len(states)):
+            self.plot_estate(states[i])
         return
 
     def find_energysize(self):
