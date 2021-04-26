@@ -219,6 +219,7 @@ plt.arrow(1.87,1.58,0,-0.09,color='dimgray',head_width=0.015,zorder=8)
 
 # plt.gcf().subplots_adjust(top=0.85)
 # fig.tight_layout()
+print(fig.get_size_inches())
 fig.savefig(f"{path}/{N_or_res}{N}_diagram_yo.png", dpi=500,bbox_inches='tight')
 
 # fig1 = plt.figure()

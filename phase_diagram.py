@@ -11,10 +11,10 @@ lattice = ti.Lattice(
 PBC_i = False, 
 PBC_j = False,
 Corners = False,
-a = 0.1,
+a = 0.2,
 b = 1,
 t = 1,
-l = 0.4,
+l = 0.2,
 M=0,
 N=6)
 
@@ -34,8 +34,8 @@ lattice.fivesites=True
 
 lattice.single_state()
 # lattice.energy_plot(r=0.5)
-    # lattice.a = t_vals[i]
-    # lattice.energy_spectrum('l',t=500,min_val=0,max_val=1)
+# lattice.a = t_vals[i]
+# lattice.energy_spectrum('t',t=200,min_val=0.2,max_val=0.6)
         
 
 # index = ti.find_mode(lattice.energies, 13)
