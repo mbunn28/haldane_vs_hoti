@@ -22,13 +22,13 @@ if not os.path.exists(path):
             os.makedirs(path)
 
 a = 1
-b = 0.466
-t = 0.693
+b = 0.2
+t = 0.4
 l = 1
-N = 500
-M = 0.2
+N = 50
+M = 0
 periodic = False
-res= 250
+res= 125
 phi = np.pi/2
 
 if a == 1 and b == 1:
@@ -119,8 +119,8 @@ _, k =np.meshgrid(np.zeros(6*N),k)
 
 fig = plt.figure(figsize=(10,20))
 ax = fig.add_subplot(111)
-ax.set_aspect(10)
-ax.set_ylim((-0.25,0.25))
+# ax.set_aspect(10)
+# ax.set_ylim((-0.25,0.25))
 ax.scatter(k[mask_left],energies[mask_left],c='b',s=1)
 ax.scatter(k[mask_right],energies[mask_right],c='r',s=1)
 ax.scatter(k[mask_other],energies[mask_other],c='black',s=0.5,marker='x',linewidth=0.25)
