@@ -11,12 +11,12 @@ lattice = ti.Lattice(
 PBC_i = False, 
 PBC_j = False,
 Corners = False,
-a = 0.2,
-b = 1,
+a = 1,
+b = 0.2,
 t = 1,
-l = 0.2,
+l = 0.05,
 M=0,
-N=6)
+N=20)
 
 lattice.fivesites=True
 # folder = "data/11052020/PBC/t1.9_a1.9_N12"

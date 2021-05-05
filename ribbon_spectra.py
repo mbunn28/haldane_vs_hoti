@@ -12,24 +12,28 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import scipy.optimize as optimise
 from matplotlib import rc
+import matplotlib.gridspec as gs
 from tqdm import tqdm
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
 plt.rcParams['axes.axisbelow'] = True
 
-path = "output/ribbon_spectra"
-if not os.path.exists(path):
-            os.makedirs(path)
+l = 1
+t = 0.693
 
 a = 1
-b = 0.2
-t = 0.4
-l = 1
-N = 50
+b = 0.466
 M = 0
 periodic = False
-res= 125
 phi = np.pi/2
+
+N = 100
+res= 125
+zoom = True
+if zoom == True: 
+    N_zoom = 300
+    res_zoom = 800
+
 
 if a == 1 and b == 1:
     aorb_name = 'ab'
@@ -51,7 +55,7 @@ else:
     torl_name = 't'
     torl = t
 
-def hamiltonian(k):
+def hamiltonian(k,N):
     A1 = b*t*np.roll(np.eye(6,dtype=complex),1,axis=1)
     A2 = b*l*np.exp(1j*phi)*np.roll(np.eye(6,dtype=complex),2,axis=1)
     A3 = np.zeros((6,6),dtype=complex)
@@ -86,9 +90,13 @@ def hamiltonian(k):
     
     return hamiltonian
 
-energy_path = f"{path}/res{res}_N{N}_energies_{aorb_name}{aorb}_{torl_name}{torl}_M{M}"
-mask_left_path = f"{path}/res{res}_N{N}_left_{aorb_name}{aorb}_{torl_name}{torl}_M{M}"
-mask_right_path = f"{path}/res{res}_N{N}_right_{aorb_name}{aorb}_{torl_name}{torl}_M{M}"
+newpath = f"output/ribbon_spectra/res{res}_N{N}_{aorb_name}{aorb}_{torl_name}{torl}_M{M}"
+newpath = newpath.replace('.','')
+if not os.path.exists(newpath):
+    os.makedirs(newpath)
+energy_path = f"{newpath}/energies"
+mask_left_path = f"{newpath}/left"
+mask_right_path = f"{newpath}/right"
 
 k = np.linspace(-np.pi,np.pi,num=res)
 
@@ -103,7 +111,7 @@ else:
 
     for i in tqdm(range(res)):
 
-        energies[i,:], evecs = np.linalg.eigh(hamiltonian(k[i]))
+        energies[i,:], evecs = np.linalg.eigh(hamiltonian(k[i],N))
         evecs = np.transpose(evecs, axes=(1,0))
         waves = np.abs(evecs)**2
         mask_left[i,:] = np.sum(waves[:,:int(np.rint(3*N))],axis=1) > 0.75
@@ -115,38 +123,108 @@ else:
 
 mask_other = np.logical_not(np.logical_or(mask_left,mask_right))
 
+if zoom == True:
+    newpath_zoom = f"output/ribbon_spectra/res{res_zoom}_N{N_zoom}_{aorb_name}{aorb}_{torl_name}{torl}_M{M}"
+    newpath_zoom = newpath_zoom.replace('.','')
+    if not os.path.exists(newpath_zoom):
+        os.makedirs(newpath_zoom)
+    energy_path_zoom = f"{newpath_zoom}/energies"
+    mask_left_path_zoom = f"{newpath_zoom}/left"
+    mask_right_path_zoom = f"{newpath_zoom}/right"
+    k_zoom = np.linspace(-np.pi,np.pi,num=res_zoom)
+
+    if (os.path.exists(energy_path_zoom) and os.path.exists(mask_left_path_zoom) and os.path.exists(mask_right_path_zoom)):
+        energies_zoom = joblib.load(energy_path_zoom)
+        mask_left_zoom = joblib.load(mask_left_path_zoom)
+        mask_right_zoom = joblib.load(mask_right_path_zoom)
+        
+    else:
+        energies_zoom = np.zeros((res_zoom, 6*N_zoom))
+        mask_left_zoom = np.zeros((res_zoom, 6*N_zoom),dtype=bool)
+        mask_right_zoom = np.zeros((res_zoom, 6*N_zoom),dtype=bool)
+
+        for i in tqdm(range(res_zoom)):
+
+            energies_zoom[i,:], evecs_zoom = np.linalg.eigh(hamiltonian(k_zoom[i],N_zoom))
+            evecs_zoom = np.transpose(evecs_zoom, axes=(1,0))
+            waves_zoom = np.abs(evecs_zoom)**2
+            mask_left_zoom[i,:] = np.sum(waves_zoom[:,:int(np.rint(3*N_zoom))],axis=1) > 0.75
+            mask_right_zoom[i,:] = np.sum(waves_zoom[:,:int(np.rint(3*N_zoom))],axis=1) < 0.25
+
+        joblib.dump(energies_zoom, energy_path_zoom)
+        joblib.dump(mask_left_zoom, mask_left_path_zoom)
+        joblib.dump(mask_right_zoom, mask_right_path_zoom)
+
+    mask_other_zoom = np.logical_not(np.logical_or(mask_left_zoom,mask_right_zoom))
+
 _, k =np.meshgrid(np.zeros(6*N),k)
 
-fig = plt.figure(figsize=(10,20))
-ax = fig.add_subplot(111)
-# ax.set_aspect(10)
-# ax.set_ylim((-0.25,0.25))
-ax.scatter(k[mask_left],energies[mask_left],c='b',s=1)
-ax.scatter(k[mask_right],energies[mask_right],c='r',s=1)
-ax.scatter(k[mask_other],energies[mask_other],c='black',s=0.5,marker='x',linewidth=0.25)
-ax.set_xlabel(r'$ak$')
-ax.set_ylabel(r'$E$')
-ax.set_xticks((-np.pi,-np.pi/2,0,np.pi/2,np.pi))
-ax.set_xticklabels((r'$-\pi$',r'$-\frac{\pi}{2}$',0,r'$\frac{\pi}{2}$',r'$\pi$'))
-fig.tight_layout()
+if zoom == True:
+    _, k_zoom =np.meshgrid(np.zeros(6*N_zoom),k_zoom)
+    y_max = np.amax(energies_zoom)
+    top_aspect = 1.5
+    zoom_y = 0.075
+    zoom_aspect = 30
+    fig= plt.figure(figsize=(3.4,7.5))
+    grd = gs.GridSpec(2,1,figure=fig,hspace=0,height_ratios=[top_aspect*(y_max+0.1),zoom_aspect*zoom_y])
+    axs = grd.subplots(sharex=True)
 
-fig_path = f"{path}/res{res}_N{N}_ribbonspectrum_{aorb_name}{aorb}_{torl_name}{torl}_M{M}_zoom"
-fig.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
+    axs[0].scatter(k[mask_left],energies[mask_left],c='b',s=0.75,linewidth=0.3)
+    axs[0].scatter(k[mask_right],energies[mask_right],c='r',s=0.75,linewidth=0.3)
+    axs[0].scatter(k[mask_other],energies[mask_other],c='black',s=0.3,linewidth=0.06)
+    axs[0].set_ylabel(r'$E$')
+    axs[0].set_xlim((-np.pi,np.pi))
+    axs[0].set_ylim((-y_max-0.1,y_max+0.1))
+    # axs[0].get_yaxis().majorTicks[-1].label1.set_verticalalignment('bottom')
+
+    axs[1].set_ylim((-zoom_y,zoom_y))
+    axs[1].scatter(k_zoom[mask_left_zoom],energies_zoom[mask_left_zoom],c='b',s=0.75,linewidth=0.3)
+    axs[1].scatter(k_zoom[mask_right_zoom],energies_zoom[mask_right_zoom],c='r',s=0.75,linewidth=0.3)
+    axs[1].scatter(k_zoom[mask_other_zoom],energies_zoom[mask_other_zoom],c='black',s=0.3,linewidth=0.06)
+    axs[1].set_xlabel(r'$k$')
+    axs[1].set_ylabel(r'$E$')
+    axs[1].set_xticks((-np.pi,-np.pi/2,0,np.pi/2,np.pi))
+    axs[1].set_xticklabels((r'$-\pi$',r'$-\frac{\pi}{2}$',0,r'$\frac{\pi}{2}$',r'$\pi$'))
+    axs[1].set_xlim((-np.pi,np.pi))
+    # axs[1].get_yaxis().majorTicks[0].label1.set_verticalalignment('top')
+
+    fig_path = f"{newpath}/ribbonspectrum"
+    fig.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
+
+else:
+    y_max = np.amax(energies)
+    aspect = 1
+    fig, ax = plt.subplots(figsize=(3.4,5))
+
+    ax.set_aspect(aspect)
+    ax.scatter(k[mask_left],energies[mask_left],c='b',s=0.75,linewidth=0.3)
+    ax.scatter(k[mask_right],energies[mask_right],c='r',s=0.75,linewidth=0.3)
+    ax.scatter(k[mask_other],energies[mask_other],c='black',s=0.3,linewidth=0.06)
+    ax.set_ylabel(r'$E$')
+    ax.set_xlim((-np.pi,np.pi))
+    ax.set_ylim((-y_max-0.1,y_max+0.1))
+    ax.set_xlabel(r'$k$')
+    ax.set_xticks((-np.pi,-np.pi/2,0,np.pi/2,np.pi))
+    ax.set_xticklabels((r'$-\pi$',r'$-\frac{\pi}{2}$',0,r'$\frac{\pi}{2}$',r'$\pi$'))
+
+    fig_path = f"{newpath}/ribbonspectrum_zoom"
+    fig.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
+
 # mask_other = np.logical_not(np.logical_or(mask_left,mask_right))
 
 # _, k =np.meshgrid(np.zeros(6*N),k)
 
 # fig = plt.figure(figsize=(10,20))
-# ax = fig.add_subplot(111)
-# ax.set_aspect(2)
-# # ax.set_ylim((-0.25,0.25))
-# ax.scatter(k[mask_left],energies[mask_left],c='b',s=1)
-# ax.scatter(k[mask_right],energies[mask_right],c='r',s=1)
-# ax.scatter(k[mask_other],energies[mask_other],c='black',s=0.5,marker='x',linewidth=0.25)
-# ax.set_xlabel(r'$ak$')
-# ax.set_ylabel(r'$E$')
-# ax.set_xticks((-np.pi,-np.pi/2,0,np.pi/2,np.pi))
-# ax.set_xticklabels((r'$-\pi$',r'$-\frac{\pi}{2}$',0,r'$\frac{\pi}{2}$',r'$\pi$'))
+# axs[0] = fig.add_subplot(111)
+# axs[0].set_aspect(2)
+# # axs[0].set_ylim((-0.25,0.25))
+# axs[0].scatter(k[mask_left],energies[mask_left],c='b',s=1)
+# axs[0].scatter(k[mask_right],energies[mask_right],c='r',s=1)
+# axs[0].scatter(k[mask_other],energies[mask_other],c='black',s=0.5,marker='x',linewidth=0.25)
+# axs[0].set_xlabel(r'$ak$')
+# axs[0].set_ylabel(r'$E$')
+# axs[0].set_xticks((-np.pi,-np.pi/2,0,np.pi/2,np.pi))
+# axs[0].set_xticklabels((r'$-\pi$',r'$-\frac{\pi}{2}$',0,r'$\frac{\pi}{2}$',r'$\pi$'))
 # fig.tight_layout()
 
 # fig_path = f"{path}/res{res}_N{N}_ribbonspectrum_{aorb_name}{aorb}_{torl_name}{torl}"

@@ -26,10 +26,10 @@ def u(r,s,n,d):
     return result
 
 l = 1
-t = 0.4
+t = 0.693
 
 a = 1
-b = 0.2
+b = 0.466
 
 r_vals = np.arange(points)
 r1,r2 = np.meshgrid(r_vals,r_vals)
@@ -158,7 +158,6 @@ axs[2].set_ylim((-0.1,2*np.pi/(np.sqrt(3))+0.1))
 axs[2].yaxis.set_visible(False)
 axs[2].get_xaxis().majorTicks[0].label1.set_horizontalalignment('left')
 
-fig.tight_layout()
 fig.subplots_adjust(top=0.8, bottom=0.2)
 cbar_ax = fig.add_axes([0.187, 0.1, 0.76, 0.05])
 label = cbar_ax.set_ylabel(r'$E$',rotation=0, fontsize=12)
@@ -208,7 +207,6 @@ axs1[2].set_ylim((-0.1,2*np.pi/(np.sqrt(3))+0.1))
 axs1[2].yaxis.set_visible(False)
 axs1[2].get_xaxis().majorTicks[0].label1.set_horizontalalignment('left')
 
-fig1.tight_layout()
 fig1.subplots_adjust(top=0.8, bottom=0.2)
 cbar_ax1 = fig1.add_axes([0.187, 0.1, 0.76, 0.05])
 label = cbar_ax1.set_ylabel(r'$F_{12}$',rotation=0, fontsize=12)

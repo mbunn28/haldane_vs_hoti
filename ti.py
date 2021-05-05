@@ -383,17 +383,20 @@ class Lattice:
     def energy_plot(self, r=None):
         fig = plt.figure()
         a = len(self.energies)
+        corner_energies = np.zeros(a,dtype=bool)
         edge_energies = np.zeros(a,dtype=bool)
         prob = np.multiply(np.conjugate(self.waves),self.waves)
+        prob = np.real(prob)
+
         #5 site corners
         if self.fivesites == True:
             for i in range(a):
                 p = prob[self.lat(0,0,0),i]+prob[self.lat(0,0,1),i]+prob[self.lat(0,0,2),i]+prob[self.lat(0,0,3),i]+prob[self.lat(0,0,5),i]
                 p = p+prob[self.lat(self.N-1,self.N-1,0),i]+prob[self.lat(self.N-1,self.N-1,2),i]+prob[self.lat(self.N-1,self.N-1,3),i]+prob[self.lat(self.N-1,self.N-1,4),i]+prob[self.lat(self.N-1,self.N-1,5),i]
                 if p > 0.3:
-                    edge_energies[i] = True
+                    corner_energies[i] = True
                 else:
-                    edge_energies[i] = False
+                    corner_energies[i] = False
 
         #4 site corners
         if self.foursites == True:
@@ -401,9 +404,9 @@ class Lattice:
                 p = prob[self.lat(0,self.N-1,0),i]+prob[self.lat(0,self.N-1,1),i]+prob[self.lat(0,self.N-1,4),i]+prob[self.lat(0,self.N-1,5),i]
                 p = p+prob[self.lat(self.N-1,0,1),i]+prob[self.lat(self.N-1,0,2),i]+prob[self.lat(self.N-1,0,3),i]+prob[self.lat(self.N-1,0,4),i]
                 if p > 0.3:
-                    edge_energies[i] = True
+                    corner_energies[i] = True
                 else:
-                    edge_energies[i] = False
+                    corner_energies[i] = False
 
         #3 site corners
         if self.threesites == True:
@@ -411,9 +414,19 @@ class Lattice:
                 p = prob[self.lat(0,0,0),i]+prob[self.lat(0,0,1),i]+prob[self.lat(0,0,2),i]
                 p = p+prob[self.lat(self.N-1,self.N-1,3),i]+prob[self.lat(self.N-1,self.N-1,4),i]+prob[self.lat(self.N-1,self.N-1,5),i]
                 if p > 0.3:
-                    edge_energies[i] = True
+                    corner_energies[i] = True
                 else:
-                    edge_energies[i] = False
+                    corner_energies[i] = False
+            
+        #edge_energies
+        pe = np.zeros(a)
+        for i in range(self.N-1):
+            for j in range(6):
+                pe += prob[self.lat(0,i,j),:] + prob[self.lat(i+1,0,j),:] + prob[self.lat(self.N-1,i+1,j),:]+prob[self.lat(i,self.N-1,j),:]
+        edge_energies = pe > 0.6
+        edge_energies[corner_energies] = 0
+        print(pe[int(a/2-10):int(a/2+10)])
+        print(pe[edge_energies])
 
         if r != None:
             min_en = int(min(range(len(self.energies)), key=lambda i: abs(self.energies[i]+r))+1)
@@ -421,8 +434,9 @@ class Lattice:
             plt.plot(en[min_en:max_en],'ko',markersize=0.5)
         else:
             x = np.arange(a)
-            plt.plot(x[~edge_energies],self.energies[~edge_energies],'ko',markersize=0.5)
-            plt.plot(x[edge_energies],self.energies[edge_energies],'ro',markersize=0.5)
+            plt.plot(x[~corner_energies],self.energies[~corner_energies],'ko',markersize=0.5)
+            plt.plot(x[corner_energies],self.energies[corner_energies],'ro',markersize=0.5)
+            plt.plot(x[edge_energies],self.energies[edge_energies],'bo',markersize=0.5)
         [newpath, name, p ,q] = self.make_names("Energy Eigenvalues of the Hamiltonian")
         # fig.suptitle(name)
         plt.xlabel(r"$n$")
@@ -595,6 +609,7 @@ class Lattice:
                     edge_energies[i] = True
                 else:
                     edge_energies[i] = False
+        
         states = np.argwhere(edge_energies)
         # eners = self.energies[states].transpose()
         # same_ener = np.round(np.diff(eners,prepend=0),2)==0

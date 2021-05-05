@@ -204,6 +204,8 @@ for k in range(len(rect_ws)):
 
 plt.arrow(1.4,1.67,-0.05,-0.095,color='dimgray',head_width=0.015,zorder=8)
 plt.arrow(1.87,1.58,0,-0.09,color='dimgray',head_width=0.015,zorder=8)
+
+print(y[x == 1.8])
 # ax2 = ax.twiny()
 # ax2.set_xlim(ax.get_xlim())
 # ax2.set_xticklabels(labels1)
