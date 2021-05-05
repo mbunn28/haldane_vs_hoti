@@ -25,12 +25,12 @@ if not os.path.exists(path_zq):
 
 
 points = 10
-iterations = 4
+iterations = 10
 location = np.array([2,2], dtype=int)
-N = 8
-max_val = 1
+N = 15
+max_val = 0.7
 min_val = 0.5
-set_val = 0.4
+set_val = 1.6
 indep = 'alpha'
 
 x = np.linspace(min_val, max_val, num=points)
@@ -72,7 +72,7 @@ else:
     # M = int(3*(N**2))
     # phi = np.random.rand(6*(N**2),M)
     # phi = scipy.linalg.orth(phi)
-    for m in trange(points):
+    for m in range(points):
         for j in range(len(zq)): 
             lattice1 = zq_lib.zq_lattice(
                 a = a[m],
@@ -93,7 +93,7 @@ else:
             # pa = np.einsum('ij,jk',singlestates_a,np.conjugate(singlestates_a.transpose()))
             # lattice1.proj = np.einsum('ij,jk',pa,phi)
 
-            for i in range(iterations):
+            for i in trange(iterations):
 
                 lattice2 = zq_lib.zq_lattice(
                     a = a[m],
@@ -214,6 +214,15 @@ def format_func(value, tick_number):
 # fig_path1 = f"{path_zq}/N{N}_iter{iterations}_res{points}_z2"
 # fig2.savefig(f"{fig_path1}.png", dpi=500, bbox_inches='tight')
 
+def format_func(value):#, tick_number):
+    if value <= 1:
+        return f'{np.round(value,3)}'
+    else:
+        v = np.round(2 - value, 3)
+        part1 = r'$\frac{1}{'
+        part2 = r'}$'
+        return fr'{part1}{v}{part2}'
+
 for p in range(points):
     fig3, ax3 = plt.subplots()
     # for i in range(np.shape(x_to_plot)[0]):
@@ -222,7 +231,7 @@ for p in range(points):
     ax3.plot(twist_energies[p,0,:,3*(N**2)-1])
     ax3.plot(twist_energies[p,0,:,3*(N**2)])
     title2 = f'En in half-filling gap'
-    ax3.set_title(rf'{title2}: $ N = {N},$ it $= {iterations}$, $res = {points}$, $\alpha = {np.round(a[p],2)}, \lambda = {l[p]}$')
+    ax3.set_title(rf'{title2}: $ N = {N},$ it $= {iterations}$, $res = {points}$, $\alpha = {np.round(a[p],2)}, \lambda$ = {format_func(set_val)}')
     ax3.set_ylabel(r'$E$')
     ax3.set_xlabel(r'$\theta$')
     fig_path2 = f"{path_zq}/twisten_N{N}_iter{iterations}_res{points}_z6_{p}"
