@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import ti
 import numpy as np
 import numpy.linalg
 import joblib
 import os
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-from matplotlib import rc
+# import matplotlib.pyplot as plt
+# import matplotlib.colors as colors
+# from matplotlib import rc
 import scipy.linalg
 import numpy.random
 import numpy.ma
 from tqdm import tqdm
 from scipy.signal import argrelextrema
 
-rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
-rc('text', usetex=True)
-rc('text.latex', preamble= r'\usepackage{amsfonts}')
+# rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+# rc('text', usetex=True)
+# rc('text.latex', preamble= r'\usepackage{amsfonts}')
 
 def curve(tau, zq):
     if zq == 'z6':
