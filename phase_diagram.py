@@ -18,7 +18,8 @@ l = 0.05,
 M=0,
 N=20)
 
-lattice.fivesites=True
+lattice.hexamercorners = True
+lattice.fivesites = False
 # folder = "data/11052020/PBC/t1.9_a1.9_N12"
 
 # lattice.energies = joblib.load( f"{folder}_energies")

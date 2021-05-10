@@ -19,10 +19,10 @@ rc('text', usetex=True)
 plt.rcParams['axes.axisbelow'] = True
 
 l = 1
-t = 0.693
+t = 0.2
 
 a = 1
-b = 0.466
+b = 0.5595
 M = 0
 periodic = False
 phi = np.pi/2
@@ -31,8 +31,8 @@ N = 100
 res= 125
 zoom = True
 if zoom == True: 
-    N_zoom = 300
-    res_zoom = 800
+    N_zoom = 600
+    res_zoom = 750
 
 
 if a == 1 and b == 1:
@@ -148,8 +148,8 @@ if zoom == True:
             energies_zoom[i,:], evecs_zoom = np.linalg.eigh(hamiltonian(k_zoom[i],N_zoom))
             evecs_zoom = np.transpose(evecs_zoom, axes=(1,0))
             waves_zoom = np.abs(evecs_zoom)**2
-            mask_left_zoom[i,:] = np.sum(waves_zoom[:,:int(np.rint(3*N_zoom))],axis=1) > 0.75
-            mask_right_zoom[i,:] = np.sum(waves_zoom[:,:int(np.rint(3*N_zoom))],axis=1) < 0.25
+            mask_left_zoom[i,:] = np.sum(waves_zoom[:,:int(np.rint(3*N_zoom))],axis=1) > 0.7
+            mask_right_zoom[i,:] = np.sum(waves_zoom[:,:int(np.rint(3*N_zoom))],axis=1) < 0.2
 
         joblib.dump(energies_zoom, energy_path_zoom)
         joblib.dump(mask_left_zoom, mask_left_path_zoom)
@@ -162,9 +162,9 @@ _, k =np.meshgrid(np.zeros(6*N),k)
 if zoom == True:
     _, k_zoom =np.meshgrid(np.zeros(6*N_zoom),k_zoom)
     y_max = np.amax(energies_zoom)
-    top_aspect = 1.5
-    zoom_y = 0.075
-    zoom_aspect = 30
+    top_aspect = 1
+    zoom_y = 0.03
+    zoom_aspect = 25
     fig= plt.figure(figsize=(3.4,7.5))
     grd = gs.GridSpec(2,1,figure=fig,hspace=0,height_ratios=[top_aspect*(y_max+0.1),zoom_aspect*zoom_y])
     axs = grd.subplots(sharex=True)
@@ -193,7 +193,7 @@ if zoom == True:
 
 else:
     y_max = np.amax(energies)
-    aspect = 1
+    aspect = 1.25
     fig, ax = plt.subplots(figsize=(3.4,5))
 
     ax.set_aspect(aspect)
@@ -207,7 +207,7 @@ else:
     ax.set_xticks((-np.pi,-np.pi/2,0,np.pi/2,np.pi))
     ax.set_xticklabels((r'$-\pi$',r'$-\frac{\pi}{2}$',0,r'$\frac{\pi}{2}$',r'$\pi$'))
 
-    fig_path = f"{newpath}/ribbonspectrum_zoom"
+    fig_path = f"{newpath}/ribbonspectrum"
     fig.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
 
 # mask_other = np.logical_not(np.logical_or(mask_left,mask_right))

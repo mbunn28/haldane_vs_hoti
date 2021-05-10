@@ -16,10 +16,18 @@ import joblib
 import scipy.linalg
 from matplotlib import rc
 from tqdm.auto import trange
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
 plt.rcParams['axes.axisbelow'] = True
+
+def colorbar(mappable):
+    ax = mappable.axes
+    fig = ax.figure
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    return fig.colorbar(mappable, cax=cax)
 
 def format_func(value, tick_number):
     if value <= 1:
@@ -93,6 +101,7 @@ class Lattice:
         self.fivesites = False
         self.foursites = False
         self.threesites = False
+        self.hexamercorners = False
 
     def lat(self,i,j,s): return(6*self.N*i+6*j+s)
 
@@ -340,7 +349,8 @@ class Lattice:
         else:
             title = ""
 
-        newpath = f'{output}/{condition}{corn}'
+        newpath = f'{output}/{condition}{corn}/a{p}_l{q}_N{self.N}'
+        newpath=newpath.replace('.','')
 
         if not os.path.exists(newpath):
             os.makedirs(newpath)
@@ -381,7 +391,7 @@ class Lattice:
         return
     
     def energy_plot(self, r=None):
-        fig = plt.figure()
+        fig = plt.figure(figsize=(3.4,3.4))
         a = len(self.energies)
         corner_energies = np.zeros(a,dtype=bool)
         edge_energies = np.zeros(a,dtype=bool)
@@ -417,16 +427,23 @@ class Lattice:
                     corner_energies[i] = True
                 else:
                     corner_energies[i] = False
-            
-        #edge_energies
+    
+        #regular corners
+        if self.hexamercorners == True:
+            pc = np.zeros(a)
+            for j in range(6):
+                pc += prob[self.lat(0,0,j),:] + prob[self.lat(0,self.N-1,j),:] + prob[self.lat(self.N-1,0,j),:] + prob[self.lat(self.N-1,self.N-1,j),:]
+            corner_energies = pc > 0.8
+
+        #edge energies
         pe = np.zeros(a)
         for i in range(self.N-1):
             for j in range(6):
                 pe += prob[self.lat(0,i,j),:] + prob[self.lat(i+1,0,j),:] + prob[self.lat(self.N-1,i+1,j),:]+prob[self.lat(i,self.N-1,j),:]
-        edge_energies = pe > 0.6
+        edge_energies = pe > 0.65
         edge_energies[corner_energies] = 0
-        print(pe[int(a/2-10):int(a/2+10)])
-        print(pe[edge_energies])
+        # print(pe[int(a/2-10):int(a/2+10)])
+        # print(pe[edge_energies])
 
         if r != None:
             min_en = int(min(range(len(self.energies)), key=lambda i: abs(self.energies[i]+r))+1)
@@ -446,7 +463,7 @@ class Lattice:
             zoom = ""
         else:
             zoom = "_zoom"
-        file_name = f"{newpath}/energyplot_l{q}_a{p}_N{self.N}{zoom}"
+        file_name = f"{newpath}/energyplot{zoom}"
         file_name = file_name.replace('.','')
         fig.savefig(f'{file_name}.png',dpi=500,bbox_inches='tight')
         plt.close(fig)
@@ -462,7 +479,7 @@ class Lattice:
     def plot_mode(self, m, shift=0):
         mode = find_mode(self.energies,m)
         rows, columns = layout(mode)
-        fig, ax_array = plt.subplots(rows, columns, squeeze=False)
+        fig, ax_array = plt.subplots(rows, columns, squeeze=False,figsize=(3.4,5))
         count = 0
 
         for l, ax_row in enumerate(ax_array):
@@ -516,9 +533,10 @@ class Lattice:
     def plot_estate(self, m):
         en = np.arange(len(self.energies))
         mode = [i for i, e in enumerate(en) if e == m]
-        rows, columns = layout(mode)
-        fig, ax_array = plt.subplots(rows, columns, squeeze=False)
+        rows, columns = 1, 1
+        fig, ax_array = plt.subplots(1, 1, squeeze=False,figsize=(1.7,6))
         count = 0
+        self.energies[np.round(self.energies,4) == 0] = 0
 
         for l, ax_row in enumerate(ax_array):
             for k,axes in enumerate(ax_row):
@@ -551,10 +569,10 @@ class Lattice:
                 axes.set_xticks([])
                 axes.set_aspect('equal',adjustable='box')
 
-                plt.scatter(x,y,s=0, c=proba, cmap= 'inferno_r',vmin=min(proba), vmax=max(proba), facecolors='none')
-                cb = plt.colorbar(ax=axes)#,fraction=0.1, shrink=0.74)
+                sc = plt.scatter(x,y,s=0, c=proba, cmap= 'inferno_r',vmin=min(proba), vmax=max(proba), facecolors='none')
+                cb = colorbar(sc)#,fraction=0.1, shrink=0.74)
                 cb.set_ticks([])
-                cb.ax.set_ylabel(r'$|\psi_i|^2$',rotation=0,labelpad=12)
+                cb.ax.set_title(r'$|\psi_i|^2$')#,rotation=0,labelpad=12)
 
             [newpath, name, p, q] = self.make_names("Energy Eigenstates")
             # if len(mode)>6:
@@ -580,6 +598,8 @@ class Lattice:
         a = len(self.energies)
         edge_energies = np.zeros(a,dtype=bool)
         prob = np.multiply(np.conjugate(self.waves),self.waves)
+        prob = np.real(prob)
+
         #5 site corners
         if self.fivesites == True:
             for i in range(a):
@@ -609,6 +629,13 @@ class Lattice:
                     edge_energies[i] = True
                 else:
                     edge_energies[i] = False
+
+        #regular corners
+        if self.hexamercorners == True:
+            pc = np.zeros(a)
+            for j in range(6):
+                pc += prob[self.lat(0,0,j),:] + prob[self.lat(0,self.N-1,j),:] + prob[self.lat(self.N-1,0,j),:] + prob[self.lat(self.N-1,self.N-1,j),:]
+            edge_energies = pc > 0.8
         
         states = np.argwhere(edge_energies)
         # eners = self.energies[states].transpose()
