@@ -159,7 +159,7 @@ axs[2].yaxis.set_visible(False)
 axs[2].get_xaxis().majorTicks[0].label1.set_horizontalalignment('left')
 
 fig.subplots_adjust(top=0.8, bottom=0.2)
-cbar_ax = fig.add_axes([0.187, 0.1, 0.76, 0.05])
+cbar_ax = fig.add_axes([0.125, 0.1, 0.775, 0.05])
 label = cbar_ax.set_ylabel(r'$E$',rotation=0, fontsize=12)
 cbar_ax.yaxis.set_label_coords(-0.05,0.06)
 fig.colorbar(im, cax=cbar_ax, orientation='horizontal')
@@ -208,10 +208,11 @@ axs1[2].yaxis.set_visible(False)
 axs1[2].get_xaxis().majorTicks[0].label1.set_horizontalalignment('left')
 
 fig1.subplots_adjust(top=0.8, bottom=0.2)
-cbar_ax1 = fig1.add_axes([0.187, 0.1, 0.76, 0.05])
+cbar_ax1 = fig1.add_axes([0.125, 0.1, 0.775, 0.05])
 label = cbar_ax1.set_ylabel(r'$F_{12}$',rotation=0, fontsize=12)
 cbar_ax1.yaxis.set_label_coords(-0.06,0.12)
-fig1.colorbar(im1, cax=cbar_ax1, orientation='horizontal')
+cb= fig1.colorbar(im1, cax=cbar_ax1, orientation='horizontal')
+cb.formatter.set_powerlimits((0,0))
 
 fig1.savefig(f"{newpath}/chern_no.png", bbox_inches = 'tight', dpi = 500)
 

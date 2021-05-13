@@ -16,10 +16,18 @@ import joblib
 import scipy.linalg
 from matplotlib import rc
 from tqdm.auto import trange
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
 plt.rcParams['axes.axisbelow'] = True
+
+def colorbar(mappable):
+    ax = mappable.axes
+    fig = ax.figure
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    return fig.colorbar(mappable, cax=cax)
 
 def format_func(value, tick_number):
     if value <= 1:
@@ -90,9 +98,12 @@ class Lattice:
         self.energies_low = None
         self.waves = None
         self.periodic_hamiltonian = False
-        self.fivesites = False
-        self.foursites = False
-        self.threesites = False
+        self.cornertype = 'Hexamer'
+        self.corners = None
+        self.edges = None
+        self.colourcode = False
+        self.corner_p = 0.8
+        self.edge_p = 0.95
 
     def lat(self,i,j,s): return(6*self.N*i+6*j+s)
 
@@ -203,7 +214,7 @@ class Lattice:
                     h[self.lat(self.N-1,j,s),self.lat(self.N-1,j,s)] = vv
 
         #5 site corners
-        if self.fivesites == True:
+        if self.cornertype == 'Five Sites':
             h[self.lat(0,0,4),:]=0
             h[:,self.lat(0,0,4)]=0
             h[self.lat(0,0,4),self.lat(0,0,4)]=vv
@@ -213,7 +224,7 @@ class Lattice:
             h[self.lat(self.N-1,self.N-1,1),self.lat(self.N-1,self.N-1,1)]=vv
 
         # #4 site corners
-        if self.foursites == True:
+        if self.cornertype == 'Four Sites':
             h[self.lat(0,self.N-1,2),:]=0
             h[:,self.lat(0,self.N-1,2)]=0
             h[self.lat(0,self.N-1,2),self.lat(0,self.N-1,2)]=vv
@@ -231,7 +242,7 @@ class Lattice:
             h[self.lat(self.N-1,0,0),self.lat(self.N-1,0,0)]=vv
 
         # #3 site corners
-        if self.threesites == True:
+        if self.cornertype == 'Three Sites':
             h[self.lat(0,0,4),:]=0
             h[:,self.lat(0,0,4)]=0
             h[self.lat(0,0,4),self.lat(0,0,4)]=vv
@@ -340,7 +351,8 @@ class Lattice:
         else:
             title = ""
 
-        newpath = f'{output}/{condition}{corn}'
+        newpath = f'{output}/{condition}{corn}/a{p}_l{q}_N{self.N}'
+        newpath=newpath.replace('.','')
 
         if not os.path.exists(newpath):
             os.makedirs(newpath)
@@ -380,73 +392,89 @@ class Lattice:
         plt.close(fig)
         return
     
-    def energy_plot(self, r=None):
-        fig = plt.figure()
+    def find_corners(self):
+        if self.corners is not None:
+            return 
+
         a = len(self.energies)
         corner_energies = np.zeros(a,dtype=bool)
+        prob = np.multiply(np.conjugate(self.waves),self.waves)
+        prob = np.real(prob)
+        p = np.zeros(a)
+
+        #5 site corners
+        if self.cornertype == 'Five Sites':
+            p = prob[self.lat(0,0,0),:]+prob[self.lat(0,0,1),:]+prob[self.lat(0,0,2),:]+prob[self.lat(0,0,3),:]+prob[self.lat(0,0,5),:]
+            p = p+prob[self.lat(self.N-1,self.N-1,0),:]+prob[self.lat(self.N-1,self.N-1,2),:]+prob[self.lat(self.N-1,self.N-1,3),:]+prob[self.lat(self.N-1,self.N-1,4),:]+prob[self.lat(self.N-1,self.N-1,5),:]
+            
+        #4 site corners
+        if self.cornertype == 'Four Sites':
+            p += prob[self.lat(0,self.N-1,0),:]+prob[self.lat(0,self.N-1,1),:]+prob[self.lat(0,self.N-1,4),:]+prob[self.lat(0,self.N-1,5),:]
+            p += prob[self.lat(self.N-1,0,1),:]+prob[self.lat(self.N-1,0,2),:]+prob[self.lat(self.N-1,0,3),:]+prob[self.lat(self.N-1,0,4),:]
+            
+        #3 site corners
+        if self.cornertype == 'Three Sites':
+            p += prob[self.lat(0,0,0),:]+prob[self.lat(0,0,1),:]+prob[self.lat(0,0,2),:]
+            p += p+prob[self.lat(self.N-1,self.N-1,3),:]+prob[self.lat(self.N-1,self.N-1,4),:]+prob[self.lat(self.N-1,self.N-1,5),:]
+                
+        #regular corners
+        if self.cornertype == 'Five Sites':
+            for j in range(6):
+                p += prob[self.lat(0,0,j),:] + prob[self.lat(0,self.N-1,j),:] + prob[self.lat(self.N-1,0,j),:] + prob[self.lat(self.N-1,self.N-1,j),:]
+            
+        corner_energies = p > self.corner_p
+        self.corners = corner_energies
+        return
+
+    def find_edges(self):
+        if self.edges is not None:
+            return
+
+        a = len(self.energies)
         edge_energies = np.zeros(a,dtype=bool)
         prob = np.multiply(np.conjugate(self.waves),self.waves)
         prob = np.real(prob)
-
-        #5 site corners
-        if self.fivesites == True:
-            for i in range(a):
-                p = prob[self.lat(0,0,0),i]+prob[self.lat(0,0,1),i]+prob[self.lat(0,0,2),i]+prob[self.lat(0,0,3),i]+prob[self.lat(0,0,5),i]
-                p = p+prob[self.lat(self.N-1,self.N-1,0),i]+prob[self.lat(self.N-1,self.N-1,2),i]+prob[self.lat(self.N-1,self.N-1,3),i]+prob[self.lat(self.N-1,self.N-1,4),i]+prob[self.lat(self.N-1,self.N-1,5),i]
-                if p > 0.3:
-                    corner_energies[i] = True
-                else:
-                    corner_energies[i] = False
-
-        #4 site corners
-        if self.foursites == True:
-            for i in range(a):
-                p = prob[self.lat(0,self.N-1,0),i]+prob[self.lat(0,self.N-1,1),i]+prob[self.lat(0,self.N-1,4),i]+prob[self.lat(0,self.N-1,5),i]
-                p = p+prob[self.lat(self.N-1,0,1),i]+prob[self.lat(self.N-1,0,2),i]+prob[self.lat(self.N-1,0,3),i]+prob[self.lat(self.N-1,0,4),i]
-                if p > 0.3:
-                    corner_energies[i] = True
-                else:
-                    corner_energies[i] = False
-
-        #3 site corners
-        if self.threesites == True:
-            for i in range(a):
-                p = prob[self.lat(0,0,0),i]+prob[self.lat(0,0,1),i]+prob[self.lat(0,0,2),i]
-                p = p+prob[self.lat(self.N-1,self.N-1,3),i]+prob[self.lat(self.N-1,self.N-1,4),i]+prob[self.lat(self.N-1,self.N-1,5),i]
-                if p > 0.3:
-                    corner_energies[i] = True
-                else:
-                    corner_energies[i] = False
-            
-        #edge_energies
-        pe = np.zeros(a)
+        p = np.zeros(a)
+        
         for i in range(self.N-1):
             for j in range(6):
-                pe += prob[self.lat(0,i,j),:] + prob[self.lat(i+1,0,j),:] + prob[self.lat(self.N-1,i+1,j),:]+prob[self.lat(i,self.N-1,j),:]
-        edge_energies = pe > 0.6
-        edge_energies[corner_energies] = 0
-        print(pe[int(a/2-10):int(a/2+10)])
-        print(pe[edge_energies])
-
+                p += prob[self.lat(0,i,j),:] + prob[self.lat(i+1,0,j),:] + prob[self.lat(self.N-1,i+1,j),:]+prob[self.lat(i,self.N-1,j),:]
+        for i in range(self.N-3):
+            for j in range(6):
+                p += prob[self.lat(1,i+1,j),:] + prob[self.lat(i+2,1,j),:] + prob[self.lat(self.N-2,i+2,j),:]+prob[self.lat(i+1,self.N-2,j),:]
+        
+        edge_energies = p > self.edge_p
+        if self.corners is not None:
+            edge_energies[self.corners] = 0
+        self.edges = edge_energies
+        return
+    
+    def energy_plot(self, r=None):
+        fig = plt.figure(figsize=(3.4,3.4))
         if r != None:
             min_en = int(min(range(len(self.energies)), key=lambda i: abs(self.energies[i]+r))+1)
             max_en = int((6*(self.N**2)-min_en))
-            plt.plot(en[min_en:max_en],'ko',markersize=0.5)
+            plt.plot(self.energies[min_en:max_en],'ko',markersize=0.5)
+            zoom = "_zoom"
+        elif self.colourcode == True:
+            self.find_corners()
+            self.find_edges()
+            x = np.arange(len(self.energies))
+            plt.plot(x[~self.corners],self.energies[~self.corners],'ko',markersize=0.5)
+            plt.plot(x[self.corners],self.energies[self.corners],'ro',markersize=0.5)
+            plt.plot(x[self.edges],self.energies[self.edges],'bo',markersize=0.5)
+            zoom = ""
         else:
-            x = np.arange(a)
-            plt.plot(x[~corner_energies],self.energies[~corner_energies],'ko',markersize=0.5)
-            plt.plot(x[corner_energies],self.energies[corner_energies],'ro',markersize=0.5)
-            plt.plot(x[edge_energies],self.energies[edge_energies],'bo',markersize=0.5)
+            x = np.arange(len(self.energies))
+            plt.plot(x,self.energies,'ko',markersize=0.5)
+            zoom = ""
+
         [newpath, name, p ,q] = self.make_names("Energy Eigenvalues of the Hamiltonian")
         # fig.suptitle(name)
         plt.xlabel(r"$n$")
         plt.ylabel(r"$E$")
-
-        if r == None:
-            zoom = ""
-        else:
-            zoom = "_zoom"
-        file_name = f"{newpath}/energyplot_l{q}_a{p}_N{self.N}{zoom}"
+            
+        file_name = f"{newpath}/energyplot{zoom}"
         file_name = file_name.replace('.','')
         fig.savefig(f'{file_name}.png',dpi=500,bbox_inches='tight')
         plt.close(fig)
@@ -462,7 +490,7 @@ class Lattice:
     def plot_mode(self, m, shift=0):
         mode = find_mode(self.energies,m)
         rows, columns = layout(mode)
-        fig, ax_array = plt.subplots(rows, columns, squeeze=False)
+        fig, ax_array = plt.subplots(rows, columns, squeeze=False,figsize=(3.4,5))
         count = 0
 
         for l, ax_row in enumerate(ax_array):
@@ -516,9 +544,10 @@ class Lattice:
     def plot_estate(self, m):
         en = np.arange(len(self.energies))
         mode = [i for i, e in enumerate(en) if e == m]
-        rows, columns = layout(mode)
-        fig, ax_array = plt.subplots(rows, columns, squeeze=False)
+        rows, columns = 1, 1
+        fig, ax_array = plt.subplots(1, 1, squeeze=False,figsize=(1.7,6))
         count = 0
+        self.energies[np.round(self.energies,4) == 0] = 0
 
         for l, ax_row in enumerate(ax_array):
             for k,axes in enumerate(ax_row):
@@ -551,22 +580,18 @@ class Lattice:
                 axes.set_xticks([])
                 axes.set_aspect('equal',adjustable='box')
 
-                plt.scatter(x,y,s=0, c=proba, cmap= 'inferno_r',vmin=min(proba), vmax=max(proba), facecolors='none')
-                cb = plt.colorbar(ax=axes)#,fraction=0.1, shrink=0.74)
+                sc = plt.scatter(x,y,s=0, c=proba, cmap= 'inferno_r',vmin=min(proba), vmax=max(proba), facecolors='none')
+                cb = colorbar(sc)
                 cb.set_ticks([])
-                cb.ax.set_ylabel(r'$|\psi_i|^2$',rotation=0,labelpad=12)
+                cb.ax.set_title(r'$|\psi_i|^2$')#,rotation=0,labelpad=12)
 
-            [newpath, name, p, q] = self.make_names("Energy Eigenstates")
-            # if len(mode)>6:
-            #     plt.suptitle(f"First 6 {name}, Total States: {len(mode)}", fontsize = 12)
-            # else:
-            #     plt.suptitle(name)
+        [newpath, name, p, q] = self.make_names("Energy Eigenstates")
 
-            file = f"{newpath}/estate{m}_l{q}_a{p}_N{self.N}"
-            file = file.replace('.','')
-            fig.tight_layout()
-            fig.savefig(file,dpi=500,bbox_inches='tight')
-            plt.close(fig)
+        file = f"{newpath}/estate{m}_l{q}_a{p}_N{self.N}"
+        file = file.replace('.','')
+        fig.tight_layout()
+        fig.savefig(file,dpi=500,bbox_inches='tight')
+        plt.close(fig)
         return
 
     def single_state(self):
@@ -577,44 +602,12 @@ class Lattice:
         return
 
     def plot_cornerstates(self):
-        a = len(self.energies)
-        edge_energies = np.zeros(a,dtype=bool)
-        prob = np.multiply(np.conjugate(self.waves),self.waves)
-        #5 site corners
-        if self.fivesites == True:
-            for i in range(a):
-                p = prob[self.lat(0,0,0),i]+prob[self.lat(0,0,1),i]+prob[self.lat(0,0,2),i]+prob[self.lat(0,0,3),i]+prob[self.lat(0,0,5),i]
-                p = p+prob[self.lat(self.N-1,self.N-1,0),i]+prob[self.lat(self.N-1,self.N-1,2),i]+prob[self.lat(self.N-1,self.N-1,3),i]+prob[self.lat(self.N-1,self.N-1,4),i]+prob[self.lat(self.N-1,self.N-1,5),i]
-                if p > 0.3:
-                    edge_energies[i] = True
-                else:
-                    edge_energies[i] = False
-
-        #4 site corners
-        if self.foursites == True:
-            for i in range(a):
-                p = prob[self.lat(0,self.N-1,0),i]+prob[self.lat(0,self.N-1,1),i]+prob[self.lat(0,self.N-1,4),i]+prob[self.lat(0,self.N-1,5),i]
-                p = p+prob[self.lat(self.N-1,0,1),i]+prob[self.lat(self.N-1,0,2),i]+prob[self.lat(self.N-1,0,3),i]+prob[self.lat(self.N-1,0,4),i]
-                if p > 0.3:
-                    edge_energies[i] = True
-                else:
-                    edge_energies[i] = False
-
-        #3 site corners
-        if self.threesites == True:
-            for i in range(a):
-                p = prob[self.lat(0,0,0),i]+prob[self.lat(0,0,1),i]+prob[self.lat(0,0,2),i]
-                p = p+prob[self.lat(self.N-1,self.N-1,3),i]+prob[self.lat(self.N-1,self.N-1,4),i]+prob[self.lat(self.N-1,self.N-1,5),i]
-                if p > 0.3:
-                    edge_energies[i] = True
-                else:
-                    edge_energies[i] = False
-        
-        states = np.argwhere(edge_energies)
-        # eners = self.energies[states].transpose()
-        # same_ener = np.round(np.diff(eners,prepend=0),2)==0
-        # same_ener = same_ener.transpose()
-        # states = states[~same_ener]
+        if self.colourcode == False:
+            return
+        self.find_corners()
+        self.find_edges()
+        state_locs = np.logical_or(self.corners,self.edges)
+        states = np.argwhere(state_locs)
         for i in range(len(states)):
             self.plot_estate(states[i])
         return
@@ -630,6 +623,92 @@ class Lattice:
         else:
             colour = 'b'
         return colour
+    
+    def energy_spectrum(self, indep, t=100, min_val=0, max_val=1):
+        #to use this function: create a lattice w all other param values
+        #... and feed this fn the min and max vals you want to plot over
+        a = self.find_energysize()
+        bigenergies = np.zeros((a, t))
+        edgeenergies = np.zeros((a, t))
+        vals = np.round(np.linspace(min_val,max_val,num=t),3)
+        a0 = self.a
+        b0 = self.b
+        l0 = self.l
+        t0 = self.t
+        
+        for k in trange(0,t):
+            if indep == 'l':
+                self.l = vals[k]
+            elif indep == 'a':
+                self.a = vals[k]
+            elif indep == 'b':
+                self.b = vals[k]
+            elif indep == 't':
+                self.t = vals[k]
+            else:
+                print("That's not a parameter!")
+                return
+
+            self.initialize_hamiltonian()
+            self.eigensystem()
+            self.find_corners()
+            
+            bigen = self.energies
+            bigen[self.corners] = np.NaN
+            bigenergies[:,k] = bigen
+            
+            edgeen = self.energies
+            edgeen[~self.corners] = 0
+            edgeenergies[:,k] = edgeen
+            
+        bigenergies = np.round(bigenergies, 4)
+        if indep == 't' or indep == 'b':
+            vals = 2 - vals
+
+        if indep == 'l' or indep == 't':
+            var = r'$\lambda$'
+            thing = "Energy vs Lambda"
+            name_var = 'a'
+        elif indep == 'a' or indep == 'b':
+            var = r'$\alpha$'
+            thing = "Energy vs Alpha"
+            name_var = 'l'
+        fig, ax = plt.subplots()
+        for m in range(a):
+            ax.plot(vals, bigenergies[m,:], color='k', alpha=0.7, linewidth=0.2)
+            ax.plot(vals, edgeenergies[m,:], color='r', alpha=0.7, linewidth=0.2)
+
+        ax.set_xlabel(var)
+        ax.set_ylabel(r"$E$")
+        # ax.set_xlim(min_val,max_val)
+        ax.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
+
+        [newpath, name, p, _] = self.make_names(thing)
+        
+        ax.set_title(name)
+        file_path = f"{newpath}/M{self.M}"
+        if not os.path.exists(file_path):
+            os.makedirs(file_path)
+        file_name = f"{file_path}/{indep}_{name_var}{p}_N{self.N}.png"
+        fig.savefig(file_name, dpi=500)
+        plt.close(fig)
+
+        # joblib.dump(vals, f"{newpath}/M{self.M}/{indep}_{name_var}{p}_N{self.N}_xvals")
+        # joblib.dump(uniques, f"{newpath}/M{self.M}/{indep}_{name_var}{p}_N{self.N}_evals")
+
+        self.a = a0
+        self.b = b0
+        self.l = l0
+        self.t = t0
+        return
+
+    def min_energy(self):
+        self.initialize_hamiltonian()
+        return np.amin(np.abs(self.energies),axis=None)
+
+    def min_periodic_energy(self, kpoint):
+        self.initialize_periodic_hamiltonian(kpoint)
+        return np.amin(np.abs(np.linalg.eigvalsh(self.periodic_hamiltonian)),axis=None)
 
     # def phase_diagram(self, s=40, t=40):
 
@@ -714,287 +793,3 @@ class Lattice:
     #     self.large_alpha = large_alpha
     #     return
 
-    def energy_spectrum(self, indep, t=100, min_val=0, max_val=1):
-        #to use this function: create a lattice w all other param values
-        #... and feed this fn the min and max vals you want to plot over
-        a = self.find_energysize()
-        bigenergies = np.zeros((a, t))
-        edgeenergies = np.zeros((a, t))
-        edge_states = np.zeros((a, t),dtype=bool)
-        vals = np.round(np.linspace(min_val,max_val,num=t),3)
-        a0 = self.a
-        b0 = self.b
-        l0 = self.l
-        t0 = self.t
-        
-        for k in trange(0,t):
-            if indep == 'l':
-                self.l = vals[k]
-            elif indep == 'a':
-                self.a = vals[k]
-            elif indep == 'b':
-                self.b = vals[k]
-            elif indep == 't':
-                self.t = vals[k]
-            else:
-                print("That's not a parameter!")
-                return
-
-            self.initialize_hamiltonian()
-            self.eigensystem()
-            bigenergies[:,k] = self.energies
-            prob = np.multiply(np.conjugate(self.waves),self.waves)
-            
-            #5 site corners
-            if self.fivesites == True:
-                for i in range(a):
-                    p = prob[self.lat(0,0,0),i]+prob[self.lat(0,0,1),i]+prob[self.lat(0,0,2),i]+prob[self.lat(0,0,3),i]+prob[self.lat(0,0,5),i]
-                    p = p+prob[self.lat(self.N-1,self.N-1,0),i]+prob[self.lat(self.N-1,self.N-1,2),i]+prob[self.lat(self.N-1,self.N-1,3),i]+prob[self.lat(self.N-1,self.N-1,4),i]+prob[self.lat(self.N-1,self.N-1,5),i]
-                    if p > 0.3:
-                        edgeenergies[i,k] = bigenergies[i,k]
-                        bigenergies[i,k] = np.NaN
-                    else:
-                        edgeenergies[i,k] = np.NaN
-
-            #4 site corners
-            if self.foursites == True:
-                for i in range(a):
-                    p = prob[self.lat(0,self.N-1,0),i]+prob[self.lat(0,self.N-1,1),i]+prob[self.lat(0,self.N-1,4),i]+prob[self.lat(0,self.N-1,5),i]
-                    p = p+prob[self.lat(self.N-1,0,1),i]+prob[self.lat(self.N-1,0,2),i]+prob[self.lat(self.N-1,0,3),i]+prob[self.lat(self.N-1,0,4),i]
-                    if p > 0.3:
-                        edgeenergies[i,k] = bigenergies[i,k]
-                        bigenergies[i,k] = np.NaN
-                    else:
-                        edgeenergies[i,k] = np.NaN
-
-            #3 site corners
-            if self.threesites == True:
-                for i in range(a):
-                    p = prob[self.lat(0,0,0),i]+prob[self.lat(0,0,1),i]+prob[self.lat(0,0,2),i]
-                    p = p+prob[self.lat(self.N-1,self.N-1,3),i]+prob[self.lat(self.N-1,self.N-1,4),i]+prob[self.lat(self.N-1,self.N-1,5),i]
-                    if p > 0.3:
-                        edgeenergies[i,k] = bigenergies[i,k]
-                        bigenergies[i,k] = np.NaN
-                    else:
-                        edgeenergies[i,k] = np.NaN
-
-            for i in range(0, len(bigenergies[:,k])):
-                if bigenergies[i,k]>1000:
-                    bigenergies[i,k] = np.nan
-                if edgeenergies[i,k]>1000:
-                    edgeenergies[i,k] = np.nan
-
-        bigenergies = np.round(bigenergies, 4)
-        other_energies = bigenergies
-        # other_energies[edge_states == 1] = np.NaN
-        new_array = [tuple(row) for row in bigenergies]
-        uniques = np.unique(new_array, axis=0)
-
-        if indep == 't' or indep == 'b':
-            vals = 2 - vals
-
-        if indep == 'l' or indep == 't':
-            var = r'$\lambda$'
-            thing = "Energy vs Lambda"
-            name_var = 'a'
-        elif indep == 'a' or indep == 'b':
-            var = r'$\alpha$'
-            thing = "Energy vs Alpha"
-            name_var = 'l'
-        fig, ax = plt.subplots()
-        for m in range(a):
-            ax.plot(vals, bigenergies[m,:], color='k', alpha=0.7, linewidth=0.2)
-            ax.plot(vals, edgeenergies[m,:], color='r', alpha=0.7, linewidth=0.2)
-
-        ax.set_xlabel(var)
-        ax.set_ylabel(r"$E$")
-        # ax.set_xlim(min_val,max_val)
-        ax.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
-
-        [newpath, name, p, _] = self.make_names(thing)
-        
-        ax.set_title(name)
-        file_path = f"{newpath}/M{self.M}"
-        if not os.path.exists(file_path):
-            os.makedirs(file_path)
-        file_name = f"{file_path}/{indep}_{name_var}{p}_N{self.N}.png"
-        fig.savefig(file_name, dpi=500)
-        plt.close(fig)
-
-        # joblib.dump(vals, f"{newpath}/M{self.M}/{indep}_{name_var}{p}_N{self.N}_xvals")
-        # joblib.dump(uniques, f"{newpath}/M{self.M}/{indep}_{name_var}{p}_N{self.N}_evals")
-
-        self.a = a0
-        self.b = b0
-        self.l = l0
-        self.t = t0
-        return
-
-    # def plot_groundstate(self):
-    #     mode = find_mode(self.energies,0)
-    #     count = 0
-    #     for f in range(0,ceil(len(mode)/6)):
-    #         if count > floor(len(mode)/6):
-    #             if (len(mode)-count)<=3:
-    #                 columns = len(mode)
-    #                 rows = 1
-    #             elif 3 < (len(mode)-count) <= 6:
-    #                 columns = int(ceil(len(mode)/2))
-    #                 rows = 2
-    #             else:
-    #                 rows = 2
-    #                 columns = 3
-    #                 fig, ax_array = plt.subplots(rows, columns, squeeze=False)
-    #         else:
-    #             rows = 2
-    #             columns = 3
-    #             fig, ax_array = plt.subplots(rows, columns, squeeze=False)
-
-    #         for l, ax_row in enumerate(ax_array):
-    #             for k,axes in enumerate(ax_row):
-    #                 psi = np.transpose(self.waves)[mode[count]] #wavefunction
-    #                 proba = (np.abs(psi))**2
-    #                 proba = proba/np.max(proba)
-
-
-    #                 axes.set_title(f"E: {np.round(self.energies[mode[count]],4)}, Mode:0.{count}", fontsize=10)
-    #                 count +=1
-
-    #                 cmap = matplotlib.cm.get_cmap('inferno_r')
-    #                 normalize = matplotlib.colors.Normalize(vmin=min(proba), vmax=max(proba))
-    #                 colors = [cmap(normalize(value)) for value in proba]
-
-    #                 #plot the probability distribution:
-    #                 x  = np.zeros(6*(self.N)**2)
-    #                 y = np.zeros(6*(self.N)**2)
-    #                 for i in range(self.N):
-    #                     for j in range(self.N):
-    #                         for l in range(6):
-    #                             if self.h[self.lat(i,j,l),self.lat(i,j,l)] < 99:
-    #                                 x[self.lat(i,j,l)] = pos(i,j,l)[0]
-    #                                 y[self.lat(i,j,l)] = pos(i,j,l)[1]
-    #                                 circle = Circle(pos(i,j,l),0.5,color=colors[self.lat(i,j,l)],alpha=1,ec=None,zorder=1)
-    #                                 axes.add_artist(circle)
-    #                 axes.set_ylim(pos(0,self.N-1,3)[-1]-4,pos(self.N-1,0,0)[-1]+4)
-    #                 axes.set_xlim(pos(0,0,5)[0]-4,pos(self.N-1,self.N-1,1)[0]+4)
-    #                 axes.set_yticklabels([])
-    #                 axes.set_xticklabels([])
-    #                 axes.set_aspect('equal')
-
-    #                 plt.scatter(x,y,s=0, c=proba, cmap= 'inferno_r',vmin=min(proba), vmax=max(proba), facecolors='none')
-    #                 plt.colorbar(ax=axes, use_gridspec=True)
-
-    #             [newpath, name]= self.make_names("Energy Eigenstates")
-    #             if not os.path.exists(f"{newpath}/groundstate"):
-    #                 os.makedirs(f"{newpath}/groundstate")
-    #             if len(mode)>6:
-    #                 plt.suptitle(f"Ground State {f}/{ceil(len(mode)/6)}: {name}, Total States: {len(mode)}", fontsize = 10)
-    #             else:
-    #                 plt.suptitle(name)
-
-    #             if self.large_hal == True:
-    #                 p = np.round(2-self.hal,4)
-    #             else:
-    #                 p = np.round(self.hal,4)
-    #             if self.large_alpha == True:
-    #                 q = np.round(2-self.alpha,4)
-    #             else:
-    #                 q = np.round(self.alpha,4)
-
-    #             file = f"{newpath}/groundstate/estate_hal{p}_alpha{q}_gs{f}.pdf"
-    #             fig.savefig(file)
-    #             plt.close(fig)
-    #     return
-
-    # def energy_spectrum_full(self, indep, set_val, t=100):
-    #     large_alpha = self.large_alpha
-    #     large_hal = self.large_hal
-    #     a = self.find_energysize()
-    #     bigenergies = np.zeros((a, 2*t-2))
-    #     vals = np.zeros(2*t-2)
-
-    #     for k in range(0,t):
-    #         value = round(k/t, 3)
-    #         vals[k] = value
-
-    #         if indep == 'Lambda':
-    #             self.large_hal = False
-    #             self.alpha = set_val
-    #             self.hal = value
-    #         elif indep == 'Alpha':
-    #             self.large_alpha = False
-    #             self.alpha = value
-    #             self.hal = set_val
-    #         else:
-    #             self.alpha = 0
-    #             self.hal = 0
-
-    #         print(f"{k}/{t}", end='\r')
-
-    #         self.initialize_hamiltonian()
-    #         self.eigenvalues()
-    #         bigenergies[:,k] = self.energies
-
-    #         # for i in range(0, len(bigenergies[:,k])):
-    #         #     if bigenergies[i,k]>1000:
-    #         #         bigenergies[i,k] = np.nan
-
-    #         vals[1-k] = 2-value
-    #         if indep == 'Lambda':
-    #             self.large_hal = True
-    #             self.alpha = set_val
-    #             self.hal = value
-    #         elif indep == 'Alpha':
-    #             self.large_alpha = False
-    #             self.alpha = value
-    #             self.hal = set_val
-    #         else:
-    #             self.alpha = 0
-    #             self.hal = 0
-
-    #         self.initialize_hamiltonian()
-    #         self.eigenvalues()
-    #         bigenergies[:,-k] = self.energies
-
-    #         # for i in range(0, len(bigenergies[:,1-k])):
-    #         #     if bigenergies[i,1-k]>1000:
-    #         #         bigenergies[i,1-k] = np.nan
-
-    #     bigenergiesmask = bigenergies > 10
-    #     bigenergies[bigenergiesmask] = np.nan
-    #     bigenergies = np.round(bigenergies, 4)
-    #     new_array = [tuple(row) for row in bigenergies]
-    #     uniques = np.unique(new_array, axis=0)
-    #     # uniques = uniques[~np.all(uniques == 0, axis=0)]
-
-    #     fig = plt.figure()
-    #     for m in range(0,uniques.shape[0]):
-    #         plt.plot(vals, uniques[m,:], self.colour(), alpha=0.7, linewidth=0.1)
-
-    #     plt.xlabel(indep)
-    #     plt.ylabel("E/self.b*self.t")
-
-
-    #     if indep == "Lambda":
-    #         [newpath, name] = self.make_names("Energy vs Lambda")
-    #     else:
-    #         [newpath, name] = self.make_names("Energy vs Alpha")
-
-    #     if not os.path.exists(f"{newpath}/M={self.M}"):
-    #         os.makedirs(f"{newpath}/M={self.M}")
-
-    #     plt.title(f"{name}, M = {self.M}")
-    #     fig.savefig(f"{newpath}/M={self.M}/{name}.pdf")
-    #     plt.close(fig)
-
-    #     self.large_hal = large_hal
-    #     self.large_alpha = large_alpha
-    #     return
-
-    def min_energy(self):
-        self.initialize_hamiltonian()
-        return np.amin(np.abs(self.energies),axis=None)
-
-    def min_periodic_energy(self, kpoint):
-        self.initialize_periodic_hamiltonian(kpoint)
-        return np.amin(np.abs(np.linalg.eigvalsh(self.periodic_hamiltonian)),axis=None)
