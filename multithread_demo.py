@@ -6,8 +6,15 @@ import joblib
 import os
 import scipy.linalg
 import numpy.random
+import numpy.ma
+from tqdm.auto import trange
 from tqdm import tqdm
+from scipy.signal import argrelextrema
 import zq_lib
+
+import cProfile
+from multiprocessing import Pool
+
 
 def rule(y):
     a = np.zeros(len(y))
@@ -24,10 +31,10 @@ def rule(y):
 def main():
     
     # TODO implement argparse
-    points = 100
+    points = 10
     iterations = 4
     location = np.array([2,2], dtype=int)
-    N = 17
+    N = 6
     max_x = 1.5
     min_x = 0.5
     max_y = 2
@@ -50,11 +57,11 @@ def main():
 
     _,zq_phases_path,small_energy_path,small_energy_loc_path = make_filenames()
 
-    if (os.path.exists(zq_phases_path)):
-        zq_phases = joblib.load(zq_phases_path)
-        small_energy = joblib.load(small_energy_path)
-        small_energy_loc = joblib.load(small_energy_loc_path)
-        return
+    # if (os.path.exists(zq_phases_path)):
+    #     zq_phases = joblib.load(zq_phases_path)
+    #     small_energy = joblib.load(small_energy_path)
+    #     small_energy_loc = joblib.load(small_energy_loc_path)
+    #     return
 
     a_vals, b_vals = rule(y)
     l_vals, t_vals = rule(x)
@@ -62,9 +69,9 @@ def main():
     t, b = np.meshgrid(t_vals,b_vals)
 
 
-    zq_phases = np.zeros((points,points,len(zq)))
-    small_energy = np.zeros((points,points,len(zq)))
-    small_energy_loc = np.zeros((points,points,len(zq)))
+    zq_phases = np.zeros((points,4*points,len(zq)))
+    small_energy = np.zeros((points,4*points,len(zq)))
+    small_energy_loc = np.zeros((points,4*points,len(zq)))
 
     phi = np.random.rand(6*(N**2),M)
     phi = scipy.linalg.orth(phi)
@@ -106,6 +113,7 @@ def main():
 
             return D
 
+
         Ts = np.linspace(0, 1, iterations+1)
         lattices = [create_lattice(theta) for theta in Ts]
         for lattice in lattices:
@@ -115,13 +123,34 @@ def main():
         small_energy[n,m,j] = gap
         small_energy_loc[n,m,j] = np.argmin(gaps)/iterations
 
+        # def worker(lattice):
+            # singlestate = get_states(lattice, M)
+            # pa = np.einsum('ij,jk', singlestate, np.conjugate(singlestate.transpose()))
+            # lattice.proj = np.einsum('ij,jk', pa, phi)
+        
+        # with Pool(processes=1) as pool:
+            # for lattice in lattices:
+                # pool.apply_async(worker)
+
         for lattice in lattices:
             singlestate = get_states(lattice, M)
             pa = np.einsum('ij,jk', singlestate, np.conjugate(singlestate.transpose()),optimize='greedy')
             lattice.proj = np.einsum('ij,jk', pa, phi,optimize='greedy')
 
+        # ? multithread
+        # def worker(lattice1, lattice2):
+        #     rc = do_integral(lattice1, lattice2)
+        #     return rc
+
+        # D = []
+        # with Pool(processes=8) as pool:
+        #     rc = [pool.apply_async(worker, (lattice1, lattice2)) for lattice1, lattice2 in zip(lattices, lattices[1:])]
+        #     for res in rc:
+        #         d = res.get(timeout=10)
+        #         D.append(d)
         D = [do_integral(lattice1, lattice2) for lattice1, lattice2 in zip(lattices, lattices[1:])]
         D = np.prod(D)
+        # D = 0
 
         zq_phase = np.angle(D)
         zq_phase1 = 6*zq_phase/(2*np.pi)
@@ -141,7 +170,7 @@ def main():
     joblib.dump(small_energy,small_energy_path)
     joblib.dump(small_energy_loc,small_energy_loc_path)
 
-    return 
 
 if __name__ == "__main__":
-    main()
+    cProfile.run('main()', sort='cumtime')
+    # main()
