@@ -116,14 +116,14 @@ def fetch_halffill_phases():
 def main():
     
     # TODO implement argparse
-    points = 20
+    points = 80
     iterations = 4
     location = np.array([2,2], dtype=int)
-    N = 20
+    N = 18
     max_x = 2
-    min_x = 1
+    min_x = 0
     max_y = 2
-    min_y = 1
+    min_y = 0
     filling = 'half'
 
     zq = ['z6']
@@ -225,7 +225,7 @@ def main():
         return
     
     for i in range(len(zq)):
-        plot_phasediagram(zq_phases[:,:40,i],zq[i])
+        plot_phasediagram(zq_phases[:,:,i],zq[i])
     return
 
 if __name__ == "__main__":
