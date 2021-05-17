@@ -24,16 +24,16 @@ def rule(y):
 def main():
     
     # TODO implement argparse
-    points = 100
+    points = 50
     iterations = 4
     location = np.array([2,2], dtype=int)
-    N = 17
-    max_x = 1.5
-    min_x = 0.5
+    N = 18
+    max_x = 1
+    min_x = 0
     max_y = 2
     min_y = 1
 
-    zq = ['z6']
+    zq = ['z2']
     M = int(3*(N**2))
 
     x = np.linspace(min_x, max_x, num=points)
