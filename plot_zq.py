@@ -14,7 +14,7 @@ import numpy.ma
 from tqdm.auto import trange
 from tqdm import tqdm
 from scipy.signal import argrelextrema
-import zq_lib
+import zq_lib, ti
 
 import cProfile
 from multiprocessing import Pool
@@ -207,7 +207,7 @@ def main():
                 ax.plot(x_to_plot[i,:],y_to_plot[i,:],c='k',lw=0.75)
 
         #making the colourbar    
-        cb = fig1.colorbar(im,cmap=cmap, format='%1i')
+        cb = ti.colorbar(im)
         labels, loc = make_colbar_labels(zq_type)
         cb.set_ticks(loc)
         cb.set_ticklabels(labels)
@@ -218,6 +218,7 @@ def main():
 
         ax.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
         ax.yaxis.set_major_formatter(plt.FuncFormatter(format_func))
+        ax.get_xaxis().majorTicks[0].label1.set_horizontalalignment('right')
 
         fig_path = f"{path_zq}/N{N}_iter{iterations}_res{points}_z6"
         fig1.savefig(f"{fig_path}.png", dpi=500, bbox_inches='tight')
