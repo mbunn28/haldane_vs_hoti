@@ -30,10 +30,11 @@ def colorbar(mappable):
     return fig.colorbar(mappable, cax=cax)
 
 def format_func(value, tick_number):
-    if value <= 1:
-        return f'{np.round(value,3)}'
+    val = np.round(value,3)
+    if val <= 1:
+        return f'{val}'
     else:
-        v = np.round(2 - value, 3)
+        v = np.round(2 - val, 3)
         part1 = r'$\frac{1}{'
         part2 = r'}$'
         return fr'{part1}{v}{part2}'
@@ -83,10 +84,9 @@ def pos(i,j,s): # Gives the x,y coordinates of site i,j,s
     if s==5: return(cell+B+C)
 
 class Lattice:
-    def __init__(self, PBC_i=False, PBC_j=False, Corners=False, a = 1, b = 1, l = 0, t = 1, M=0, N=10):
+    def __init__(self, PBC_i=False, PBC_j=False, cornertype = 'Hexamer', a = 1, b = 1, l = 0, t = 1, M=0, N=10):
         self.PBC_i = PBC_i
         self.PBC_j = PBC_j
-        self.Corners = Corners
         self.N = N
         self.b = b
         self.t = t
@@ -95,10 +95,9 @@ class Lattice:
         self.M = M
         self.h = None
         self.energies = None
-        self.energies_low = None
         self.waves = None
         self.periodic_hamiltonian = False
-        self.cornertype = 'Hexamer'
+        self.cornertype = cornertype
         self.corners = None
         self.edges = None
         self.colourcode = False
@@ -188,7 +187,7 @@ class Lattice:
                 h[self.lat(i,0,4), self.lat(i,self.N-1,2)] = 0
 
         #dimer geometry
-        if self.PBC_j == False and self.Corners == True:
+        if self.PBC_j == False and self.cornertype == 'Cut':
             for i in range(0,self.N):
                 for s in [0,3,4,5]:
                     h[self.lat(i,0,s),:] = 0
@@ -201,7 +200,7 @@ class Lattice:
                     h[self.lat(i,self.N-1,s),self.lat(i,self.N-1,s)] = vv
 
 
-        if self.PBC_i==False and self.Corners == True:
+        if self.PBC_i==False and self.cornertype == 'Cut':
             for j in range(0,self.N):
                 for s in [2,3,4,5]:
                     h[self.lat(0,j,s),:]=0
@@ -297,7 +296,6 @@ class Lattice:
 
         return
 
-
     def make_names(self, name="", output="output"):
         if self.a < 1:
             alph = np.round(self.a,3)
@@ -334,7 +332,7 @@ class Lattice:
         else:
             condition = ""
 
-        if self.Corners == True and condition != "PBC":
+        if self.cornertype == 'Cut' and condition != "PBC":
             corners = "with Corners"
             corn = "_corners"
         else:
@@ -351,7 +349,10 @@ class Lattice:
         else:
             title = ""
 
-        newpath = f'{output}/{condition}{corn}/a{p}_l{q}_N{self.N}'
+        if name == "Energy vs Lambda" or name == "Energy vs Alpha":
+            newpath = f'{output}/{condition}{corn}'
+        else:
+            newpath = f'{output}/{condition}{corn}/a{p}_l{q}_N{self.N}'
         newpath=newpath.replace('.','')
 
         if not os.path.exists(newpath):
@@ -394,8 +395,8 @@ class Lattice:
     
     def find_corners(self):
         if self.corners is not None:
-            return 
-
+            return
+        
         a = len(self.energies)
         corner_energies = np.zeros(a,dtype=bool)
         prob = np.multiply(np.conjugate(self.waves),self.waves)
@@ -418,7 +419,7 @@ class Lattice:
             p += p+prob[self.lat(self.N-1,self.N-1,3),:]+prob[self.lat(self.N-1,self.N-1,4),:]+prob[self.lat(self.N-1,self.N-1,5),:]
                 
         #regular corners
-        if self.cornertype == 'Five Sites':
+        if self.cornertype == 'Hexamer':
             for j in range(6):
                 p += prob[self.lat(0,0,j),:] + prob[self.lat(0,self.N-1,j),:] + prob[self.lat(self.N-1,0,j),:] + prob[self.lat(self.N-1,self.N-1,j),:]
             
@@ -616,20 +617,17 @@ class Lattice:
         self.initialize_hamiltonian()
         self.eigenvalues()
         return len(self.energies)
-
-    def colour(self):
-        if self.PBC_i == True and self.PBC_j == True:
-            colour = 'r'
-        else:
-            colour = 'b'
-        return colour
     
     def energy_spectrum(self, indep, t=100, min_val=0, max_val=1):
         #to use this function: create a lattice w all other param values
         #... and feed this fn the min and max vals you want to plot over
         a = self.find_energysize()
         bigenergies = np.zeros((a, t))
-        edgeenergies = np.zeros((a, t))
+        if self.colourcode == True:
+            cornerenergies = np.zeros((a, t))
+            num_corner_states = np.zeros(t)
+            edgeenergies = np.zeros((a,t))
+            num_edge_states = np.zeros(t)
         vals = np.round(np.linspace(min_val,max_val,num=t),3)
         a0 = self.a
         b0 = self.b
@@ -651,17 +649,33 @@ class Lattice:
 
             self.initialize_hamiltonian()
             self.eigensystem()
-            self.find_corners()
+
+            bigen = np.zeros(a)
+            bigen[:] = self.energies[:]
+            if self.colourcode == True:
+                self.find_corners()
+                self.find_edges()
             
-            bigen = self.energies
-            bigen[self.corners] = np.NaN
+                bigen[self.corners] = np.NaN
+                bigen[self.edges] = np.NaN
+
+                corneren = np.zeros(a)
+                corneren[:] = self.energies[:]
+                corneren[~self.corners] = np.NaN
+                cornerenergies[:,k] = corneren
+                num_edge_states[k] = np.count_nonzero(self.edges)
+
+                edgeen = np.zeros(a)
+                edgeen[:] = self.energies[:]
+                edgeen[~self.edges] = np.NaN
+                edgeenergies[:,k] = edgeen
+                num_corner_states[k] = np.count_nonzero(self.corners)
+            
             bigenergies[:,k] = bigen
+
+            self.corners = None
+            self.edges = None
             
-            edgeen = self.energies
-            edgeen[~self.corners] = 0
-            edgeenergies[:,k] = edgeen
-            
-        bigenergies = np.round(bigenergies, 4)
         if indep == 't' or indep == 'b':
             vals = 2 - vals
 
@@ -673,19 +687,20 @@ class Lattice:
             var = r'$\alpha$'
             thing = "Energy vs Alpha"
             name_var = 'l'
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=(3.4,3.4))
         for m in range(a):
             ax.plot(vals, bigenergies[m,:], color='k', alpha=0.7, linewidth=0.2)
-            ax.plot(vals, edgeenergies[m,:], color='r', alpha=0.7, linewidth=0.2)
+            ax.plot(vals, cornerenergies[m,:], color='r', alpha=0.7, linewidth=0.2)
+            ax.plot(vals, edgeenergies[m,:], color='b', alpha=0.7, linewidth=0.2)
 
         ax.set_xlabel(var)
         ax.set_ylabel(r"$E$")
-        # ax.set_xlim(min_val,max_val)
+        ax.set_xlim(min_val,max_val)
         ax.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
 
         [newpath, name, p, _] = self.make_names(thing)
         
-        ax.set_title(name)
+        # ax.set_title(name)
         file_path = f"{newpath}/M{self.M}"
         if not os.path.exists(file_path):
             os.makedirs(file_path)

@@ -27,9 +27,9 @@ def main():
     points = 100
     iterations = 4
     location = np.array([2,2], dtype=int)
-    N = 17
-    max_x = 1.5
-    min_x = 0.5
+    N = 12
+    max_x = 2
+    min_x = 1
     max_y = 2
     min_y = 1
 
