@@ -609,13 +609,13 @@ class Lattice:
         self.find_edges()
         state_locs = np.logical_or(self.corners,self.edges)
         states = np.argwhere(state_locs)
-        for i in range(len(states)):
+        for i in trange(len(states)):
             self.plot_estate(states[i])
         return
 
     def find_energysize(self):
         self.initialize_hamiltonian()
-        self.eigenvalues()
+        self.eigensystem()
         return len(self.energies)
     
     def energy_spectrum(self, indep, t=100, min_val=0, max_val=1):
@@ -695,7 +695,8 @@ class Lattice:
 
         ax.set_xlabel(var)
         ax.set_ylabel(r"$E$")
-        ax.set_xlim(min_val,max_val)
+        if indep == 't' or indep == 'b':
+            ax.set_xlim(2-max_val,2-min_val)
         ax.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
 
         [newpath, name, p, _] = self.make_names(thing)
@@ -705,6 +706,7 @@ class Lattice:
         if not os.path.exists(file_path):
             os.makedirs(file_path)
         file_name = f"{file_path}/{indep}_{name_var}{p}_N{self.N}.png"
+        fig.tight_layout()
         fig.savefig(file_name, dpi=500)
         plt.close(fig)
 
