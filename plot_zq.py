@@ -9,9 +9,6 @@ import matplotlib.colors as colors
 from matplotlib import rc
 import zq_lib, ti
 
-import cProfile
-from multiprocessing import Pool
-
 def format_func(value, tick_number):
     if value <= 1:
         return f'{np.round(value,3)}'

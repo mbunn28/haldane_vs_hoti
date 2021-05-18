@@ -618,7 +618,7 @@ class Lattice:
         self.eigensystem()
         return len(self.energies)
     
-    def energy_spectrum(self, indep, t=100, min_val=0, max_val=1):
+    def energy_spectrum(self, indep, t=100, min_val=0, max_val=1, yrange=None):
         #to use this function: create a lattice w all other param values
         #... and feed this fn the min and max vals you want to plot over
         a = self.find_energysize()
@@ -699,6 +699,8 @@ class Lattice:
             ax.set_xlim(2-max_val,2-min_val)
         else:
             ax.set_xlim(min_val,max_val)
+        if yrange is not None:
+            ax.set_ylim(yrange)
         ax.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
 
         [newpath, name, p, _] = self.make_names(thing)

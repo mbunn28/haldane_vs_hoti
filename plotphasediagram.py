@@ -157,6 +157,8 @@ ax.set_aspect(1)
 
 labels=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0, r'$\frac{1}{0.8}$',r'$\frac{1}{0.6}$',r'$\frac{1}{0.4}$',r'$\frac{1}{0.2}$',r'$\infty$']
 locs=[0.0, 0.2, 0.4, 0.6, 0.8, 1.0,1.2,1.4,1.6,1.8,2.0]
+# labels=[0.0, 0.25, 0.5, 0.75, 1.0, r'$\frac{1}{0.75}$',r'$\frac{1}{0.5}$',r'$\frac{1}{0.25}$',r'$\infty$']
+# locs=[0.0, 0.25, 0.5, 0.75, 1.0,1.25,1.5,1.75,2.0]
 ax.set_yticklabels(labels)
 ax.set_yticks(locs)
 ax.set_ylabel(r'$\alpha$')
@@ -176,12 +178,12 @@ ax.set_xticklabels(labels)
 ax.set_xticks(locs)
 ax.set_xlabel(r'$\lambda$')
 
-rect_ws = np.array([0.05,0.08,0.11,0.10,0.08,0.11,0.14,0.17,0.11,0.08,0.11,0.14])
+rect_ws = np.array([0.05,0.08,0.10,0.08,0.11,0.14,0.17,0.11,0.08,0.11,0.11,0.14])
 rect_x_offsets = np.array([-0.004,-0.004,-0.004,-0.004,-0.004,-0.004,-0.004,-0.004,-0.004,-0.004,-0.004,-0.004])
-rect_y_offsets = np.array([0.008,0.008,0.008,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01])
+rect_y_offsets = np.array([0.008,0.008,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.008,0.01])
 x_texts = np.array([0.1,0.1,0.6,0.73,0.9,1.6,1.4,1.87,1.9,1.9,1.6,0.905])
 y_texts = np.array([1.9,0.1,1,1.87,1.57,1.8,1.67,1.58,1.3,0.7,0.2,0.3])
-texts = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII']
+texts = ['I','II','IV','V','VI','VII','VIII','IX','X','XI','III','XII']
 for k in range(len(rect_ws)):
     # define the rectangle size and the offset correction
     rect_w = rect_ws[k]
