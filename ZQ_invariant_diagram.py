@@ -40,7 +40,7 @@ def main():
     elif filling == 'third':
         M = int(2*(N**2))
     elif filling == 'sixth':
-        M = int(N**6)
+        M = int(N**2)
     
     x = np.linspace(min_x, max_x, num=points)
     y = np.linspace(min_y, max_y, num=points)
@@ -61,6 +61,7 @@ def main():
     
     if filling == 'sixth' or filling == 'third':
         gapless = load_gapless()
+        print(np.count_nonzero(gapless))
 
     _,zq_phases_path,small_energy_path,small_energy_loc_path = make_filenames()
 
