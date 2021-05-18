@@ -440,9 +440,9 @@ class Lattice:
         for i in range(self.N-1):
             for j in range(6):
                 p += prob[self.lat(0,i,j),:] + prob[self.lat(i+1,0,j),:] + prob[self.lat(self.N-1,i+1,j),:]+prob[self.lat(i,self.N-1,j),:]
-        for i in range(self.N-3):
-            for j in range(6):
-                p += prob[self.lat(1,i+1,j),:] + prob[self.lat(i+2,1,j),:] + prob[self.lat(self.N-2,i+2,j),:]+prob[self.lat(i+1,self.N-2,j),:]
+        # for i in range(self.N-3):
+        #     for j in range(6):
+        #         p += prob[self.lat(1,i+1,j),:] + prob[self.lat(i+2,1,j),:] + prob[self.lat(self.N-2,i+2,j),:]+prob[self.lat(i+1,self.N-2,j),:]
         
         edge_energies = p > self.edge_p
         if self.corners is not None:
@@ -697,6 +697,8 @@ class Lattice:
         ax.set_ylabel(r"$E$")
         if indep == 't' or indep == 'b':
             ax.set_xlim(2-max_val,2-min_val)
+        else:
+            ax.set_xlim(min_val,max_val)
         ax.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
 
         [newpath, name, p, _] = self.make_names(thing)

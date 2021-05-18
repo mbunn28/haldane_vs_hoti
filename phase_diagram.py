@@ -7,18 +7,18 @@ def main():
     lattice = ti.Lattice(
         PBC_i = False, PBC_j = False,
         cornertype = 'Five Sites',
-        a = 0.1, b = 1,
-        l = 1, t = 1,
+        a = 0.2, b = 1,
+        l = 0.2, t = 1,
         M=0,
-        N=5
+        N=10
     )
 
     lattice.colourcode = True
-    lattice.corner_p = 0.75
-    lattice.edge_p = 0.85
+    lattice.corner_p = 0.3
+    lattice.edge_p = 2
 
-    lattice.energy_spectrum(indep='t',t=50,min_val=0,max_val=1)
-    # lattice.single_state()
+    # lattice.energy_spectrum(indep='l',t=500,min_val=0,max_val=1)
+    lattice.single_state()
 
     return
 

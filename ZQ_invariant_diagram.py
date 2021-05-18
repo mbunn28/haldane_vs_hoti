@@ -24,29 +24,43 @@ def rule(y):
 def main():
     
     # TODO implement argparse
-    points = 50
+    points = 100
     iterations = 4
     location = np.array([2,2], dtype=int)
-    N = 18
-    max_x = 1
+    N = 16
+    max_x = 2
     min_x = 0
     max_y = 2
-    min_y = 1
+    min_y = 0
+    filling = 'sixth'
 
-    zq = ['z2']
-    M = int(3*(N**2))
-
+    zq = ['z6','z2']
+    if filling == 'half':
+        M = int(3*(N**2))
+    elif filling == 'third':
+        M = int(2*(N**2))
+    elif filling == 'sixth':
+        M = int(N**6)
+    
     x = np.linspace(min_x, max_x, num=points)
     y = np.linspace(min_y, max_y, num=points)
 
     def make_filenames():
-        path_zq = "output/zq/diagrams"
+        path_zq = f"output/zq/diagrams/{filling}"
         if not os.path.exists(path_zq):
             os.makedirs(path_zq)
         zq_phases_path = f'{path_zq}/zq_phases_N{N}_it{iterations}_res{points}'
         small_energy_path = f'{path_zq}/small_energy_N{N}_it{iterations}_res{points}'
         small_energy_loc_path = f'{path_zq}/smallen_loc_N{N}_it{iterations}_res{points}'
         return [path_zq,zq_phases_path,small_energy_path,small_energy_loc_path]
+
+    def load_gapless():
+        path = f"output/phasediagram/periodic/{filling}"
+        gapless = joblib.load(f"{path}/res{points}_gapmask")
+        return gapless
+    
+    if filling == 'sixth' or filling == 'third':
+        gapless = load_gapless()
 
     _,zq_phases_path,small_energy_path,small_energy_loc_path = make_filenames()
 
@@ -105,6 +119,11 @@ def main():
                 # raise ValueError('The overlap matrix det = 0!')
 
             return D
+        
+        if filling == 'sixth' or filling == 'third':
+            if gapless[n,m] == True:
+                zq_phases[n,m,j] = -1
+                return
 
         Ts = np.linspace(0, 1, iterations+1)
         lattices = [create_lattice(theta) for theta in Ts]
@@ -131,7 +150,9 @@ def main():
         if zq_phase2 < -1e-1:
             zq_phase2 = zq_phase2 + 6
         zq_phases[n,m,j] = zq_phase2
-        
+        return 
+    
+    
     with tqdm(total=points * points * len(zq)) as pbar:
         for m, n, j in np.ndindex(points, points, len(zq)):
             compute(m, n,j)
