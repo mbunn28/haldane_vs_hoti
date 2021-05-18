@@ -29,17 +29,17 @@ def fetch_halffill_phases():
 def main():
     
     # TODO implement argparse
-    points = 20
+    points = 30
     iterations = 4
     location = np.array([2,2], dtype=int)
-    N = 5
+    N = 14
     max_x = 2
     min_x = 0
     max_y = 2
     min_y = 0
-    filling = 'third'
+    filling = 'sixth'
 
-    zq = ['z2']
+    zq = ['z6']
 
     if filling == 'third' or filling == 'sixth':
         gapless = True
@@ -51,7 +51,7 @@ def main():
     rc('text.latex', preamble= r'\usepackage{amsfonts}')
 
     def make_filenames():
-        path_zq = "output/zq/diagrams"
+        path_zq = f"output/zq/diagrams/{filling}"
         if not os.path.exists(path_zq):
             os.makedirs(path_zq)
         zq_phases_path = f'{path_zq}/zq_phases_N{N}_it{iterations}_res{points}'
@@ -67,7 +67,8 @@ def main():
 
         ax.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
         ax.yaxis.set_major_formatter(plt.FuncFormatter(format_func))
-        ax.get_xaxis().majorTicks[0].label1.set_horizontalalignment('right')
+        ticks = ax.xaxis.get_major_ticks()
+        ticks[-1].label1.set_horizontalalignment('right')
         return
     
     def plot_phases(ax):
