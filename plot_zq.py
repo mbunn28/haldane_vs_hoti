@@ -32,17 +32,17 @@ def fetch_halffill_phases():
 def main():
     
     # TODO implement argparse
-    points = 30
+    points = 100
     iterations = 4
     location = np.array([2,2], dtype=int)
-    N = 14
+    N = 16
     max_x = 2
     min_x = 0
     max_y = 2
     min_y = 0
-    filling = 'sixth'
+    filling = 'third'
 
-    zq = ['z6']
+    zq = ['z6','z2']
 
     if filling == 'third' or filling == 'sixth':
         gapless = True
@@ -119,16 +119,20 @@ def main():
             labels = [0,1,2,3,4,5]
             loc    = np.array([5/12,15/12,25/12,35/12,45/12,55/12])
         elif zq_type == 'z6' and gapless == True:
-            labels = ['Gapless',0,1,2,3,4,5]
-            loc    = np.array([-5/12,5/12,15/12,25/12,35/12,45/12,55/12])
+            labels = ['No\nGap',0,1,2,3,4,5]
+            loc    = np.array([-4/7,2/7,8/7,2,20/7,26/7,32/7])
         elif zq_type == 'z2' and gapless == False:
             labels = [0,1]
             loc    = np.array([1/4,3/4])
         elif zq_type == 'z2' and gapless == True:
-            labels = ['Gapless',0,1]
+            labels = ['No\nGap',0,1]
             loc    = np.array([-2/3,0,2/3])
         cb.set_ticks(loc)
         cb.set_ticklabels(labels)
+        # if gapless == True:
+        #     ticks = cb.ax.yaxis.get_major_ticks()
+        #     ticks[0].label2.set_rotation(90)
+        #     ticks[0].label2.set_verticalalignment('center')
         return
 
     def add_cbar_tag(cb, zq_type):
