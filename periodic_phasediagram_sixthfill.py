@@ -32,7 +32,7 @@ def rule(y):
 
 def main():
     #creating the folder where you want to store the output
-    path = "output/phasediagram/periodic/sixth"
+    path = "output/phasediagram/periodic/third"
     if not os.path.exists(path):
                 os.makedirs(path)
 
@@ -102,11 +102,11 @@ def main():
 
     def energy_5(n,m,k):
         en = hamil(n,m,k)
-        return en[0,1]
+        return en[0,2]
 
     def energy_6(n,m,k):
         en = hamil(n,m,k)
-        return en[0,5]
+        return en[0,4]
 
     #reduced zone functions
     #the reduced zone is a path through the BZ which I've parameterised. Split into two functions

@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from matplotlib import rc
 import zq_lib, ti
+import copy
+import matplotlib.cm as cm
 
 def format_func(value, tick_number):
     if value <= 1:
@@ -26,20 +28,21 @@ def fetch_halffill_phases():
     y_to_plot = joblib.load(f"{path_phasediagram}/{N_or_res}{Nphase}_y_to_plot")
     return x_to_plot, y_to_plot
 
+
 def main():
     
     # TODO implement argparse
-    points = 30
+    points = 100
     iterations = 4
     location = np.array([2,2], dtype=int)
-    N = 14
+    N = 16
     max_x = 2
     min_x = 0
     max_y = 2
     min_y = 0
-    filling = 'sixth'
+    filling = 'third'
 
-    zq = ['z6']
+    zq = ['z6','z2']
 
     if filling == 'third' or filling == 'sixth':
         gapless = True
@@ -58,6 +61,11 @@ def main():
         small_energy_path = f'{path_zq}/small_energy_N{N}_it{iterations}_res{points}'
         small_energy_loc_path = f'{path_zq}/smallen_loc_N{N}_it{iterations}_res{points}'
         return [path_zq,zq_phases_path,small_energy_path,small_energy_loc_path]
+
+    def load_gapless():
+        path = f"output/phasediagram/periodic/{filling}"
+        gapless = joblib.load(f"{path}/res{points}_gapmask")
+        return gapless
     
     def add_axes_labels(ax):
         ax.set_ylabel(r'$\alpha$')
@@ -86,8 +94,6 @@ def main():
     zq_phases = joblib.load(zq_phases_path)
     small_energy = joblib.load(small_energy_path)
     small_energy_loc = joblib.load(small_energy_loc_path)
-
-    small_energy[small_energy>1e-1] = np.NaN
     x = np.linspace(min_x, max_x, num=points)
     y = np.linspace(min_y, max_y, num=points)
 
@@ -156,9 +162,14 @@ def main():
         return
     
     def plot_gapdiagram(small_energy,zq_type):
+        small_energy[small_energy>1e-1] = 1e-1
+        gapless = load_gapless()
+        small_energy[gapless]= -1
         fig, ax = plt.subplots(figsize=(3.4,3.4))
         plot_phases(ax)
-        im = ax.pcolormesh(x,y,small_energy, norm = colors.LogNorm(), cmap='inferno')
+        my_cmap = copy.copy(cm.get_cmap('inferno'))
+        my_cmap.set_bad('k')
+        im = ax.pcolormesh(x,y,small_energy, norm = colors.LogNorm(), cmap=my_cmap)
         ti.colorbar(im)
         ax.set_aspect(1)
         add_axes_labels(ax)
