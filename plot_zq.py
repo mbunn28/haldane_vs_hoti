@@ -182,9 +182,13 @@ def main():
         return
     
     def plot_gaplocs(gap_locs,zq_type):
+        gapless = load_gapless()
+        gap_locs[gapless] = np.NaN
         fig, ax = plt.subplots(figsize=(3.4,3.4))
         plot_phases(ax)
-        im = ax.pcolormesh(x,y,gap_locs)
+        my_cmap = copy.copy(cm.get_cmap('viridis'))
+        my_cmap.set_bad('k')
+        im = ax.pcolormesh(x,y,gap_locs,cmap=my_cmap)
         ti.colorbar(im)
         ax.set_aspect(1)
         add_axes_labels(ax)
