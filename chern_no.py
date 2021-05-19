@@ -25,11 +25,11 @@ def u(r,s,n,d):
     result = result/np.absolute(result)
     return result
 
-l = 1
-t = 0.693
+l = 0.1
+t = 1
 
 a = 1
-b = 0.466
+b = 0.2
 
 r_vals = np.arange(points)
 r1,r2 = np.meshgrid(r_vals,r_vals)
@@ -173,9 +173,10 @@ fig.savefig(f"{newpath}/energybands.png", bbox_inches='tight', dpi =500)
 fig1 = plt.figure(constrained_layout = True,figsize=(3.4,3.4))
 grd = gs.GridSpec(1,3,figure=fig1,wspace=0)
 axs1 = grd.subplots(sharex=True,sharey=True)
+cmp = 'seismic'#'coolwarm'
 
 lim = np.amax(np.abs(np.imag(F[0:2,:,:])))
-axs1[0].pcolormesh(kx,ky,np.imag(F[0,:,:]),cmap='coolwarm', vmin = -lim, vmax=lim)
+axs1[0].pcolormesh(kx,ky,np.imag(F[0,:,:]),cmap=cmp, vmin = -lim, vmax=lim)
 axs1[0].set_aspect('equal')
 axs1[0].title.set_text(f'$n=1$\n$c_n={chernnos[0]}$')
 axs1[0].set_ylabel(r'$k_y$')
@@ -186,7 +187,7 @@ axs1[0].set_yticklabels([0,r'$\frac{2\pi}{3\sqrt{3}}$',r'$\frac{4\pi}{3\sqrt{3}}
 axs1[0].set_xlim((-0.1,2*np.pi/3+0.1))
 axs1[0].get_xaxis().majorTicks[2].label1.set_horizontalalignment('right')
 
-axs1[1].pcolormesh(kx,ky,np.imag(F[1,:,:]),cmap='coolwarm', vmin =-lim, vmax=lim)
+axs1[1].pcolormesh(kx,ky,np.imag(F[1,:,:]),cmap=cmp, vmin =-lim, vmax=lim)
 axs1[1].set_aspect('equal')
 axs1[1].title.set_text(f'$n=2$\n$c_n={chernnos[1]}$')
 axs1[1].set_xlabel(r'$k_x$')
@@ -197,7 +198,7 @@ axs1[1].get_xaxis().majorTicks[0].label1.set_horizontalalignment('left')
 axs1[1].get_xaxis().majorTicks[2].label1.set_horizontalalignment('right')
 axs1[1].yaxis.set_visible(False)
 
-im1 = axs1[2].pcolormesh(kx,ky,np.imag(F[2,:,:]),cmap='coolwarm', vmin =-lim, vmax=lim)
+im1 = axs1[2].pcolormesh(kx,ky,np.imag(F[2,:,:]),cmap=cmp, vmin =-lim, vmax=lim)
 axs1[2].set_aspect('equal')
 axs1[2].title.set_text(f'$n=3$\n$c_n={chernnos[2]}$')
 axs1[2].set_xticks([0,np.pi/3,2*np.pi/3])
