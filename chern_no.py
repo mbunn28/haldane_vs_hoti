@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 from matplotlib import rc
 import matplotlib.gridspec as gs
+from tqdm import tqdm
 
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
@@ -25,11 +26,11 @@ def u(r,s,n,d):
     result = result/np.absolute(result)
     return result
 
-l = 0.1
+l = 0.8
 t = 1
 
-a = 1
-b = 0.2
+a = 0.22
+b = 1
 
 r_vals = np.arange(points)
 r1,r2 = np.meshgrid(r_vals,r_vals)
@@ -82,9 +83,8 @@ def hamiltonian(eigensys):
 eigensys = hamiltonian(eigensys)
 chern = np.zeros(6,dtype=complex)
 F = np.zeros((6,points,points),dtype=complex)
-for n in range(0,6):
-    for r in range(0,points):
-        for s in range(0, points):
+with tqdm(total=6 * points * points) as pbar:
+        for n, r, s in np.ndindex(6, points, points):
             F[n,r,s] = -np.log(u(r,s,n,1)*u(r+1,s,n,2)*np.conjugate(u(r,s+1,n,1))*np.conjugate(u(r,s,n,2)))
             while np.imag(F[n,r,s])>np.pi:
                 print('too high')
@@ -92,7 +92,8 @@ for n in range(0,6):
             while np.imag(F[n,r,s])<=-np.pi:
                 print('too low')
                 F[n,r,s]=F[n,r,s]+2*np.pi*1j
-    chern[n] = np.sum(np.imag(F[n,:,:]))/(2*np.pi)
+            pbar.update(1)
+chern[:] = np.sum(np.imag(F),axis=(1,2))/(2*np.pi)
 
 chernnos = np.round(np.real(chern))
 chernnos[chernnos == 0] = 0
