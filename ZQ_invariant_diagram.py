@@ -27,14 +27,14 @@ def main():
     points = 100
     iterations = 4
     location = np.array([2,2], dtype=int)
-    N = 16
-    max_x = 2
+    N = 18
+    max_x = 1
     min_x = 0
     max_y = 2
-    min_y = 0
-    filling = 'sixth'
+    min_y = 1
+    filling = 'half'
 
-    zq = ['z6','z2']
+    zq = ['z2']
     if filling == 'half':
         M = int(3*(N**2))
     elif filling == 'third':

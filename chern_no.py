@@ -26,11 +26,11 @@ def u(r,s,n,d):
     result = result/np.absolute(result)
     return result
 
-l = 0.8
-t = 1
+l = 1
+t = 0.2
 
-a = 0.22
-b = 1
+a = 1
+b = 0.5595
 
 r_vals = np.arange(points)
 r1,r2 = np.meshgrid(r_vals,r_vals)
@@ -80,25 +80,6 @@ def hamiltonian(eigensys):
 
     return eigensys
 
-eigensys = hamiltonian(eigensys)
-chern = np.zeros(6,dtype=complex)
-F = np.zeros((6,points,points),dtype=complex)
-with tqdm(total=6 * points * points) as pbar:
-        for n, r, s in np.ndindex(6, points, points):
-            F[n,r,s] = -np.log(u(r,s,n,1)*u(r+1,s,n,2)*np.conjugate(u(r,s+1,n,1))*np.conjugate(u(r,s,n,2)))
-            while np.imag(F[n,r,s])>np.pi:
-                print('too high')
-                F[n,r,s]=F[n,r,s]-2*np.pi*1j
-            while np.imag(F[n,r,s])<=-np.pi:
-                print('too low')
-                F[n,r,s]=F[n,r,s]+2*np.pi*1j
-            pbar.update(1)
-chern[:] = np.sum(np.imag(F),axis=(1,2))/(2*np.pi)
-
-chernnos = np.round(np.real(chern))
-chernnos[chernnos == 0] = 0
-print(chernnos)
-
 if a ==1:
     alphname = "b"
     alph = b
@@ -115,7 +96,36 @@ else:
 
 newpath = f"output/chern/{halname}{hal}_{alphname}{alph}_res{points}"
 if not os.path.exists(newpath):
-            os.makedirs(newpath)
+    os.makedirs(newpath)
+
+if os.path.exists(f'{newpath}/chern'):
+    imagF = joblib.load(f'{newpath}/chern')
+    eigensys = joblib.load(f'{newpath}/eigensys')
+else:
+    eigensys = hamiltonian(eigensys)
+    F = np.zeros((6,points,points),dtype=complex)
+    with tqdm(total=6 * points * points) as pbar:
+            for n, r, s in np.ndindex(6, points, points):
+                F[n,r,s] = -np.log(u(r,s,n,1)*u(r+1,s,n,2)*np.conjugate(u(r,s+1,n,1))*np.conjugate(u(r,s,n,2)))
+                while np.imag(F[n,r,s])>np.pi:
+                    print('too high')
+                    F[n,r,s]=F[n,r,s]-2*np.pi*1j
+                while np.imag(F[n,r,s])<=-np.pi:
+                    print('too low')
+                    F[n,r,s]=F[n,r,s]+2*np.pi*1j
+                pbar.update(1)
+    imagF = np.imag(F)
+
+    joblib.dump(imagF, f'{newpath}/chern')
+    joblib.dump(eigensys, f'{newpath}/eigensys')
+    
+chern = np.sum(imagF,axis=(1,2))/(2*np.pi)
+chernnos = np.round(np.real(chern))
+chernnos[chernnos == 0] = 0
+print(chernnos)
+
+
+
 
 # print(eigensys[1:5,1:5,0,0])
 # print(k1[0,1:5,1:5])
@@ -123,11 +133,11 @@ if not os.path.exists(newpath):
 ##########################################################################
 #                        ENERGY EIGENSTATES PLOT                         #
 ##########################################################################
-fig = plt.figure(constrained_layout = True,figsize=(3.4,3.4))
+fig = plt.figure(figsize=(3.4,3.4))
 grd = gs.GridSpec(1,3,figure=fig,wspace=0)
 axs = grd.subplots(sharex=True,sharey=True)
 
-axs[0].pcolormesh(kx,ky,np.real(eigensys[:,:,0,0]),cmap='plasma', vmin = np.real(np.amin(eigensys[:,:,0,:])), vmax=0)
+axs[0].pcolormesh(kx,ky,np.real(eigensys[:,:,0,0]),cmap='plasma', vmin = np.real(np.amin(eigensys[:,:,0,:])), vmax=0, shading='auto')
 axs[0].set_aspect('equal')
 axs[0].title.set_text(r'$n=1$')
 axs[0].set_ylabel(r'$k_y$')
@@ -138,7 +148,7 @@ axs[0].set_yticklabels([0,r'$\frac{2\pi}{3\sqrt{3}}$',r'$\frac{4\pi}{3\sqrt{3}}$
 axs[0].set_xlim((-0.1,2*np.pi/3+0.1))
 axs[0].get_xaxis().majorTicks[2].label1.set_horizontalalignment('right')
 
-axs[1].pcolormesh(kx,ky,np.real(eigensys[:,:,0,1]),cmap='plasma', vmin = np.real(np.amin(eigensys[:,:,0,:])), vmax=0)
+axs[1].pcolormesh(kx,ky,np.real(eigensys[:,:,0,1]),cmap='plasma', vmin = np.real(np.amin(eigensys[:,:,0,:])), vmax=0, shading='auto')
 axs[1].set_aspect('equal')
 axs[1].title.set_text(r'$n=2$')
 axs[1].set_xlabel(r'$k_x$')
@@ -149,7 +159,7 @@ axs[1].get_xaxis().majorTicks[0].label1.set_horizontalalignment('left')
 axs[1].get_xaxis().majorTicks[2].label1.set_horizontalalignment('right')
 axs[1].yaxis.set_visible(False)
 
-im = axs[2].pcolormesh(kx,ky,np.real(eigensys[:,:,0,2]),cmap='plasma', vmin = np.real(np.amin(eigensys[:,:,0,:])), vmax=0)
+im = axs[2].pcolormesh(kx,ky,np.real(eigensys[:,:,0,2]),cmap='plasma', vmin = np.real(np.amin(eigensys[:,:,0,:])), vmax=0, shading='auto')
 axs[2].set_aspect('equal')
 axs[2].title.set_text(r'$n=3$')
 axs[2].set_xticks([0,np.pi/3,2*np.pi/3])
@@ -171,13 +181,13 @@ fig.savefig(f"{newpath}/energybands.png", bbox_inches='tight', dpi =500)
 ##########################################################################
 #                          BERRY CURVATURE PLOT                          #
 ##########################################################################
-fig1 = plt.figure(constrained_layout = True,figsize=(3.4,3.4))
+fig1 = plt.figure(figsize=(3.4,3.4))
 grd = gs.GridSpec(1,3,figure=fig1,wspace=0)
 axs1 = grd.subplots(sharex=True,sharey=True)
 cmp = 'seismic'#'coolwarm'
 
-lim = np.amax(np.abs(np.imag(F[0:2,:,:])))
-axs1[0].pcolormesh(kx,ky,np.imag(F[0,:,:]),cmap=cmp, vmin = -lim, vmax=lim)
+lim = np.amax(np.abs(imagF[0:2,:,:]))
+axs1[0].pcolormesh(kx,ky,imagF[0,:,:],cmap=cmp, vmin = -lim, vmax=lim, shading='auto')
 axs1[0].set_aspect('equal')
 axs1[0].title.set_text(f'$n=1$\n$c_n={chernnos[0]}$')
 axs1[0].set_ylabel(r'$k_y$')
@@ -188,7 +198,7 @@ axs1[0].set_yticklabels([0,r'$\frac{2\pi}{3\sqrt{3}}$',r'$\frac{4\pi}{3\sqrt{3}}
 axs1[0].set_xlim((-0.1,2*np.pi/3+0.1))
 axs1[0].get_xaxis().majorTicks[2].label1.set_horizontalalignment('right')
 
-axs1[1].pcolormesh(kx,ky,np.imag(F[1,:,:]),cmap=cmp, vmin =-lim, vmax=lim)
+axs1[1].pcolormesh(kx,ky,imagF[1,:,:],cmap=cmp, vmin =-lim, vmax=lim, shading='auto')
 axs1[1].set_aspect('equal')
 axs1[1].title.set_text(f'$n=2$\n$c_n={chernnos[1]}$')
 axs1[1].set_xlabel(r'$k_x$')
@@ -199,7 +209,7 @@ axs1[1].get_xaxis().majorTicks[0].label1.set_horizontalalignment('left')
 axs1[1].get_xaxis().majorTicks[2].label1.set_horizontalalignment('right')
 axs1[1].yaxis.set_visible(False)
 
-im1 = axs1[2].pcolormesh(kx,ky,np.imag(F[2,:,:]),cmap=cmp, vmin =-lim, vmax=lim)
+im1 = axs1[2].pcolormesh(kx,ky,imagF[2,:,:],cmap=cmp, vmin =-lim, vmax=lim, shading='auto')
 axs1[2].set_aspect('equal')
 axs1[2].title.set_text(f'$n=3$\n$c_n={chernnos[2]}$')
 axs1[2].set_xticks([0,np.pi/3,2*np.pi/3])

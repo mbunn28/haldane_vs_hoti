@@ -22,11 +22,11 @@ rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
 plt.rcParams['axes.axisbelow'] = True
 
-def colorbar(mappable):
+def colorbar(mappable, pad_space = 0.05):
     ax = mappable.axes
     fig = ax.figure
     divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="5%", pad=0.05)
+    cax = divider.append_axes("right", size="5%", pad=pad_space)
     return fig.colorbar(mappable, cax=cax)
 
 def format_func(value, tick_number):

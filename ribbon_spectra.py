@@ -18,29 +18,21 @@ rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
 plt.rcParams['axes.axisbelow'] = True
 
-def a_or_b(a,b):
-    if a == 1 and b == 1:
-        aorb_name = 'ab'
-        aorb = 1
-    elif a == 1:
-        aorb_name = 'b'
-        aorb = b
+def define_alph_hal(params):
+    if params[0] ==1:
+        alphname = "b"
+        alph = params[1]
     else:
-        aorb_name = 'a'
-        aorb = a
-    return aorb_name, aorb
+        alphname = "a"
+        alph = params[0]
 
-def l_or_t(l,t):
-    if t == 1 and l == 1:
-        torl_name = 'tl'
-        torl = 1
-    elif t == 1:
-        torl_name = 'l'
-        torl = l
+    if params[2] == 1:
+        halname = "t"
+        hal = params[3]
     else:
-        torl_name = 't'
-        torl = t
-    return torl_name, torl
+        halname = "l"
+        hal = params[2]
+    return [alphname,alph,halname,hal]
 
 def main():
     l = 1
@@ -52,15 +44,14 @@ def main():
     periodic = False
     
 
-    N = 100
-    res= 125
-    zoom = True
+    N = 800
+    res= 500
+    zoom = False
     if zoom == True: 
-        N_zoom = 1000
-        res_zoom = 750
+        N_zoom = 100
+        res_zoom = 150
 
-    aorb_name, aorb = a_or_b(a,b)
-    torl_name, torl = l_or_t(l,t)
+    aorb_name, aorb, torl_name, torl = define_alph_hal([a,b,l,t])
 
     def hamiltonian(k,N):
         phi = np.pi/2
@@ -98,9 +89,7 @@ def main():
         
         return hamiltonian
 
-
-
-    newpath = f"output/ribbon_spectra/res{res}_N{N}_{aorb_name}{aorb}_{torl_name}{torl}_M{M}"
+    newpath = f"output/ribbon_spectra/res{res}_N{N}_{aorb_name}{aorb}_{torl_name}{torl}"
     newpath = newpath.replace('.','')
     if not os.path.exists(newpath):
         os.makedirs(newpath)
@@ -120,7 +109,6 @@ def main():
         mask_right = np.zeros((res, 6*N),dtype=bool)
 
         for i in tqdm(range(res)):
-
             energies[i,:], evecs = np.linalg.eigh(hamiltonian(k[i],N))
             evecs = np.transpose(evecs, axes=(1,0))
             waves = np.abs(evecs)**2
