@@ -478,7 +478,6 @@ class Lattice:
         file_name = f"{newpath}/energyplot{zoom}"
         file_name = file_name.replace('.','')
         fig.savefig(f'{file_name}.png',dpi=500,bbox_inches='tight')
-        plt.close(fig)
         return
 
     def plot_eigenstates(self, max_states):
@@ -618,7 +617,7 @@ class Lattice:
         self.eigensystem()
         return len(self.energies)
     
-    def energy_spectrum(self, indep, t=100, min_val=0, max_val=1, yrange=None):
+    def energy_spectrum(self, indep, t=100, min_val=0, max_val=1, yrange=None, ax=None):
         #to use this function: create a lattice w all other param values
         #... and feed this fn the min and max vals you want to plot over
         a = self.find_energysize()
@@ -687,14 +686,16 @@ class Lattice:
             var = r'$\alpha$'
             thing = "Energy vs Alpha"
             name_var = 'l'
-        fig, ax = plt.subplots(figsize=(3.4,3.4))
+        if ax == None:
+            gave_ax = True
+            fig, ax = plt.subplots(figsize=(3.4,3.4))
+        else:
+            gave_ax = False
         for m in range(a):
             ax.plot(vals, bigenergies[m,:], color='k', alpha=0.7, linewidth=0.2)
             ax.plot(vals, cornerenergies[m,:], color='r', alpha=0.7, linewidth=0.2)
             ax.plot(vals, edgeenergies[m,:], color='b', alpha=0.7, linewidth=0.2)
 
-        ax.set_xlabel(var)
-        ax.set_ylabel(r"$E$")
         if indep == 't' or indep == 'b':
             ax.set_xlim(2-max_val,2-min_val)
         else:
@@ -703,16 +704,20 @@ class Lattice:
             ax.set_ylim(yrange)
         ax.xaxis.set_major_formatter(plt.FuncFormatter(format_func))
 
-        [newpath, name, p, _] = self.make_names(thing)
-        
-        # ax.set_title(name)
-        file_path = f"{newpath}/M{self.M}"
-        if not os.path.exists(file_path):
-            os.makedirs(file_path)
-        file_name = f"{file_path}/{indep}_{name_var}{p}_N{self.N}.png"
-        fig.tight_layout()
-        fig.savefig(file_name, dpi=500)
-        plt.close(fig)
+        if gave_ax == True:
+            ax.set_xlabel(var)
+            ax.set_ylabel(r"$E$")
+            
+            [newpath, name, p, _] = self.make_names(thing)
+            
+            # ax.set_title(name)
+            file_path = f"{newpath}/M{self.M}"
+            if not os.path.exists(file_path):
+                os.makedirs(file_path)
+            file_name = f"{file_path}/{indep}_{name_var}{p}_N{self.N}.png"
+            fig.tight_layout()
+            fig.savefig(file_name, dpi=500)
+            plt.close(fig)
 
         # joblib.dump(vals, f"{newpath}/M{self.M}/{indep}_{name_var}{p}_N{self.N}_xvals")
         # joblib.dump(uniques, f"{newpath}/M{self.M}/{indep}_{name_var}{p}_N{self.N}_evals")

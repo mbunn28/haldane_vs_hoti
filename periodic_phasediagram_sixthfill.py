@@ -32,7 +32,8 @@ def rule(y):
 
 def main():
     #creating the folder where you want to store the output
-    path = "output/phasediagram/periodic/third"
+    filling = "third"
+    path = f"output/phasediagram/periodic/{filling}"
     if not os.path.exists(path):
                 os.makedirs(path)
 
@@ -195,8 +196,10 @@ def main():
     gap_mask = gap == 0
 
     #saves all the data so you can plot again without having to calculate again
-    joblib.dump(gap_mask, f"{path}/res{res}_gapmask")
-    joblib.dump(gap, f"{path}/res{res}_gap")
+    gap_mask_path = f"{path}/res{res}_gapmask"
+    gap_path = f"{path}/res{res}_gap"
+    joblib.dump(gap_mask, gap_mask_path)
+    joblib.dump(gap, gap_path)
     joblib.dump(x, f"{path}/res{res}_x")
 
     #plot the data
