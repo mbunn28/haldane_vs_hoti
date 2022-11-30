@@ -29,7 +29,7 @@ def main():
     # TODO implement argparse
     #params = (a, b, l ,t)
 
-    N = 6
+    N = 16
 
     rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
     rc('text', usetex=True)
@@ -45,7 +45,7 @@ def main():
         lattice0.colourcode = True
         lattice0.corner_p = 0.3
         lattice0.edge_p = 2    
-        lattice0.energy_spectrum(indep='l',t=100,min_val=0,max_val=1, ax=axs[0,0])
+        lattice0.energy_spectrum(indep='l',t=250,min_val=0,max_val=1, ax=axs[0,0])
         
         axs[0,0].xaxis.set_ticks([])
         axs[0,0].set_ylabel(r'$E$')
@@ -54,7 +54,7 @@ def main():
         lattice1.colourcode = True
         lattice1.corner_p = 0.3
         lattice1.edge_p = 2
-        lattice1.energy_spectrum(indep='t',t=100,min_val=0,max_val=1,ax=axs[0,1])
+        lattice1.energy_spectrum(indep='t',t=250,min_val=0,max_val=1,ax=axs[0,1])
         axs[0,1].xaxis.set_ticks([])
         # axs[0,1].yaxis.set_ticks([])
 
@@ -62,7 +62,7 @@ def main():
         lattice2.colourcode = True
         lattice2.corner_p = 0.3
         lattice2.edge_p = 2
-        lattice2.energy_spectrum(indep='a',t=200,min_val=0,max_val=1,ax=axs[0,2])
+        lattice2.energy_spectrum(indep='a',t=250,min_val=0,max_val=1,ax=axs[0,2])
         axs[0,2].xaxis.set_ticks([])
         # axs[0,1].yaxis.set_ticks([])
 
@@ -75,7 +75,7 @@ def main():
         lattice3.colourcode = True
         lattice3.corner_p = 0.3
         lattice3.edge_p = 0.55    
-        lattice3.energy_spectrum(indep='l',t=100,min_val=0,max_val=1, ax=axs[1,0])
+        lattice3.energy_spectrum(indep='l',t=250,min_val=0,max_val=1, ax=axs[1,0])
         axs[1,0].xaxis.set_ticks([])
         axs[1,0].set_ylabel(r'$E$')
 
@@ -83,7 +83,7 @@ def main():
         lattice4.colourcode = True
         lattice4.corner_p = 0.3
         lattice4.edge_p = 0.55
-        lattice4.energy_spectrum(indep='t',t=100,min_val=0,max_val=1,ax=axs[1,1])
+        lattice4.energy_spectrum(indep='t',t=250,min_val=0,max_val=1,ax=axs[1,1])
         axs[1,1].xaxis.set_ticks([])
         # axs[0,1].yaxis.set_ticks([])
 
@@ -91,7 +91,7 @@ def main():
         lattice5.colourcode = True
         lattice5.corner_p = 0.3
         lattice5.edge_p = 0.55
-        lattice5.energy_spectrum(indep='a',t=200,min_val=0,max_val=1,ax=axs[1,2])
+        lattice5.energy_spectrum(indep='a',t=250,min_val=0,max_val=1,ax=axs[1,2])
         axs[1,2].xaxis.set_ticks([])
         # axs[0,1].yaxis.set_ticks([])
 
@@ -104,7 +104,7 @@ def main():
         lattice6.colourcode = True
         lattice6.corner_p = 0.3
         lattice6.edge_p = 0.55    
-        lattice6.energy_spectrum(indep='l',t=100,min_val=0,max_val=1, ax=axs[2,0])
+        lattice6.energy_spectrum(indep='l',t=250,min_val=0,max_val=1, ax=axs[2,0])
         axs[2,0].xaxis.set_major_formatter(plt.FuncFormatter(format_func))
         axs[2,0].set_xlabel(r'$\lambda$')
         axs[2,0].set_ylabel(r'$E$')
@@ -116,7 +116,7 @@ def main():
         lattice7.colourcode = True
         lattice7.corner_p = 0.3
         lattice7.edge_p = 0.55
-        lattice7.energy_spectrum(indep='t',t=100,min_val=0,max_val=1,ax=axs[2,1])
+        lattice7.energy_spectrum(indep='t',t=250,min_val=0,max_val=1,ax=axs[2,1])
         axs[2,1].xaxis.set_major_formatter(plt.FuncFormatter(format_func))
         axs[2,1].set_xlabel(r'$\lambda$')
         ticks1 = axs[2,1].xaxis.get_major_ticks()
@@ -127,7 +127,7 @@ def main():
         lattice8.colourcode = True
         lattice8.corner_p = 0.3
         lattice8.edge_p = 0.55
-        lattice8.energy_spectrum(indep='a',t=200,min_val=0,max_val=1,ax=axs[2,2])
+        lattice8.energy_spectrum(indep='a',t=250,min_val=0,max_val=1,ax=axs[2,2])
         axs[2,2].xaxis.set_major_formatter(plt.FuncFormatter(format_func))
         axs[2,2].set_xlabel(r'$\alpha$')
         ticks2 = axs[2,2].xaxis.get_major_ticks()

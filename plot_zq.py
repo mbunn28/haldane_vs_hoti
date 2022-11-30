@@ -41,17 +41,17 @@ def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
 def main():
     
     # TODO implement argparse
-    points = 50
+    points = 20
     iterations = 4
     location = np.array([2,2], dtype=int)
-    N = 18
-    max_x = 1
+    N = 14
+    max_x = 2
     min_x = 0
     max_y = 2
-    min_y = 1
+    min_y = 0
     filling = 'half'
 
-    zq = ['z2']
+    zq = ['z6']
     inset_iterations=40
     
     if filling == 'third' or filling == 'sixth':
@@ -64,7 +64,7 @@ def main():
     rc('text.latex', preamble= r'\usepackage{amsfonts}')
 
     def make_filenames():
-        path_zq = f"output/zq/diagrams/{filling}"
+        path_zq = f"output/zq/diagrams/no_gauge_fix/{filling}"
         if not os.path.exists(path_zq):
             os.makedirs(path_zq)
         zq_phases_path = f'{path_zq}/zq_phases_N{N}_it{iterations}_res{points}'
@@ -73,8 +73,10 @@ def main():
         return [path_zq,zq_phases_path,small_energy_path,small_energy_loc_path]
 
     def make_minen_filenames():
-        path_zq_minen = f"output/zq/min_energy/{filling}"
-        min_en_data = f"{path_zq_minen}/small_energy_N{N}_it{inset_iterations}"
+        # path_zq_minen = f"output/zq/min_energy/{filling}"
+        path_zq_minen = f"output/zq/diagrams/no_gauge_fix/{filling}"
+        # min_en_data = f"{path_zq_minen}/small_energy_N{N}_it{inset_iterations}"
+        min_en_data = f"{path_zq_minen}/small_energy_N{N}_it{iterations}_res{points}"
         return [path_zq_minen, min_en_data]
 
     def load_gapless():
@@ -116,6 +118,8 @@ def main():
     min_en_data = joblib.load(min_en_data_path)
     x = np.linspace(min_x, max_x, num=points)
     y = np.linspace(min_y, max_y, num=points)
+
+    print(zq_phases)
 
     def define_col_map(zq_type):
         if zq_type == 'z6':
@@ -269,10 +273,10 @@ def main():
         return
     
     for i in range(len(zq)):
-        # plot_phasediagram(zq_phases[:,:,i],zq[i])
+        plot_phasediagram(zq_phases[:,:,i],zq[i])
         # plot_gapdiagram(small_energy[:,:,i],zq[i])
         # plot_gaplocs(small_energy_loc[:,:,i],zq[i])
-        plot_phase_gap(zq_phases[:,:,i],small_energy[:,:,i],zq[i])
+        # plot_phase_gap(zq_phases[:,:,i],small_energy[:,:,i],zq[i])
     return
 
 if __name__ == "__main__":

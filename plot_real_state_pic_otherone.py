@@ -9,26 +9,26 @@ from matplotlib import colors
 
 
 def main():
-    corners = 'Cut'
+    corners = 'Hexamer'
     lattice = ti.Lattice(
         PBC_i = False, PBC_j = False,
         cornertype = corners,
-        a = 0.2, b = 1,
-        l = 0.2, t = 1,
+        a = 1, b = 0.2,
+        l = 0.05, t = 1,
         M=0,
         N=10
     )
 
     lattice.colourcode = True
 
-    if corners == 'Five Sites':
+    if corners == 'Hexamer':
         padding = 4
-        lattice.corner_p = 0.1
-        lattice.edge_p = 2   
+        lattice.corner_p = 0.3
+        lattice.edge_p = 0.55   
     elif corners == 'Cut':
         padding = 1
-        lattice.corner_p = 0.1
-        lattice.edge_p = 0.5 
+        lattice.corner_p = 0.3
+        lattice.edge_p = 2
 
     lattice.initialize_hamiltonian()
     lattice.eigensystem()
@@ -45,8 +45,7 @@ def main():
         #     for k,axes in enumerate(ax_row):
         psi = np.transpose(lattice.waves)[mode[0]] #wavefunction
         proba = (np.abs(psi))**2
-        if corners == 'Cut':
-            wave_max = np.amax(proba)
+        wave_max = np.amax(proba)
         proba = proba/wave_max
 
         # ax.set_title(rf"$E$: {np.round(lattice.energies[mode[0]],4)}", fontsize=10)
@@ -102,7 +101,6 @@ def main():
 
         arg_corners=np.argwhere(lattice.corners)
         axs.plot(x[~lattice.corners],lattice.energies[~lattice.corners],'ko',markersize=0.5)
-        axs.plot(x[lattice.edges],lattice.energies[lattice.edges],'bo',markersize=0.5)
 
         axs.set_xlabel(r"$n$")
         axs.set_ylabel(r"$E$")
@@ -111,7 +109,7 @@ def main():
 
         lattice.find_corners()
         lattice.find_edges()
-        if corners == 'Five Sites':
+        if corners == 'Hexamer':
             state_locs = np.logical_or(lattice.corners,lattice.edges)
         elif corners == 'Cut':
             state_locs = lattice.corners
@@ -129,40 +127,55 @@ def main():
         inset_1_w= 0.43
         pad = 0.02
 
-        if corners == 'Five Sites':
+        if corners == 'Hexamer':
+            chern_edges = np.copy(lattice.edges)
+            chern_edges[220:400] = False
+            dimer_edges = np.copy(lattice.edges)
+            dimer_edges[chern_edges] = False
+
+            arg_chern = np.argwhere(chern_edges)
+            arg_dimer = np.argwhere(dimer_edges)
+
+            axs.plot(x[chern_edges],lattice.energies[chern_edges],'bo',markersize=0.5)
+            axs.plot(x[dimer_edges],lattice.energies[dimer_edges],'o',color='orange',markersize=0.5)
+
+            arg_corners = np.argwhere(lattice.corners)
+
             axs.plot(x[arg_corners[0:1]],lattice.energies[arg_corners[0:1]],'o',c='limegreen',markersize=0.5)
             axs.plot(x[arg_corners[2:3]],lattice.energies[arg_corners[2:3]],'o',c='darkviolet',markersize=0.5)
-            axs.plot(x[arg_corners[4:5]],lattice.energies[arg_corners[4:5]],'o',c='orange',markersize=0.5)
-            # axs.plot(x[arg_corners[6:]],lattice.energies[arg_corners[6:]],'ro',markersize=0.5)
+            axs.plot(x[arg_corners[4:5]],lattice.energies[arg_corners[4:5]],'o',c='limegreen',markersize=0.5)
             axs.plot(x[arg_corners[6:7]],lattice.energies[arg_corners[6:7]],'o',c='darkviolet',markersize=0.5)
-            axs.plot(x[arg_corners[8:]],lattice.energies[arg_corners[8:]],'o',c='limegreen',markersize=0.5)
+            axs.plot(x[arg_corners[8:9]],lattice.energies[arg_corners[8:9]],'o',c='limegreen',markersize=0.5)
+            axs.plot(x[arg_corners[10:11]],lattice.energies[arg_corners[10:11]],'o',c='darkviolet',markersize=0.5)
+            axs.plot(x[arg_corners[12:]],lattice.energies[arg_corners[12:]],'o',c='limegreen',markersize=0.5)
 
-            add_inset(lattice,axs,(pad,1-pad-inset_0_w*ratio,inset_0_w,inset_0_w*ratio),states[0], wave_max, label='(a)', col='limegreen')
-            add_inset(lattice,axs,(pad,1-2*pad-2*inset_0_w*ratio,inset_0_w,inset_0_w*ratio),states[2],wave_max, label='(b)', col='darkviolet')
+            add_inset(lattice,axs,(pad,1-pad-inset_0_w*ratio,inset_0_w,inset_0_w*ratio),arg_corners[5], wave_max, label='(a)', col='limegreen')
+            add_inset(lattice,axs,(pad,1-2*pad-2*inset_0_w*ratio,inset_0_w,inset_0_w*ratio),arg_corners[6],wave_max, label='(b)', col='darkviolet')
             # add_inset(lattice,axs,(2*pad+inset_0_w,1-pad-inset_0_w*ratio,inset_0_w,inset_0_w*ratio),states[2], wave_max)
-            add_inset(lattice,axs,(1-pad-inset_1_w,pad,inset_1_w,inset_1_w*ratio),states[4], wave_max, label='(c)', col='orange')
+            add_inset(lattice,axs,(1-pad-inset_0_w,2*pad+inset_0_w*ratio,inset_0_w,inset_0_w*ratio),arg_dimer[5], wave_max, label='(c)', col='orange')
+            add_inset(lattice,axs,(1-pad-inset_0_w,pad,inset_0_w,inset_0_w*ratio),arg_chern[5], wave_max, label='(d)', col='blue')
             cax = axs.inset_axes((2*pad+inset_0_w,1-pad-inset_0_w*ratio,0.02,inset_0_w*ratio))
+            print(lattice.energies[arg_corners[8][0]])
+            print(lattice.energies[arg_corners[6][0]])
+            print(lattice.energies[arg_dimer[5][0]])
+            print(lattice.energies[arg_chern[5][0]])
+            plt.annotate("", xy=(arg_corners[5][0], lattice.energies[arg_corners[5][0]]), xytext=(arg_corners[5][0]+45, lattice.energies[arg_corners[5][0]]), arrowprops=dict(color='darkgray',arrowstyle="->, head_width=0.1, head_length=0.2"))
+            plt.annotate("", xy=(arg_corners[6][0], lattice.energies[arg_corners[6][0]]), xytext=(arg_corners[6][0]+45, lattice.energies[arg_corners[6][0]]), arrowprops=dict(color='darkgray',arrowstyle="->, head_width=0.1, head_length=0.2"))
+            plt.annotate("", xy=(arg_dimer[5][0]+5, lattice.energies[arg_dimer[5][0]]), xytext=(arg_dimer[5][0]+50, lattice.energies[arg_dimer[5][0]]), arrowprops=dict(color='darkgray',arrowstyle="->, head_width=0.1, head_length=0.2"))
+            plt.annotate("", xy=(arg_chern[5][0], lattice.energies[arg_chern[5][0]]), xytext=(arg_chern[5][0]+45, lattice.energies[arg_chern[5][0]]), arrowprops=dict(color='darkgray',arrowstyle="->, head_width=0.1, head_length=0.2"))
         
         if corners == 'Cut':
-            inset_0_w = 0.26
-            N = np.sum(lattice.edges)
-            edge_states = np.argwhere(lattice.edges)
-            big_edges = np.array([edge_states[0][0],edge_states[1][0],edge_states[int(N/2-2)][0],edge_states[int(N/2-1)][0],edge_states[int(N/2)][0],edge_states[int(N/2+1)][0],edge_states[int(N-2)][0],edge_states[int(N-1)][0]],dtype=int)
-            print(big_edges)
-            axs.plot(x[lattice.corners],lattice.energies[lattice.corners],'o',color='limegreen',markersize=0.5)
-            axs.plot(x[edge_states],lattice.energies[edge_states],'o',color='darkviolet',markersize=0.5)
-            axs.plot(x[big_edges],lattice.energies[big_edges],'o',color='orange',markersize=0.5)
-            add_inset(lattice,axs,(pad,1-pad-inset_0_w*ratio,inset_0_w,inset_0_w*ratio),edge_states[int(N/2-2)][0], wave_max, label='(a)', col='orange')
-            add_inset(lattice,axs,(pad,1-2*pad-2*inset_0_w*ratio,inset_0_w,inset_0_w*ratio),edge_states[int(N/2-5)][0],wave_max, label='(b)', col='darkviolet')
-            add_inset(lattice,axs,(1-pad-inset_1_w,pad,inset_1_w,inset_1_w*ratio),np.argwhere(lattice.corners)[0], wave_max, label='(c)', col='limegreen')
-            cax = axs.inset_axes((2*pad+inset_0_w,1-pad-inset_0_w*ratio,0.02,inset_0_w*ratio))
+            inset_1_w= 0.42
+            axs.plot(x[lattice.corners],lattice.energies[lattice.corners],'ro',markersize=0.5)
+            add_inset(lattice,axs,(pad,1-pad-inset_1_w*ratio,inset_1_w,inset_1_w*ratio),np.argwhere(lattice.corners==True)[0], wave_max, label='(a)', col='red')
+            cax = axs.inset_axes((2*pad+inset_1_w,1-pad-inset_0_w*ratio,0.02,inset_0_w*ratio))
 
         cb = plt.colorbar(cm.ScalarMappable(norm=colors.Normalize(vmin=0, vmax=1),cmap=cm.get_cmap('inferno_r')), cax=cax)
         cb.set_ticks([])
         cax.set_ylabel(r'$|\psi_i|^2$',rotation=0)
         cax.yaxis.set_label_coords(4.5,1)
             
-        file_name = f'output/real_space_plot_{corners}.png'
+        file_name = f'output/real_space_plot_{corners}_other_hey_look_at_me.png'
         file_name = file_name.replace(' ','')
         fig.savefig(file_name,dpi=500,bbox_inches='tight')
         return

@@ -9,31 +9,25 @@ from matplotlib import colors
 
 
 def main():
-    corners = 'Cut'
+    corners = 'Hexamer'
     lattice = ti.Lattice(
         PBC_i = False, PBC_j = False,
         cornertype = corners,
-        a = 0.2, b = 1,
-        l = 0.2, t = 1,
+        a = 1, b = 1,
+        l = 0.1, t = 1,
         M=0,
-        N=10
+        N=15
     )
 
     lattice.colourcode = True
-
-    if corners == 'Five Sites':
-        padding = 4
-        lattice.corner_p = 0.1
-        lattice.edge_p = 2   
-    elif corners == 'Cut':
-        padding = 1
-        lattice.corner_p = 0.1
-        lattice.edge_p = 0.5 
+    padding = 1
+    lattice.corner_p = 0.1
+    lattice.edge_p = 0.8 
 
     lattice.initialize_hamiltonian()
     lattice.eigensystem()
 
-    def plot_estate(lattice, ax, m,anc, wave_max):
+    def plot_estate(lattice, ax, m, anc, wave_max):
         en = np.arange(len(lattice.energies))
         mode = [i for i, e in enumerate(en) if e == m]
         # rows, columns = 1, 1
@@ -103,18 +97,17 @@ def main():
         arg_corners=np.argwhere(lattice.corners)
         axs.plot(x[~lattice.corners],lattice.energies[~lattice.corners],'ko',markersize=0.5)
         axs.plot(x[lattice.edges],lattice.energies[lattice.edges],'bo',markersize=0.5)
+        axs.plot(x[lattice.corners],lattice.energies[lattice.corners],'bo',markersize=0.5)
 
         axs.set_xlabel(r"$n$")
         axs.set_ylabel(r"$E$")
         y_max = np.amax(lattice.energies)
         axs.set_ylim((-y_max-0.1,y_max+0.1))
 
-        lattice.find_corners()
-        lattice.find_edges()
-        if corners == 'Five Sites':
-            state_locs = np.logical_or(lattice.corners,lattice.edges)
-        elif corners == 'Cut':
+        if corners == 'Cut':
             state_locs = lattice.corners
+        else:
+            state_locs = np.logical_or(lattice.corners,lattice.edges)
         states = np.argwhere(state_locs)
 
         psi = np.transpose(lattice.waves)[states] #wavefunction
@@ -125,7 +118,7 @@ def main():
         width = ti.pos(lattice.N-1,lattice.N-1,2)[0]- ti.pos(0,0,5)[0] + 8
         ltow = length/width
         ratio = ltow/fig_rat
-        inset_0_w = 0.28
+        inset_0_w = 0.4 #0.28
         inset_1_w= 0.43
         pad = 0.02
 
@@ -143,7 +136,7 @@ def main():
             add_inset(lattice,axs,(1-pad-inset_1_w,pad,inset_1_w,inset_1_w*ratio),states[4], wave_max, label='(c)', col='orange')
             cax = axs.inset_axes((2*pad+inset_0_w,1-pad-inset_0_w*ratio,0.02,inset_0_w*ratio))
         
-        if corners == 'Cut':
+        elif corners == 'Cut':
             inset_0_w = 0.26
             N = np.sum(lattice.edges)
             edge_states = np.argwhere(lattice.edges)
@@ -157,13 +150,19 @@ def main():
             add_inset(lattice,axs,(1-pad-inset_1_w,pad,inset_1_w,inset_1_w*ratio),np.argwhere(lattice.corners)[0], wave_max, label='(c)', col='limegreen')
             cax = axs.inset_axes((2*pad+inset_0_w,1-pad-inset_0_w*ratio,0.02,inset_0_w*ratio))
 
+        else:
+            print(lattice.energies[states[int(len(states)/2)]])
+            add_inset(lattice,axs,(pad,1-pad-inset_0_w*ratio,inset_0_w,inset_0_w*ratio),states[int(len(states)/2)], wave_max, label='', col='blue')
+            cax = axs.inset_axes((2*pad+inset_0_w,1-pad-inset_0_w*ratio,0.02,inset_0_w*ratio))
+        
+
         cb = plt.colorbar(cm.ScalarMappable(norm=colors.Normalize(vmin=0, vmax=1),cmap=cm.get_cmap('inferno_r')), cax=cax)
         cb.set_ticks([])
         cax.set_ylabel(r'$|\psi_i|^2$',rotation=0)
         cax.yaxis.set_label_coords(4.5,1)
             
-        file_name = f'output/real_space_plot_{corners}.png'
-        file_name = file_name.replace(' ','')
+        file_name = f'output/real_space_plot_a{lattice.a}_l{lattice.l}_N{lattice.N}_{corners}.png'
+        file_name = file_name.replace('.','')
         fig.savefig(file_name,dpi=500,bbox_inches='tight')
         return
 

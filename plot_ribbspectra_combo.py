@@ -14,6 +14,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from numpy.ma import masked_array
 import matplotlib.gridspec as gs
+import matplotlib.patches as patches
 
 def format_func(value, tick_number):
     if value <= 1:
@@ -70,19 +71,82 @@ def main():
     
     # TODO implement argparse
     #params = (a, b, l ,t)
-    params = [[1,0.38,1,1],
-                [1,0.466,1,0.693],
-                [1,0.5595,1,0.2]
+
+    #CHERN
+    params = [[1,0.5,0.2,1],
+                [1,0.08,0.57,1],
+                [1,0.25,1,0.25]
             ]
 
     N_ribbon = 100
     res_ribbon = 125
     chern_points = 500
-    N_ribbon_zoom = np.array([200,200,800])
-    res_ribbon_zoom = np.array([200,200,500])
-    y_lim = np.array([0.1,0.1,0.025])
+    N_ribbon_zoom = np.array([200,100,800])
+    res_ribbon_zoom = np.array([200,150,500])
+    y_lim = np.array([0.1,0.1,0.03])
+    label_pos = np.array([2,3,5])
+    zoom = np.array([False, True, False])
+    name = 'chern_phases'
 
-    zoom = np.array([True, True, True])
+
+    # #HOTI
+    # params = [[1,0.2,0.1,1],
+    #             [0.2,1,0.1,1],
+    #             [0.2,1,1,0.4]
+    #         ]
+
+    # N_ribbon = 100
+    # res_ribbon = 125
+    # chern_points = 500
+    # N_ribbon_zoom = np.array([200,200,800])
+    # res_ribbon_zoom = np.array([200,200,500])
+    # y_lim = np.array([0.1,0.1,0.03])
+    
+
+    # zoom = np.array([False, False, False])
+    # name = 'hoti_phases'
+    # label_pos = np.array([0,1,10])
+
+    # #APPENDIX 1
+    # params = [[1,0.38,1,1],
+    #             [1,0.466,1,0.693],
+    #             [1,0.5595,1,0.2]
+    #         ]
+
+    # N_ribbon = 100
+    # res_ribbon = 125
+    # chern_points = 500
+    # N_ribbon_zoom = np.array([200,200,800])
+    # res_ribbon_zoom = np.array([200,200,500])
+    # y_lim = np.array([0.1,0.1,0.03])
+
+    # zoom = np.array([True, True, True])
+    # name = 'appendix_phases_1'
+    # label_pos = np.array([4,6,7])
+
+    # #APPENDIX 2
+    # params = [[1,0.6,1,0.4],
+    #             [0.6,1,1,0.4],
+    #             [0.22,1,0.8,1]
+    #         ]
+
+    # N_ribbon = 100
+    # res_ribbon = 125
+    # chern_points = 500
+    # N_ribbon_zoom = np.array([100,100,100])
+    # res_ribbon_zoom = np.array([125, 125, 125])
+    # y_lim = np.array([0.15,0.2,0.1])
+
+    # zoom = np.array([True, True, True])
+    # name = 'appendix_phases_2'
+    # label_pos = np.array([8,9,11])
+
+    rect_ws = 5*np.array([0.05,0.08,0.10,0.08,0.11,0.14,0.17,0.11,0.08,0.11,0.11,0.14])
+    rect_x_offsets = 5*np.array([-0.004,-0.004,-0.004,-0.004,-0.004,-0.004,-0.004,-0.004,-0.004,-0.004,-0.004,-0.004])
+    rect_y_offsets = 5*np.array([0.008,0.008,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.01,0.008,0.01])
+    # x_texts = np.array([0.1,0.1,0.6,0.73,0.9,1.6,1.4,1.87,1.9,1.9,1.6,0.905])
+    # y_texts = np.array([1.9,0.1,1,1.87,1.57,1.8,1.67,1.58,1.3,0.7,0.2,0.3])
+    texts = ['I','II','IV','V','VI','VII','VIII','IX','X','XI','III','XII']
 
     rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
     rc('text', usetex=True)
@@ -137,7 +201,7 @@ def main():
         else:
             return im
 
-    def plot_chern_band(ax, Fimag, set_title = None, return_color = False):
+    def plot_chern_band(ax, Fimag, i, set_title = None, return_color = False):
         kx,ky = make_kxky(chern_points)
         vmin, vmax = find_lims('chern')
         im = ax.pcolormesh(kx,ky,Fimag,cmap='seismic', norm = colors.SymLogNorm(linthresh = 1e-5, vmin=vmin, vmax=vmax), shading='auto')
@@ -147,7 +211,7 @@ def main():
         if chernno==0:
             chernno = 0
         chernno = int(chernno)
-        ax.text(2*np.pi/3,0,rf'$c={chernno}$',ha='right',va='bottom')
+        ax.text(2*np.pi/3,0,rf'$c_{i}={chernno}$',ha='right',va='bottom')
         if set_title != None:
             ax.title.set_text(f'$n={set_title}$')
         if return_color == False:
@@ -190,13 +254,13 @@ def main():
 
     def make_figure():
         w = 7.06
-        h = 7.9
+        h = 8.3
         fig = plt.figure(figsize=(w,h),dpi=500,constrained_layout=False)
 
         A = 10*np.pi/(3*np.sqrt(3)) + 0.4
         B = 2*np.pi/3 + 0.2
-        mid_text_width = 0.8
-        right_text_width = 0.8
+        mid_text_width = 0.7
+        right_text_width = 0.7
         cbar_width = 0.2
 
         # print(w - mid_text_width - B*h/A - right_text_width -cbar_width)
@@ -223,57 +287,85 @@ def main():
             rib_ax1_1 = fig.add_subplot(zoom_grid[1,0])
             plot_ribbon_spectra(rib_ax1_0, params[1], plot_no = '(c)')
             plot_ribbon_spectra(rib_ax1_1, params[1], ylim = y_lim[1], N = N_ribbon_zoom[1], res= res_ribbon_zoom[1])
-            # rib_ax1_0.get_yaxis().majorTicks[1].label1.set_verticalalignment('bottom')
-            # rib_ax1_1.get_yaxis().majorTicks[0].label1.set_verticalalignment('top')
+            # ticks10 = rib_ax1_0.yaxis.get_major_ticks()
+            # ticks10[0].label1.set_verticalalignment('bottom')
+            # ticks11 = rib_ax1_1.yaxis.get_major_ticks()
+            # ticks11[0].label1.set_verticalalignment('top')
         
         if zoom[2] == False:
             rib_ax2 = fig.add_subplot(main_grid[2,0])
             plot_ribbon_spectra(rib_ax2, params[2],xlabel=True, plot_no = '(e)')
         else:
             zoom_grid = gs.GridSpecFromSubplotSpec(ncols = 1, nrows = 2, subplot_spec=main_grid[2,0], hspace=0, height_ratios = [0.7,0.3])
-            rib_ax1_0 = fig.add_subplot(zoom_grid[0,0])
-            rib_ax1_1 = fig.add_subplot(zoom_grid[1,0])
-            plot_ribbon_spectra(rib_ax1_0, params[2], plot_no = '(e)')
-            plot_ribbon_spectra(rib_ax1_1, params[2], ylim = y_lim[2], N = N_ribbon_zoom[2], res= res_ribbon_zoom[2])
+            rib_ax2_0 = fig.add_subplot(zoom_grid[0,0])
+            rib_ax2_1 = fig.add_subplot(zoom_grid[1,0])
+            plot_ribbon_spectra(rib_ax2_0, params[2], plot_no = '(e)')
+            plot_ribbon_spectra(rib_ax2_1, params[2], ylim = y_lim[2], N = N_ribbon_zoom[2], res= res_ribbon_zoom[2])
+            ticks20 = rib_ax2_0.yaxis.get_major_ticks()
+            ticks20[0].label1.set_verticalalignment('bottom')
+            ticks21 = rib_ax2_1.yaxis.get_major_ticks()
+            ticks21[-1].label1.set_verticalalignment('top')
 
         chern_path0 = define_filepaths(params[0],chern_points)
         eigensys0 = joblib.load(f'{chern_path0}/eigensys')
         chern0 = joblib.load(f'{chern_path0}/chern')
         chern_ax0_0 = fig.add_subplot(main_grid[0,2])
         plot_energy_band(chern_ax0_0, eigensys0[:,:,0,0], yaxis='left', plot_no = '(b)')
-        plot_chern_band(chern_ax0_0, chern0[0,:,:], set_title = 1)
+        plot_chern_band(chern_ax0_0, chern0[0,:,:], 1, set_title = 1)
         chern_ax0_1 = fig.add_subplot(main_grid[0,3])
         plot_energy_band(chern_ax0_1, eigensys0[:,:,0,1])
-        plot_chern_band(chern_ax0_1, chern0[1,:,:], set_title = 2)
+        plot_chern_band(chern_ax0_1, chern0[1,:,:], 2, set_title = 2)
         chern_ax0_2 = fig.add_subplot(main_grid[0,4])
         plot_energy_band(chern_ax0_2, eigensys0[:,:,0,2],yaxis='right')
-        plot_chern_band(chern_ax0_2, chern0[2,:,:], set_title = 3)
+        plot_chern_band(chern_ax0_2, chern0[2,:,:], 3, set_title = 3)
         
         chern_path1 = define_filepaths(params[1],chern_points)
         eigensys1 = joblib.load(f'{chern_path1}/eigensys')
         chern1 = joblib.load(f'{chern_path1}/chern')
         chern_ax1_0 = fig.add_subplot(main_grid[1,2])
         plot_energy_band(chern_ax1_0, eigensys1[:,:,0,0], yaxis='left', plot_no = '(d)')
-        plot_chern_band(chern_ax1_0, chern1[0,:,:])
+        plot_chern_band(chern_ax1_0, chern1[0,:,:], 1)
         chern_ax1_1 = fig.add_subplot(main_grid[1,3])
         plot_energy_band(chern_ax1_1, eigensys1[:,:,0,1], write_xlabel=True)
-        plot_chern_band(chern_ax1_1, chern1[1,:,:])
+        plot_chern_band(chern_ax1_1, chern1[1,:,:], 2)
         chern_ax1_2 = fig.add_subplot(main_grid[1,4])
         plot_energy_band(chern_ax1_2, eigensys1[:,:,0,2],yaxis='right')
-        plot_chern_band(chern_ax1_2, chern1[2,:,:])
+        plot_chern_band(chern_ax1_2, chern1[2,:,:], 3)
 
         chern_path2 = define_filepaths(params[2],chern_points)
         eigensys2 = joblib.load(f'{chern_path2}/eigensys')
         chern2 = joblib.load(f'{chern_path2}/chern')
         chern_ax2_0 = fig.add_subplot(main_grid[2,2])
         plot_energy_band(chern_ax2_0, eigensys2[:,:,0,0], do_xticks = True, yaxis='left', plot_no = '(f)')
-        plot_chern_band(chern_ax2_0, chern2[0,:,:])
+        plot_chern_band(chern_ax2_0, chern2[0,:,:], 1)
         chern_ax2_1 = fig.add_subplot(main_grid[2,3])
         plot_energy_band(chern_ax2_1, eigensys2[:,:,0,1], do_xticks = True, write_xlabel=True)
-        plot_chern_band(chern_ax2_1, chern2[1,:,:])
+        plot_chern_band(chern_ax2_1, chern2[1,:,:], 2)
         chern_ax2_2 = fig.add_subplot(main_grid[2,4])
         im0 = plot_energy_band(chern_ax2_2, eigensys2[:,:,0,2], do_xticks = True, yaxis='right', return_color=True)
-        im1 = plot_chern_band(chern_ax2_2, chern2[2,:,:], return_color=True)
+        im1 = plot_chern_band(chern_ax2_2, chern2[2,:,:], 3, return_color=True)
+
+        axs = [chern_ax0_0, chern_ax1_0, chern_ax2_0]
+        for i in range(3):
+            # define the rectangle size and the offset correction
+            k = label_pos[i]
+            rect_w = rect_ws[k]
+            rect_h = 0.09*5
+            rect_x_offset = rect_x_offsets[k]
+            rect_y_offset = rect_y_offsets[k]
+
+            # text coordinates and content
+            x_text = -0.1-0.8
+            y_text = (2*np.pi/(np.sqrt(3))+4*np.pi*np.sqrt(3)/9)/4
+            text = texts[k]
+
+            # place the text
+            axs[i].text(x_text, y_text, text, ha="center", va="center", zorder=10)
+            # create the rectangle (below the text, hence the smaller zorder)
+            rect = patches.FancyBboxPatch((x_text-rect_w/2+rect_x_offset, y_text-rect_h/2+rect_y_offset),
+                                    rect_w,rect_h,boxstyle=patches.BoxStyle("Round", pad=0.02),linewidth=1,edgecolor='orange',facecolor='wheat',zorder=9, clip_on=False)
+            # add rectangle to plot
+            axs[i].add_patch(rect)
 
         cbar_ax_0 = fig.add_subplot(main_grid[0,-1])
         fig.colorbar(im0, cax=cbar_ax_0)
@@ -281,11 +373,11 @@ def main():
         # cbar_ax_0.set_ylabel(r'$E$',rotation=0, fontsize=12)
         # cbar_ax_0.yaxis.set_label_coords(-0.05,-0.5)
         cbar_ax_1 = fig.add_subplot(main_grid[-1,-1])
-        cbar_ax_1.title.set_text(r'$F_{12}$')
+        cbar_ax_1.title.set_text(r'Im$(F_{12})$')
         # cbar_ax_1.set_ylabel(r'$F_{12}$',rotation=0, fontsize=12)
         # cbar_ax_1.yaxis.set_label_coords(1.06,-0.5)
         fig.colorbar(im1, cax=cbar_ax_1)
-        fig.savefig('output/appendix_phases_1.png',bbox_inches='tight')
+        fig.savefig(f'output/{name}.png',bbox_inches='tight')
         return
 
     make_figure()

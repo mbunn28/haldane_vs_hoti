@@ -143,7 +143,7 @@ def main():
         my_cmap = copy.copy(cm.get_cmap('inferno'))
         my_cmap.set_bad('k')
         im = plt.pcolormesh(x,y,gap, norm = colors.SymLogNorm(linthresh=1e-5), cmap=my_cmap, shading='auto')
-        ax.grid(linestyle='--')
+        # ax.grid(linestyle='--')
         add_axes_labels(ax, plot_x, plot_y = True)
         return im
 
@@ -176,6 +176,14 @@ def main():
         ax00 = fig.add_subplot(main_grid[0,0])
         im0 = plot_gap(ax00,'sixth')
         ax00.text(1,1,'(a)', c='w', ha='center', va='center')
+        ax00.text(0.1,1.5,-1, ha='center', va='center')
+        ax00.text(0.5,1.8,1, ha='center', va='center')
+        ax00.text(0.15,0.3,0, ha='center', va='center')
+        ax00.text(1,0.1,0, ha='center', va='center')
+        # ax00.text(1,1,'(a)', c='w', ha='center', va='center')
+        # ax00.text(1,1,'(a)', c='w', ha='center', va='center')
+        # ax00.text(1,1,'(a)', c='w', ha='center', va='center')
+
         ax01 = fig.add_subplot(main_grid[0,1])
         im1 = plot_phases(ax01,'sixth','z2')
         ax01.text(1,1,'(b)', c='w', ha='center', va='center')
@@ -186,6 +194,12 @@ def main():
         ax10 = fig.add_subplot(main_grid[1,0])
         _ = plot_gap(ax10, 'third', plot_x = True)
         ax10.text(1,1,'(d)', c='w', ha='center', va='center')
+        ax10.text(0.35,1.85,1, ha='center', va='center')
+        ax10.text(0.25,1.5,-1, ha='center', va='center')
+        ax10.text(1.8,1.8,2, ha='center', va='center')
+        ax10.text(0.5,0.2,0, ha='center', va='center')
+        ax10.text(1.8,0.2,0, ha='center', va='center')
+
         ax11 = fig.add_subplot(main_grid[1,1])
         _ = plot_phases(ax11, 'third','z2', plot_x = True, xlabel = True)
         ax11.text(1,1,'(e)', c='w', ha='center', va='center')

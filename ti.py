@@ -14,9 +14,9 @@ from scipy.sparse.linalg import eigsh
 from numpy import random
 import joblib
 import scipy.linalg
-from matplotlib import rc
 from tqdm.auto import trange
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib import rc
 
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
 rc('text', usetex=True)
@@ -103,6 +103,10 @@ class Lattice:
         self.colourcode = False
         self.corner_p = 0.8
         self.edge_p = 0.95
+        self.impurity_type = None
+        self.impurity = None
+        self.impurity_loc = None
+        self.output = None
 
     def lat(self,i,j,s): return(6*self.N*i+6*j+s)
 
@@ -266,6 +270,23 @@ class Lattice:
             h[:,self.lat(self.N-1,self.N-1,0)]=0
             h[self.lat(self.N-1,self.N-1,0),self.lat(self.N-1,self.N-1,0)]=vv
 
+        #impurity
+        if self.impurity_type is not None:
+            for i in range(len(self.impurity_type)):
+                if self.impurity_type[i] == 'Site':
+                    a = self.impurity_loc[i,0]
+                    b = self.impurity_loc[i,1]
+                    c = self.impurity_loc[i,2]
+                    h[self.lat(a,b,c),self.lat(a,b,c)] += self.impurity[i]
+                elif self.impurity_type[i] == 'Bond':
+                    a = self.impurity_loc[i,0]
+                    b = self.impurity_loc[i,1]
+                    c = self.impurity_loc[i,2]
+                    d = self.impurity_loc[i,3]
+                    e = self.impurity_loc[i,4]
+                    f = self.impurity_loc[i,5]
+                    h[self.lat(a,b,c),self.lat(d,e,f)] += self.impurity[i]
+            
         h = np.conjugate(h.transpose()) + h
         self.h = h
         return
@@ -339,7 +360,7 @@ class Lattice:
             corners = ""
             corn = ""
 
-        if name == "Energy Eigenstates" or name == "Density of States" or name == "Energy Eigenvalues of the Hamiltonian":
+        if name == "Energy Eigenstates" or name == "Density of States" or name == "Energy Eigenvalues of the Hamiltonian" or name == "Impurity Spectrum":
             title = rf"{condition} {corners} {name}: $\alpha =$ {alph}, $\lambda =$ {lamb}"
         elif name == "Energy vs Alpha":
             title = rf"{condition} {corners} $E$ vs. $\alpha$: $\lambda =$ {lamb}"
@@ -348,6 +369,9 @@ class Lattice:
             title = rf"{condition} {corners} $E$ vs. $\lambda$: $\alpha =$ {alph}"
         else:
             title = ""
+
+        if self.output is not None:
+            output = f"output/{self.output}"
 
         if name == "Energy vs Lambda" or name == "Energy vs Alpha":
             newpath = f'{output}/{condition}{corn}'
@@ -419,7 +443,7 @@ class Lattice:
             p += p+prob[self.lat(self.N-1,self.N-1,3),:]+prob[self.lat(self.N-1,self.N-1,4),:]+prob[self.lat(self.N-1,self.N-1,5),:]
                 
         #regular corners
-        if self.cornertype == 'Hexamer':
+        if self.cornertype == 'Hexamer' or self.cornertype == 'Cut':
             for j in range(6):
                 p += prob[self.lat(0,0,j),:] + prob[self.lat(0,self.N-1,j),:] + prob[self.lat(self.N-1,0,j),:] + prob[self.lat(self.N-1,self.N-1,j),:]
             
@@ -453,8 +477,9 @@ class Lattice:
     def energy_plot(self, r=None):
         fig = plt.figure(figsize=(3.4,3.4))
         if r != None:
-            min_en = int(min(range(len(self.energies)), key=lambda i: abs(self.energies[i]+r))+1)
-            max_en = int((6*(self.N**2)-min_en))
+            # min_en = int(min(range(len(self.energies)), key=lambda i: abs(self.energies[i]+r))+1)
+            min_en = r
+            max_en = int((6*(self.N**2)-min_en-1))
             plt.plot(self.energies[min_en:max_en],'ko',markersize=0.5)
             zoom = "_zoom"
         elif self.colourcode == True:
@@ -594,10 +619,10 @@ class Lattice:
         plt.close(fig)
         return
 
-    def single_state(self):
+    def single_state(self, y=None):
         self.initialize_hamiltonian()
         self.eigensystem()
-        self.energy_plot()
+        self.energy_plot(r=y)
         self.plot_cornerstates()
         return
 
@@ -674,7 +699,7 @@ class Lattice:
 
             self.corners = None
             self.edges = None
-            
+        
         if indep == 't' or indep == 'b':
             vals = 2 - vals
 
@@ -695,6 +720,7 @@ class Lattice:
             ax.plot(vals, bigenergies[m,:], color='k', alpha=0.7, linewidth=0.2)
             ax.plot(vals, cornerenergies[m,:], color='r', alpha=0.7, linewidth=0.2)
             ax.plot(vals, edgeenergies[m,:], color='b', alpha=0.7, linewidth=0.2)
+
 
         if indep == 't' or indep == 'b':
             ax.set_xlim(2-max_val,2-min_val)
@@ -726,6 +752,63 @@ class Lattice:
         self.b = b0
         self.l = l0
         self.t = t0
+        return
+
+    def impurity_spectrum(self, t=100, min_val=np.array([-0.02]), max_val=np.array([0.02]), impurity_loc=np.array([[3,3,0]]), imp_type = np.array(['Site']), keyword = None,yrange=None, ax=None):
+        a = self.find_energysize()
+        min_en = np.amin(np.abs(self.energies))
+        bigenergies = np.zeros((a, t))
+        vals = np.zeros((len(min_val),t))
+        for i in range(len(min_val)):
+            vals[i,:] = np.round(np.linspace(min_val[i],max_val[i],num=t),3)
+        self.impurity_loc = impurity_loc
+        self.impurity_type = imp_type
+        for k in trange(0,t):
+            self.impurity = vals[:,k]
+            self.initialize_hamiltonian()
+            self.eigensystem()
+            bigen = np.zeros(a)
+            bigen[:] = self.energies[:]              
+            bigenergies[:,k] = bigen
+        
+        j = int(t/2 - 1)
+        bandlimits = []
+        for n in range(6):
+            bandlimits = np.append(bandlimits,[bigenergies[int(100*n),j],bigenergies[int(100*n+99),j]])
+        
+        fig, ax = plt.subplots(figsize=(3.4,3.4))
+        ax.axvline(0,ls='--', c='gray',linewidth=0.2,zorder=3)   
+        ax.axhline(0,ls='--', c='gray',linewidth=0.2,zorder=3) 
+        for m in range(6):
+            # bulklower =  bigenergies >= bandlimits[2*m] - 0.02
+            # bulkupper = bigenergies <= bandlimits[2*m+1]+0.02
+            # bulkenergies = np.logical_and(bulkupper,bulklower)
+            # bigenergies[bulkenergies] = np.NaN
+            ax.fill_between(vals[0,:],bandlimits[2*m]*np.ones(t),bandlimits[2*m+1]*np.ones(t),color='lightgray',zorder=2)
+        for m in range(a):
+            ax.plot(vals[0,:], bigenergies[m,:], color='k', linewidth=0.5,zorder=1)
+
+
+
+        
+        ax.set_xlim(min_val[0],max_val[0])
+        if yrange is not None:
+            ax.set_ylim(yrange)
+
+        ax.set_xlabel(r"$V_0$")
+        ax.set_ylabel(r"$E$")
+        [file_path, _, p, q] = self.make_names('Impurity Spectrum', output='output/impurities')
+        if keyword is not None:
+            file_name = f"{file_path}/a{p}_l{q}_N{self.N}_M{self.M}_{self.impurity_type[0]}_{keyword}"
+        else:
+            file_name = f"{file_path}/a{p}_l{q}_N{self.N}_M{self.M}_{self.impurity_type[0]}"
+        file_name = file_name.replace('.','')
+        fig.tight_layout()
+        fig.savefig(f"{file_name}.png", dpi=500)
+        plt.close(fig)
+
+        # joblib.dump(vals, f"{newpath}/M{self.M}/{indep}_{name_var}{p}_N{self.N}_xvals")
+        # joblib.dump(uniques, f"{newpath}/M{self.M}/{indep}_{name_var}{p}_N{self.N}_evals")
         return
 
     def min_energy(self):

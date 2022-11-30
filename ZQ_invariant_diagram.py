@@ -24,17 +24,17 @@ def rule(y):
 def main():
     
     # TODO implement argparse
-    points = 100
+    points = 20
     iterations = 4
     location = np.array([2,2], dtype=int)
-    N = 18
-    max_x = 1
+    N = 14
+    max_x = 2
     min_x = 0
     max_y = 2
-    min_y = 1
+    min_y = 0
     filling = 'half'
 
-    zq = ['z2']
+    zq = ['z6']
     if filling == 'half':
         M = int(3*(N**2))
     elif filling == 'third':
@@ -46,7 +46,7 @@ def main():
     y = np.linspace(min_y, max_y, num=points)
 
     def make_filenames():
-        path_zq = f"output/zq/diagrams/{filling}"
+        path_zq = f"output/zq/diagrams/no_gauge_fix/{filling}"
         if not os.path.exists(path_zq):
             os.makedirs(path_zq)
         zq_phases_path = f'{path_zq}/zq_phases_N{N}_it{iterations}_res{points}'
@@ -137,8 +137,10 @@ def main():
 
         for lattice in lattices:
             singlestate = get_states(lattice, M)
-            pa = np.einsum('ij,jk', singlestate, np.conjugate(singlestate.transpose()),optimize='greedy')
-            lattice.proj = np.einsum('ij,jk', pa, phi,optimize='greedy')
+            #pa = np.einsum('ij,jk', singlestate, np.conjugate(singlestate.transpose()),optimize='greedy')
+            #lattice.proj = np.einsum('ij,jk', pa, phi,optimize='greedy')
+            lattice.proj = singlestate
+        lattices[-1].proj = lattices[0].proj
 
         D = [do_integral(lattice1, lattice2) for lattice1, lattice2 in zip(lattices, lattices[1:])]
         D = np.prod(D)

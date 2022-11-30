@@ -9,6 +9,7 @@ import matplotlib.colors as colors
 import scipy.optimize as optimise
 from matplotlib import rc
 from tqdm import tqdm
+from numpy.random import rand
 
 # just a code snippet that makes all the fonts used in the plot LaTeX font
 rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
@@ -16,7 +17,7 @@ rc('text', usetex=True)
 plt.rcParams['axes.axisbelow'] = True
 
 #creating the folder where you want to store the output
-path = "output/phasediagram/periodic/"
+path = "output/phasediagram/periodic/top_detail"
 if not os.path.exists(path):
             os.makedirs(path)
 
@@ -33,7 +34,7 @@ def rule(y):
     return a, b
 
 #the resolution of the energy diagram
-res = 250
+res = 200
 run = res #ignore this: I use this when I want to create a zoomed in portion of the hase diagram
 # run2= int(res/2)
 
@@ -53,27 +54,27 @@ run = res #ignore this: I use this when I want to create a zoomed in portion of 
 #highly recommend v nifty
 M = 0
 
-s_vals = np.linspace(0,2,num=run)
-up, down = rule(s_vals)
-l,a = np.meshgrid(up,up)
-t,b = np.meshgrid(down,down)
+# s_vals = np.linspace(0,2,num=run)
+# up, down = rule(s_vals)
+# l,a = np.meshgrid(up,up)
+# t,b = np.meshgrid(down,down)
 
 
-# Ignore this: this is just my zoomed in version
-# t_min = 0.625
-# t_max = 0.725
+#Ignore this: this is just my zoomed in version
+t_min = 0.47
+t_max = 0.49
 
-# tvals = np.linspace(t_min,t_max,num=run)
+tvals = np.linspace(t_min,t_max,num=run)
 
-# b_min = 0.45
-# b_max = 0.5
+b_min = 0.51
+b_max = 0.53
 
-# bvals = np.linspace(b_min,b_max,num=run)
+bvals = np.linspace(b_min,b_max,num=run)
 
-# t,b = np.meshgrid(np.flipud(tvals), np.flipud(bvals))
-# ones = np.ones((run,run))
-# a = ones
-# l = ones
+t,b = np.meshgrid(np.flipud(tvals), np.flipud(bvals))
+ones = np.ones((run,run))
+a = ones
+l = ones
 
 
 #lattice vectors
@@ -95,6 +96,10 @@ def reduced_zone2(parameter,n,m):
     energy = hamil(n,m,kpoint)
     return energy
 
+def irred_zone(parameter, n,m):
+    kpoint = parameter[0]*b1 + parameter[1]*b2
+    energy = hamil(n,m,kpoint)
+    return energy
 
 #the periodic Hamiltonian
 #input: n,m values that tell you the lattice parameter vals
@@ -152,7 +157,7 @@ def hamil(n,m,kvals):
 #output: the minimum energy in the reduced BZ (according to the root finding)
 #       the path parameter values for the reduced BZ where the min energy occured
 def min_en(n,m):
-
+    
     #high symmetry points in BZ
     Kpoint = (1/3)*(b1+b2)
     Kdashpoint = (1/3)*(b1+b2)
@@ -162,15 +167,21 @@ def min_en(n,m):
     energies = hamil(n,m,np.array([Kdashpoint, Kpoint,Gamma, Mpoint]))
     #storing the min energy of the lot and where it was 
     min_energy = np.amin(energies)
-    lam_val = np.argmin(energies)
-    if lam_val ==3:
-        lam = 2+np.sqrt(3)/2
-    else:
-        lam = lam_val
+    # lam_val = np.argmin(energies)
+    # if lam_val ==3:
+    #     lam = 2+np.sqrt(3)/2
+    # else:
+    #     lam = lam_val
     
     #root finding in reduced BZ, with a bunch of initial guesses
     # note: if you go down this root, you'll want to make sure you have enough initial guesses 
     if min_energy != 0:
+        # bnds = ((0,0.25),(0,0.5))
+        # cons = ({'type': 'ineq',
+        #          'fun': lambda x: 0.5-x[0]-x[1]},
+        #          {'type': 'ineq',
+        #          'fun': lambda x: x[1]-x[0]})
+
         # result = optimise.minimize(reduced_zone1,0.1,args=(n,m), bounds=[(0,2/3)],tol=1e-50)
         # if result.fun < min_energy:
         #     min_energy = result.fun[0]
@@ -179,33 +190,36 @@ def min_en(n,m):
         # if result.fun < min_energy:
         #     min_energy = result.fun[0]
         #     lam = 3*((2/3) - result.x)
-        # result = optimise.minimize(reduced_zone1,7/18,args=(n,m), bounds=[(0,2/3)],tol=1e-50)
-        # if result.fun < min_energy:
-        #     min_energy = result.fun[0]
-        #     lam = 3*((2/3) - result.x)
-        # result = optimise.minimize(reduced_zone1,4/9,args=(n,m), bounds=[(0,2/3)],tol=1e-50)
-        # if result.fun < min_energy:
-        #     min_energy = result.fun[0]
-        #     lam = 3*((2/3) - result.x)
-        result = optimise.minimize(reduced_zone1,5/9,args=(n,m), bounds=[(0,2/3)],tol=1e-50)
+        result = optimise.minimize(reduced_zone1,7/18,args=(n,m), bounds=[(0,2/3)],tol=1e-50)
         if result.fun < min_energy:
             min_energy = result.fun[0]
             lam = 3*((2/3) - result.x)
-        result = optimise.minimize(reduced_zone1,11/18,args=(n,m), bounds=[(0,2/3)],tol=1e-50)
+        result = optimise.minimize(reduced_zone1,4/9,args=(n,m), bounds=[(0,2/3)],tol=1e-50)
         if result.fun < min_energy:
             min_energy = result.fun[0]
             lam = 3*((2/3) - result.x)
+        # for i in range(75):
+        #     result = optimise.minimize(irred_zone,(0.25*rand(),0.5*rand()),args=(n,m),bounds=bnds,constraints=cons,tol=1e-50)
+        #     result = optimise.minimize(irred_zone,(0.25*rand(),0.5*rand()),args=(n,m),bounds=bnds,tol=1e-50)
+        #     if result.fun < min_energy:
+        #         min_energy = result.fun[0]
+            # lam = 3*((2/3) - result.x)
+        # result = optimise.minimize(irred_zone,(11/58,11/58),args=(n,m),bounds=bnds,constraints=cons,tol=1e-50)
+        # if result.fun < min_energy:
+        #     min_energy = result.fun[0]
+            # lam = 3*((2/3) - result.x)
 
-        # result = optimise.minimize(reduced_zone2,0.15,args=(n,m), bounds=[(0,1/2)],tol=1e-50)
-        # if result.fun < min_energy:
-        #     min_energy = result.fun
-        #     lam = 2 + np.sqrt(3)*result.x
-        # result = optimise.minimize(reduced_zone2,0.35,args=(n,m), bounds=[(0,1/2)],tol=1e-50)
-        # if result.fun < min_energy:
-        #     min_energy = result.fun
-        #     lam = 2 + np.sqrt(3)*result.x
+        result = optimise.minimize(reduced_zone2,0.15,args=(n,m), bounds=[(0,1/2)],tol=1e-50)
+        if result.fun < min_energy:
+            min_energy = result.fun
+            lam = 2 + np.sqrt(3)*result.x
+        result = optimise.minimize(reduced_zone2,0.35,args=(n,m), bounds=[(0,1/2)],tol=1e-50)
+        if result.fun < min_energy:
+            min_energy = result.fun
+            lam = 2 + np.sqrt(3)*result.x
         
-    return min_energy, lam 
+    #print(min_energy)
+    return min_energy#, lam 
 
 #Because I knew roughly where the gap closed, I made sure not to compute evals where I didn't need to. 
 #this function checks is the lattice parameter vals are in a zone where I want to evaluate the min energy, or not
@@ -234,7 +248,7 @@ def check_eval(n,m):
 
 #defining the arrays where I store the min energy and where it was along the red BZ
 gap = np.zeros((run,run))
-kgap = np.zeros((run,run))
+#kgap = np.zeros((run,run))
 #summing over each point in the discretized BZ
 with tqdm(total=run * run) as pbar:
         for m, n in np.ndindex(run, run):
@@ -243,11 +257,12 @@ with tqdm(total=run * run) as pbar:
             check = check_eval(n,m)
             if check == True:
                 #if so, find the min energy at that point and where in the red BZ it occurred
-                gap[n,m], kgap[n,m] = min_en(n,m)
+                #gap[n,m], kgap[n,m] = min_en(n,m)
+                gap[n,m] = min_en(n,m)
             if check == False:
                 #otherwise write "No" in the array 
                 gap[n,m] = np.NaN
-                kgap[n,m] = np.NaN
+                #kgap[n,m] = np.NaN
             
             pbar.update(1)
 
@@ -256,11 +271,11 @@ x = np.linspace(0,2,num=run)
 
 
 #deleteing all the values greater than 0.01. Better resolution, and you can drop this down
-gap[gap>0.1]= 0.1
+#gap[gap>0.3]= 0.3
 
 #saves all the data so you can plot again without having to calculate again
 joblib.dump(gap, f"{path}/res{res}_gap_topmid")
-joblib.dump(kgap, f"{path}/res{res}_kgap_topmid")
+#joblib.dump(kgap, f"{path}/res{res}_kgap_topmid")
 joblib.dump(x, f"{path}/res{res}_x")
 
 #plot the data
