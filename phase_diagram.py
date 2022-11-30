@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import ti
 import numpy as np
+from numpy.random import randint
 
 def main():
     lattice = ti.Lattice(
@@ -18,16 +19,23 @@ def main():
     V_0 = 20
     y_lim = np.amax(lattice.energies)+0.3
 
+    N_imp = 20
+    imp_loc = np.zeros((N_imp,3))
+    for i in range(N_imp):
+        imp_loc[i,0] = randint(lattice.N)
+        imp_loc[i,0] = randint(lattice.N)
+        imp_loc[i,0] = randint(6)
+    print(imp_loc)
     imp_loc = [np.array([[3,3,1]])]#,np.array([[3,3,1,4,4,4]]),np.array([[3,3,1,3,3,2]]),np.array([[3,3,1,4,4,3]]),np.array([[3,3,1,3,3,3]])]
-    bond_typ = [np.array(['Site'])]#,np.array(['Bond']),np.array(['Bond']),np.array(['Bond']),np.array(['Bond'])]
-    keys = ['site']#, "dimer","hexamer","dimer_sec","hexamer_sec"]
-    for i in range(5):
+    bond_typ = np.array(['Site']*N_imp)#,np.array(['Bond']),np.array(['Bond']),np.array(['Bond']),np.array(['Bond'])]
+    #keys = ['site']*N_imp#, "dimer","hexamer","dimer_sec","hexamer_sec"]
+    for i in range(N_imp):
         lattice.impurity_spectrum(
             t=1000,
             min_val = np.array([-V_0]),max_val=np.array([V_0]),
             impurity_loc = imp_loc[i],
             imp_type = bond_typ[i],
-            keyword = keys[i],
+            keyword = f"{i}siteimp",
             yrange=[-y_lim,y_lim]
         )
 
