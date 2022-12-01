@@ -754,16 +754,20 @@ class Lattice:
         self.t = t0
         return
 
-    def impurity_spectrum(self, t=100, min_val=np.array([-0.02]), max_val=np.array([0.02]), impurity_loc=np.array([[3,3,0]]), imp_type = np.array(['Site']), keyword = None,yrange=None, ax=None):
+    def impurity_spectrum(self, t=100, field_max=None, field_type='const', min_val=None, max_val=None, impurity_loc=np.array([[3,3,0]]), imp_type = np.array(['Site']), keyword = None, file_keyword = None, imp_strength=None, ax=None):
         a = self.find_energysize()
         min_en = np.amin(np.abs(self.energies))
         bigenergies = np.zeros((a, t))
-        vals = np.zeros((len(min_val),t))
-        for i in range(len(min_val)):
-            vals[i,:] = np.round(np.linspace(min_val[i],max_val[i],num=t),3)
+        vals = np.zeros((len(imp_type),t))
+        if field_max != None:
+            V_vals = np.round(np.linspace(-field_max,field_max,num=t),2)
+            for i in range(len(imp_type)):
+                vals[i,:] = np.copy(V_vals)*(2*imp_strength[i]-1)     
+
+        
         self.impurity_loc = impurity_loc
         self.impurity_type = imp_type
-        print(self.impurity_type)
+
         for k in trange(0,t):
             self.impurity = vals[:,k]
             self.initialize_hamiltonian()
@@ -772,10 +776,10 @@ class Lattice:
             bigen[:] = self.energies[:]              
             bigenergies[:,k] = bigen
         
-        j = int(t/2 - 1)
+        j = int((t-1)/2)
         bandlimits = []
         for n in range(6):
-            bandlimits = np.append(bandlimits,[bigenergies[int(100*n),j],bigenergies[int(100*n+99),j]])
+            bandlimits = np.append(bandlimits,[bigenergies[int((self.N**2)*n),j],bigenergies[int((self.N**2)*(n+1)-1),j]])
         
         fig, ax = plt.subplots(figsize=(3.4,3.4))
         ax.axvline(0,ls='--', c='gray',linewidth=0.2,zorder=3)   
@@ -785,20 +789,23 @@ class Lattice:
             # bulkupper = bigenergies <= bandlimits[2*m+1]+0.02
             # bulkenergies = np.logical_and(bulkupper,bulklower)
             # bigenergies[bulkenergies] = np.NaN
-            ax.fill_between(vals[0,:],bandlimits[2*m]*np.ones(t),bandlimits[2*m+1]*np.ones(t),color='lightgray',zorder=2)
+            ax.fill_between(V_vals,bandlimits[2*m]*np.ones(t),bandlimits[2*m+1]*np.ones(t),color='lightgray',zorder=2)
         for m in range(a):
-            ax.plot(vals[0,:], bigenergies[m,:], color='k', linewidth=0.5,zorder=1)
+            ax.plot(V_vals, bigenergies[m,:], color='k', linewidth=0.5,zorder=1)
 
 
 
         
-        ax.set_xlim(min_val[0],max_val[0])
-        if yrange is not None:
-            ax.set_ylim(yrange)
+        ax.set_xlim(-field_max,field_max)
+        # if yrange is not None:
+        #     ax.set_ylim(yrange)
+        q = np.amin(np.abs(bandlimits))
+        extra_width = 0.06*q
+        ax.set_ylim(-q-extra_width,q+extra_width)
 
         ax.set_xlabel(r"$V_0$")
         ax.set_ylabel(r"$E$")
-        [file_path, _, p, q] = self.make_names('Impurity Spectrum', output='output/impurities')
+        [file_path, _, p, q] = self.make_names('Impurity Spectrum', output=f'output/impurities_{file_keyword}')
         if keyword is not None:
             file_name = f"{file_path}/a{p}_l{q}_N{self.N}_M{self.M}_{self.impurity_type[0]}_{keyword}"
         else:

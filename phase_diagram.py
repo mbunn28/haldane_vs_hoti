@@ -3,6 +3,7 @@
 import ti
 import numpy as np
 from numpy.random import randint
+from numpy.random import random
 
 def main():
     lattice = ti.Lattice(
@@ -11,13 +12,13 @@ def main():
         a = 1, b = 1,
         l = 0.1, t = 1,
         M=0,
-        N= 10
+        N=15
     )
 
-    lattice.initialize_hamiltonian()
-    lattice.eigensystem()
-    V_0 = 20
-    y_lim = np.amax(lattice.energies)+0.3
+    # lattice.initialize_hamiltonian()
+    # lattice.eigensystem()
+    V_0 = 50
+    # y_lim = np.amax(lattice.energies)+0.3
 
     N_imp = 20
     imp_loc = np.zeros((N_imp,3))
@@ -25,19 +26,33 @@ def main():
         imp_loc[i,0] = randint(lattice.N)
         imp_loc[i,1] = randint(lattice.N)
         imp_loc[i,2] = randint(6)
-    print(imp_loc)
+    # imp_strength = np.ones(N_imp)
+    # file_keyword = 'const'
+    imp_strength = np.empty(N_imp)
+    for i in range(N_imp):
+        imp_strength[i] = 0.5*random()*(2*randint(0,2)-1)
+    file_keyword = 'rand'
     #imp_loc = [np.array([[3,3,1]])]#,np.array([[3,3,1,4,4,4]]),np.array([[3,3,1,3,3,2]]),np.array([[3,3,1,4,4,3]]),np.array([[3,3,1,3,3,3]])]
     bond_typ = np.array(['Site']*N_imp)#,np.array(['Bond']),np.array(['Bond']),np.array(['Bond']),np.array(['Bond'])]
     #keys = ['site']*N_imp#, "dimer","hexamer","dimer_sec","hexamer_sec"]
+    [file_path, _,_,_]=lattice.make_names('Impurity Spectrum', output=f'output/impurities_{file_keyword}')
+    f = open(f'{file_path}/data','w')
+    f.write("Impurity Loc \tRelative Strength\n")
     for i in range(N_imp):
         lattice.impurity_spectrum(
-            t=100,
-            min_val = np.array([-V_0]*(i+1)),max_val=np.array([V_0]*(i+1)),
+            t=101,
+            field_max = V_0,
+            field_type = file_keyword,
             impurity_loc = imp_loc[:(i+1),:],
             imp_type = bond_typ[:(i+1)],
-            keyword = f"{i}siteimp",
-            yrange=[-y_lim,y_lim]
+            keyword = f"{i+1}siteimp",
+            file_keyword = file_keyword,
+            imp_strength = imp_strength
+            # yrange=[-y_lim,y_lim]
         )
+        f.write(f'{imp_loc[i,:]}\t{imp_strength[i]}\n')
+   
+    f.close()
 
     # imp_loc = [np.array([[3,3,1,3,3,2],[3,3,2,3,3,3],[3,3,3,3,3,4],[3,3,4,3,3,5],[3,3,5,3,3,0],[3,3,0,3,3,1]])]
     # #                np.array([[3,3,1,3,3,3],[3,3,3,3,3,5],[3,3,5,3,3,1]]),
