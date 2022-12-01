@@ -108,7 +108,7 @@ class Lattice:
         self.impurity_loc = None
         self.output = None
 
-    def lat(self,i,j,s): return(6*self.N*i+6*j+s)
+    def lat(self,i,j,s): return int(6*self.N*i+6*j+s)
 
     def initialize_hamiltonian(self):
         vv = 1e7
@@ -763,6 +763,7 @@ class Lattice:
             vals[i,:] = np.round(np.linspace(min_val[i],max_val[i],num=t),3)
         self.impurity_loc = impurity_loc
         self.impurity_type = imp_type
+        print(self.impurity_type)
         for k in trange(0,t):
             self.impurity = vals[:,k]
             self.initialize_hamiltonian()
